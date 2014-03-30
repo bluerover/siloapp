@@ -12,7 +12,8 @@
     "bcrypt": "*",
     "sails-mysql": "*",
     "gake": "~0.1.2",
-    "sails-migrations": "0.0.4"
+    "sails-migrations": "0.0.4",
+    "node-uuid": "~1.4.1"
   },
   "scripts": {
     "start": "node app.js",
