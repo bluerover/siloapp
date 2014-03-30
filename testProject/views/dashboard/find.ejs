@@ -1,5 +1,4 @@
 <% for (var i in dashboard_widgets) {
-  var widget = dashboard_widgets[i];
-  var widget_template = "partials/" + widget.template_filename %>
-  <%  %>
+  var widget = dashboard_widgets[i]; %>
+  <%- renderWidget(widget) %>
 <% } %>

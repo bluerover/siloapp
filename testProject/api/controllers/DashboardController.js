@@ -69,7 +69,8 @@ module.exports = {
             organization_name: req.session.organization_name,
             page_category: "dashboard",
             full_name: req.session.full_name,
-            dashboard_widgets: dashboard_widgets
+            dashboard_widgets: dashboard_widgets,
+            renderWidget: sails.custom_helpers.render_widget
           });
         });
     });
