@@ -34,7 +34,7 @@ module.exports = {
     var dashboard_id = req.param('id');
 
     if (dashboard_id === undefined || dashboard_id === null) {
-      res.view({layout: "barebones"}, 404);
+      res.view({layout: "barebones"}, '404');
       return;
     }
 
@@ -55,20 +55,23 @@ module.exports = {
         return;
       }
 
-      Dashboard_Widget.find({ dashboard_id: dashboard_id }).done(function (err, dashboard_widgets) {
-        if (err) {
-          res.view({layout: "barebones"}, '500');
-          return;
-        }
+      Temp_DashboardWidget_Widget.query(
+        "SELECT * FROM dashboard_widget JOIN widget ON dashboard_widget.widget_id = widget.id WHERE dashboard_id = ?", 
+        [dashboard_id], 
+        function(err, dashboard_widgets) {
+          if (err) {
+            res.view({layout: "barebones"}, '500');
+            return;
+          }
 
-        res.view({
-          title: dashboard.name,
-          organization_name: req.session.organization_name,
-          page_category: "dashboard",
-          full_name: req.session.full_name,
-          dashboard_widgets: dashboard_widgets
+          res.view({
+            title: dashboard.name,
+            organization_name: req.session.organization_name,
+            page_category: "dashboard",
+            full_name: req.session.full_name,
+            dashboard_widgets: dashboard_widgets
+          });
         });
-      });
     });
   }
 

@@ -1,4 +1,4 @@
 <% for (var i in dashboard_widgets) {
   var widget = dashboard_widgets[i]; %>
-  <%= widget.display_name %><br />
+  <% include "partials/" + widget.template_name %>
 <% } %>

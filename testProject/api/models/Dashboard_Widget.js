@@ -43,7 +43,7 @@ module.exports = {
       required: true,
       maxLength: 3000
     },
-    custom_attributes: {
+    options: {
       type: 'string',
       maxLength: 5000
     },
