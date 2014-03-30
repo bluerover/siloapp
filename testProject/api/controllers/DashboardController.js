@@ -33,6 +33,11 @@ module.exports = {
   find: function(req, res) {
     var dashboard_id = req.param('id');
 
+    if (dashboard_id === undefined || dashboard_id === null) {
+      res.view({layout: "barebones"}, 404);
+      return;
+    }
+
     Dashboard.findOne(dashboard_id).done(function (err, dashboard) {
       if (err) {
         res.view({layout: "barebones"}, '500');

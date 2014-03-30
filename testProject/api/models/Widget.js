@@ -14,7 +14,7 @@ module.exports = {
       type: 'string',
       required: true
     },
-    html_filename: {
+    template_filename: {
       type: 'string',
       required: true
     },
