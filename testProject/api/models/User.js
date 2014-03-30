@@ -42,9 +42,19 @@ module.exports = {
       type: 'integer',
       required: true
     },
-    first_name: 'string',
-    last_name: 'string',
-    is_admin: 'boolean'
+    first_name: {
+      type: 'string',
+      required: true
+    },
+    last_name: {
+      type: 'string',
+      required: true
+    },
+    is_admin: 'boolean',
+
+    full_name: function() {
+      return this.first_name + " " + this.last_name;
+    }
     
   },
 

@@ -31,7 +31,40 @@ module.exports = {
   // },
 
   find: function(req, res) {
-    res.json({success: "Show dashboard"});
+    var dashboard_id = req.param('id');
+
+    Dashboard.findOne(dashboard_id).done(function (err, dashboard) {
+      if (err) {
+        res.view({layout: "barebones"}, '500');
+        return;
+      }
+
+      if (dashboard === undefined || dashboard === null) {
+        res.view({layout: "barebones"}, '404');
+        return;
+      }
+
+      if (req.session.organization !== dashboard.organization_id) {
+        // Return 404 instead of 403 so that users cannot know if a dashboard exists or not
+        res.view({layout: "barebones"}, '404');
+        return;
+      }
+
+      Dashboard_Widget.find({ dashboard_id: dashboard_id }).done(function (err, dashboard_widgets) {
+        if (err) {
+          res.view({layout: "barebones"}, '500');
+          return;
+        }
+
+        res.view({
+          title: dashboard.name,
+          organization_name: req.session.organization_name,
+          page_category: "dashboard",
+          full_name: req.session.full_name,
+          dashboard_widgets: dashboard_widgets
+        });
+      });
+    });
   }
 
   

@@ -40,18 +40,31 @@ module.exports = {
         bcrypt.compare(req.body.password, user.password, function (err, match) {
           if (err) res.json({error: "Internal Server Error"}, 500);
 
-          if (match) {
-            req.session.user = user.id;
-            req.session.authenticated = true;
-            res.json({
-              username: user.username,
-              email: user.email
-            });
-          }
-          else {
-            if (req.session.user) req.session.user = null;
-            res.json({error: "Invalid password"}, 400);
-          }
+          Organization.findOne(user.organization_id).done(function (err, org) {
+            if (err || org === undefined || org === null) {
+              res.json({error: "Internal Server Error"}, 500);
+              return;
+            }
+            else {
+              if (match) {
+                req.session.user = user.id;
+                req.session.username = user.username;
+                req.session.username = user.username;
+                req.session.full_name = user.full_name();
+                req.session.organization = user.organization_id;
+                req.session.organization_name = org.name;
+                req.session.authenticated = true;
+                res.json({
+                  username: user.username,
+                  email: user.email
+                });
+              }
+              else {
+                if (req.session.user) req.session.user = null;
+                res.json({error: "Invalid password"}, 400);
+              }
+            }
+          });
         })
       }
       else {
@@ -61,8 +74,7 @@ module.exports = {
   },
 
   logout: function (req, res) {
-    req.session.user = null;
-    req.session.authenticated = null;
+    req.session = null;
     res.json({success: "Successfully logged out"});
   }
   

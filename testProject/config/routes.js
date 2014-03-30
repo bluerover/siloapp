@@ -36,6 +36,11 @@ module.exports.routes = {
     controller: 'dashboard',
     action: 'find',
     id: 1
+  },
+
+  'get /widget_assets/:type/:file': {
+    controller: 'WidgetAsset',
+    action: 'retrieveAsset'
   }
 
   /*
