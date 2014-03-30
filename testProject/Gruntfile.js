@@ -413,7 +413,8 @@ module.exports = function (grunt) {
   });
 
   // Run migrations
-  grunt.loadNpmTasks('sails-migrations');
+  // grunt.loadNpmTasks('gake')
+  // grunt.loadNpmTasks('sails-migrations');
 
   // When Sails is lifted:
   grunt.registerTask('default', [
