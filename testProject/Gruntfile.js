@@ -412,6 +412,9 @@ module.exports = function (grunt) {
     }
   });
 
+  // Run migrations
+  grunt.loadNpmTasks('sails-migrations');
+
   // When Sails is lifted:
   grunt.registerTask('default', [
     'compileAssets',
