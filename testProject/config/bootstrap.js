@@ -12,6 +12,11 @@ module.exports.bootstrap = function (cb) {
 
   sails.project_path = "/" + __dirname.substring(1, __dirname.lastIndexOf('/'));
 
+  sails.custom_helpers = {};
+  sails.custom_helpers.render_widget = function(filename) {
+
+  };
+
   // It's very important to trigger this callack method when you are finished 
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
   cb();
