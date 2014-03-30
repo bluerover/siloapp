@@ -6,6 +6,16 @@
  * @docs		:: http://sailsjs.org/#!documentation/models
  */
 
+var verifyAssociations = function(attrs, next) {
+  Organization.findOne(attrs.organization_id).done(function (err, org) {
+    if (org === undefined) return next({
+      error: "Organization ID " + attrs.organization_id + " does not exist."
+    });
+
+    return next();
+  });
+}
+
 module.exports = {
 
   attributes: {
@@ -19,6 +29,10 @@ module.exports = {
       required: true
     }
     
+  },
+
+  beforeValidation: function (attrs, next) {
+    return verifyAssociations(attrs, next);
   }
 
 };

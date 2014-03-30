@@ -26,11 +26,11 @@ module.exports = {
    */
   _config: {},
 
-  index: function (req, res) {
-    res.json({success: "Got dashboard"});
-  },
+  // index: function (req, res) {
+  //   res.json({success: "This will eventually show a list of dashboards"});
+  // },
 
-  show: function(req, res) {
+  find: function(req, res) {
     res.json({success: "Show dashboard"});
   }
 

@@ -6,6 +6,18 @@
  * @docs        :: http://sailsjs.org/#!documentation/models
  */
 
+var verifyAssociations = function(attrs, next) {
+  Organization.findOne(attrs.organization_id).done(function (err, org) {
+    if (err) return next(err);
+    
+    if (org === undefined) return next({
+      error: "Organization ID " + attrs.organization_id + " does not exist."
+    });
+
+    return next();
+  });
+}
+
 module.exports = {
 
   attributes: {
@@ -26,10 +38,18 @@ module.exports = {
       required: true,
       minLength: 6
     },
+    organization_id: {
+      type: 'integer',
+      required: true
+    },
     first_name: 'string',
     last_name: 'string',
     is_admin: 'boolean'
     
+  },
+
+  beforeValidation: function(attrs, next) {
+    return verifyAssociations(attrs, next);
   },
 
   beforeCreate: function (attrs, next) {
