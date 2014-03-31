@@ -31,6 +31,7 @@ module.exports = {
   // },
 
   find: function(req, res) {
+    var ip = require("ip");
     var dashboard_id = req.param('id');
 
     if (dashboard_id === undefined || dashboard_id === null) {
@@ -70,7 +71,11 @@ module.exports = {
             page_category: "dashboard",
             full_name: req.session.full_name,
             dashboard_widgets: dashboard_widgets,
-            renderWidget: sails.custom_helpers.render_widget
+            load_dashboard_js: true,
+            header_javascript: "",
+            renderWidget: sails.custom_helpers.render_widget,
+            host: ip.address(),
+            port: process.env.PORT || 1337
           });
         });
     });

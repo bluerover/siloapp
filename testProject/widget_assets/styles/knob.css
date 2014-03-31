@@ -1,0 +1,110 @@
+#knob-title {
+    text-align: center;
+    font-size: 18pt;
+    font-weight: 100;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.knob-temperature {
+    height: 70px;
+    text-align: center;
+    font-weight: 300;
+}
+
+.knob-temperature .knob-temperature-text {
+    font-size: 36pt;
+    display: inline-block;
+}
+
+.knob-temperature .knob-temperature-unit {
+    font-size: 14pt;
+    position: relative;
+    display: inline-block;
+    top: -21px;
+    font-weight: lighter;
+}
+
+.knob-trend i {
+    font-size: 4em;
+}
+
+.knob-header {
+    height: 70px;
+}
+
+.knob-alarm {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 20pt;
+}
+
+.knob-graph {
+    width: 100%;
+    margin-top:20px;
+    margin-bottom:20px;
+}
+
+.knob-line-graph {
+    width: 100%;
+    margin-top:20px;
+}
+
+/*TODO: Get rid of the weird CSS here*/
+.knob-text {
+    position: absolute;
+    /* width: 100%; */
+    width: calc(100% - 50px);
+    /* left: calc(50% - 31px); */
+    top: 125px;
+    font-size: 24pt;
+    text-align: center;
+}
+
+.knob-graph svg {
+    display: block;
+    margin: auto;
+}
+
+.knob-line-graph svg {
+    display: block;
+    margin: auto;
+}
+
+.knob-line-graph.legend {
+	font-size:10pt;
+	
+}
+.line-graph-area.above {
+  fill:  #FF544C;
+}
+
+.line-graph-area.below {
+  fill: #C7EECD;
+}
+
+.line-graph-area.inverted-below {
+    fill: #FF544C;
+}
+
+.line-graph-area.inverted-above {
+    fill:  #C7EECD;
+}
+
+.line-graph-line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.subtitle {
+    text-align: center;
+    font-style: italic;
+    font-size: 9pt;
+}
+
+.knob-help {
+    float: right;
+    color: #aaaaaa;
+}

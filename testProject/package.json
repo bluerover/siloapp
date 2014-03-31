@@ -14,7 +14,8 @@
     "gake": "~0.1.2",
     "sails-migrations": "0.0.4",
     "node-uuid": "~1.4.1",
-    "sails-memory": "~0.9.1"
+    "sails-memory": "~0.9.1",
+    "ip": "~0.3.0"
   },
   "scripts": {
     "start": "node app.js",

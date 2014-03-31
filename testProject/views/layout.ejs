@@ -7,21 +7,24 @@
     <% if (typeof(stylesheets) !== 'undefined') { %>
         <%- stylesheets %>
     <% } %>
+    <% if (typeof(dashboard_widgets) !== 'undefined') {
+        for (var i in dashboard_widgets) {
+          var widget = dashboard_widgets[i]; %>
+          <link rel="stylesheet" type="text/css" href="/widget_assets/styles/<%= widget.css_filename %>" />
+    <%  } 
+    }%>
     <link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="/styles/font-awesome.min.css" />
     <link rel="stylesheet" type="text/css" href="/styles/colours.css" />
     <link rel="stylesheet" type="text/css" href="/styles/overrides.css" />
-    <% if (typeof(dashboard_widgets) !== 'undefined') { %>
-        widgets
-    <% } %>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="/js/moment.min.js"></script>
+    <% if (typeof(load_dashboard_js) !== "undefined" && load_dashboard_js) { %>
+        <%- include dashboard/js/dashboard_js.ejs %>
+    <% } %>
     <% if (typeof (header_javascript) !== "undefined") { %>
         <%- header_javascript %>
-    <% } %>
-    <% if (typeof(dashboard_widgets) !== 'undefined') { %>
-        widgets
     <% } %>
 </head>
 <body>
@@ -78,6 +81,59 @@
 </div>
 <% if (typeof(body_javascript) !== "undefined") { %>
     <%- body_javascript %>
+<% } %>
+<% if (typeof(load_dashboard_js) !== "undefined" && load_dashboard_js) { %>
+    <script type="text/javascript">
+        var reconnects = {};
+        var widgetManager = new WidgetManager();
+        var socketMultiplexer = new SocketMultiplexer("<%= host %>", "<%= port %>");
+
+        var connect = function() {
+            return new SockJS('http://<%= host %>:<%= port %>/socket/');
+        }
+
+        function connectWidget(selector) {
+            var id = $(selector).attr("data-id");
+            var filter = $(selector).attr("data-filter");
+            var type = $(selector).attr("data-type");
+
+            var objToSend = {
+                id: id,
+                filter: filter,
+                type: type
+            }
+            var socket = socketMultiplexer.newConnection(objToSend);
+
+            var currentWidget = $(selector);
+
+            var options = {};
+            if (currentWidget.attr("data-options")) {
+                //console.log(currentWidget.attr("data-options"));
+                options = JSON.parse(currentWidget.attr("data-options"));
+            }
+
+            if ($(selector).attr('visualization') in window) {
+                var widget = new window[$(selector).attr('visualization')]($(selector), options);
+                socket.onopen = widget.onOpen;
+                socket.onmessage = widget.onMessage;
+                socket.onclose = widget.onClose;
+
+                widgetManager.registerWidget(widget);
+            }
+            else {
+                console.warn("Widget JS not found: " + $(selector).attr('visualization'));
+            }
+        }
+
+        $(document).ready(function() {
+            var widgets = $('.widget');
+
+            widgets.each(function() {
+                connectWidget(this);
+            });
+
+        });
+    </script>
 <% } %>
 </body>
 </html>

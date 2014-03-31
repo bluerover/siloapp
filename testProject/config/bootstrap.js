@@ -9,6 +9,7 @@
  */
 
 module.exports.bootstrap = function (cb) {
+  var ip = require('ip');
 
   sails.project_path = "/" + __dirname.substring(1, __dirname.lastIndexOf('/'));
 
