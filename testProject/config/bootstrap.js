@@ -21,10 +21,12 @@ module.exports.bootstrap = function (cb) {
   };
 
   sails.socketListeners = {};
+  sails.rfid_history = {};
 
   createEventEmitters();
   setupTickEvent();
   setupBlueRoverApi();
+  setupEventListeners();
 
   // It's very important to trigger this callack method when you are finished 
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
@@ -35,6 +37,9 @@ function createEventEmitters() {
   var events = require('events');
   sails.event_emitter = new events.EventEmitter();
   sails.alert_emitter = new events.EventEmitter();
+
+  sails.event_emitter.setMaxListeners(0);
+  sails.alert_emitter.setMaxListeners(0);
 }
 
 function setupTickEvent() {
@@ -89,6 +94,8 @@ function setupBlueRoverApi() {
 }
 
 function setupEventListeners() {
+  var circBuffer = require('../helpers/CircularBuffer');
+
   // This listener takes the parsed data and broadcasts on the rfid-* channel
   sails.event_emitter.on('parsed_data', function(data) {
     if (!(data['rfidTagNum'] in sails.rfid_history)) {
@@ -98,5 +105,12 @@ function setupEventListeners() {
     sails.rfid_history[data['rfidTagNum']].push(data);
 
     sails.event_emitter.emit('rfid-' + data['rfidTagNum'], data);
+  });
+
+  sails.event_emitter.on('parsed_data', function(data) {
+    RfidData.create(data).done(function (err, rfid_data) {
+      if (err) { sails.log.error("Error saving RFID data to database: " + err); }
+      else { sails.log.info("Wrote new RFID data to database"); }
+    });
   });
 }

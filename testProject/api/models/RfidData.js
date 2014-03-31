@@ -10,22 +10,22 @@ module.exports = {
 
   attributes: {
 
-    account_id: 'integer',
-    device_id: 'string',
+    accountID: 'integer',
+    deviceID: 'string',
     timestamp: 'integer',
-    status_code: 'integer',
-    rfid: 'integer',
-    temperature: 'integer',
+    statusCode: 'integer',
+    rfidTagNum: 'integer',
+    rfidTemperature: 'integer',
     latitude: 'float',
     longitude: 'float',
-    speed: 'float',
-    zone_1_avg: 'float',
-    zone_2_avg: 'float',
-    zone_3_avg: 'float',
-    zone_4_avg: 'float',
-    zone_5_avg: 'float',
-    zone_6_avg: 'float',
-    zone_7_avg: 'float'
+    speedKPH: 'float',
+    zone1Avg: 'float',
+    zone2Avg: 'float',
+    zone3Avg: 'float',
+    zone4Avg: 'float',
+    zone5Avg: 'float',
+    zone6Avg: 'float',
+    zone7Avg: 'float'
     
   }
 
