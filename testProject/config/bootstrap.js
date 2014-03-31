@@ -95,6 +95,7 @@ function setupBlueRoverApi() {
 
 function setupEventListeners() {
   var circBuffer = require('../helpers/CircularBuffer');
+  var util = require('util');
 
   // This listener takes the parsed data and broadcasts on the rfid-* channel
   sails.event_emitter.on('parsed_data', function(data) {
@@ -109,7 +110,7 @@ function setupEventListeners() {
 
   sails.event_emitter.on('parsed_data', function(data) {
     RfidData.create(data).done(function (err, rfid_data) {
-      if (err) { sails.log.error("Error saving RFID data to database: " + err); }
+      if (err) { sails.log.error("Error saving RFID data to database: " + util.inspect(err)); }
       else { sails.log.info("Wrote new RFID data to database"); }
     });
   });

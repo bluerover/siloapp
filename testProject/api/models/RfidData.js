@@ -10,7 +10,7 @@ module.exports = {
 
   attributes: {
 
-    accountID: 'integer',
+    accountID: 'string',
     deviceID: 'string',
     timestamp: 'integer',
     statusCode: 'integer',
