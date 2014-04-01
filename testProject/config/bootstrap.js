@@ -20,7 +20,7 @@ module.exports.bootstrap = function (cb) {
     return rendered;
   };
 
-  sails.socketListeners = {};
+  sails.socket_listeners = {};
   sails.rfid_history = {};
 
   createEventEmitters();

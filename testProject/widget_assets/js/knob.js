@@ -96,26 +96,26 @@ function Knob(widgetSelector, options) {
             2*60*60);
 
         // Make GET request for data
-        $.ajax({
-            url: '/data?rfid=' + self.rfid,
-            success: function(data) {
-                var temps = [];
-                for (var event in data) {
-                    if (data[event]['rfidTemperature'] !== null) {
-                        temps.push({temperature: data[event]['rfidTemperature']});
-                    }
-                }
+        // $.ajax({
+        //     url: '/data?rfid=' + self.rfid,
+        //     success: function(data) {
+        //         var temps = [];
+        //         for (var event in data) {
+        //             if (data[event]['rfidTemperature'] !== null) {
+        //                 temps.push({temperature: data[event]['rfidTemperature']});
+        //             }
+        //         }
 
-                self.lineGraphUpdate = new LineGraph("#knob-line-graph-" + self.dataId,
-                    temps,
-                    knobGraph.width(),
-                    width,
-                    self.threshold,
-                    self.minTemp,
-                    self.maxTemp,
-                    self.inverted
-                );
-            }
-        });
+        //         self.lineGraphUpdate = new LineGraph("#knob-line-graph-" + self.dataId,
+        //             temps,
+        //             knobGraph.width(),
+        //             width,
+        //             self.threshold,
+        //             self.minTemp,
+        //             self.maxTemp,
+        //             self.inverted
+        //         );
+        //     }
+        // });
     }
 }

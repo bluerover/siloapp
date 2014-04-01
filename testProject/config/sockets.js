@@ -15,21 +15,85 @@ module.exports.sockets = {
   // Keep in mind that Sails' RESTful simulation for sockets 
   // mixes in socket.io events for your routes and blueprints automatically.
   onConnect: function(session, socket) {
+    var util = require('util');
     sails.log.debug("Socket connected");
     if (!session.authenticated) {
       sails.log.info("Unauthenticated socket connected. Disconnecting them.");
       socket.disconnect();
     }
     socket.on('message', function (data) {
-      sails.log.debug(data);
+      try {
+        var widgetInfo = JSON.parse(data);
+      }
+      catch(e) {
+        sails.log.error("Invalid widget data from socket");
+        socket.disconnect();
+      }
+
+      if (!(socket.id in sails.socket_listeners)) {
+        sails.socket_listeners[socket.id] = [];
+      }
+
+      var send = function(type, d) {
+        sails.log.debug("Writing " + type + " to " + widgetInfo['filter']);
+        var filter = widgetInfo['filter'];
+        var dataToSend = {};
+        var _d = d;
+        if (type === "data") {
+          _d = {
+            latitiude: d['latitude'],
+            longitude: d['longitude'],
+            statusCode: d['statusCode'],
+            timestamp: d['timestamp'],
+            speedKPH: d['speedKPH'],
+            deviceID: d['deviceID'],
+            rfidTagNum: d['rfidTagNum'],
+            accountId: d['accountId'],
+            rfidTemperature: d['rfidTemperature']
+          };
+        }
+        dataToSend[filter] = {type: type, data: _d};
+        socket.emit('message', dataToSend);
+      };
+
+      var sendData = function(d) {
+        send('data', d);
+      };
+
+      var sendAlert = function(d) {
+        send('alert', d);
+      }
+
+      var filters = widgetInfo['filter'].split(" ");
+
+      for (var f in filters) {
+        if (filters[f].indexOf('rfid-') === 0) {
+          var rfid = parseInt(filters[f].substring(5));
+          // TODO: Emit recent from database
+        }
+
+        sails.socket_listeners[socket.id].push({
+          filter: filters[f],
+          f: sendData
+        });
+        sails.socket_listeners[socket.id].push({
+          filter: filters[f],
+          f: sendData
+        });
+
+        sails.event_emitter.on(filters[f], sendData);
+        sails.alert_emitter.on(filters[f], sendAlert);
+      }
     });
   },
 
   // This custom onDisconnect function will be run each time a socket disconnects
   onDisconnect: function(session, socket) {
-
-    // By default: do nothing
-    // This is a good place to broadcast a disconnect message, or any other custom socket.io logic
+    for (var listener in sails.socket_listeners[socket.id]) {
+      sails.event_emitter.removeListener(sails.socket_listeners[socket.id][listener]['filter'], sails.socket_listeners[socket.id][listener]['f']);
+      sails.alert_emitter.removeListener(sails.socket_listeners[socket.id][listener]['filter'], sails.socket_listeners[socket.id][listener]['f']);
+    }
+    sails.log.info("Socket connection closed. Removed listeners.");
   },
 
 
