@@ -15,23 +15,13 @@ module.exports.sockets = {
   // Keep in mind that Sails' RESTful simulation for sockets 
   // mixes in socket.io events for your routes and blueprints automatically.
   onConnect: function(session, socket) {
+    sails.log.debug("Socket connected");
+    if (!session.authenticated) {
+      sails.log.info("Unauthenticated socket connected. Disconnecting them.");
+      socket.disconnect();
+    }
     socket.on('message', function (data) {
-      var auth_token;
-      var filter_string;
-      auth_token = data.auth_token;
-      filter_string = data.data_filter;
-
-      Organization.findOne(session.organization).done(function (err, organization) {
-        if (organization === undefined || organization === null) {
-          sails.log.error("Invalid organization in session");
-          socket.disconnect();
-          return;
-        }
-
-        // TODO: Make sure auth token can access requested filters
-
-        sails.log.debug("Connected");
-      });
+      sails.log.debug(data);
     });
   },
 
