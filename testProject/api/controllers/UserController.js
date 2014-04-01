@@ -70,7 +70,7 @@ module.exports = {
                 if (req.session.user) req.session.user = null;
                 res.view({
                   layout: "none",
-                  error: "Wrong username/password"
+                  error: "Incorrect username and/or password"
                 }, 'user/login');
               }
             }
@@ -80,7 +80,7 @@ module.exports = {
       else {
         res.view({
           layout: "none",
-          error: "Wrong username/password"
+          error: "Incorrect username and/or password"
         }, 'user/login');
       }
     });

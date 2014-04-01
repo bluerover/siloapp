@@ -34,7 +34,7 @@ function SocketMultiplexer(domain, port) {
         console.log("SocketMux: Opened connection");
 
         for (var f in self.socketData) {
-            self.socket.send(JSON.stringify(self.socketData[f]));
+            self.socket.emit('message', JSON.stringify(self.socketData[f]));
         }
 
         for (var socket in self.socketList) {
@@ -62,10 +62,16 @@ function SocketMultiplexer(domain, port) {
         self.socketConnected = false;
         try {
             console.log("SocketMux: Attempting to connect via SockJS")
-            self.socket = new SockJS('http://' + domain + ':' + port + '/socket/');
-            self.socket.onopen = function() { openConnection(self); };
-            self.socket.onmessage = function(d) { onData(self, d); };
-            self.socket.onclose = function() { closeConnection(self); };
+            self.socket = io.connect();
+            self.socket.on('connect', function() { 
+                openConnection(self); 
+                self.socket.on('message', function() {
+                    onData(self, d);
+                });
+                self.socket.on('disconnect', function() {
+                    closeConnection(self);
+                });
+            });
         }
         catch(e) {
             console.log("SocketMux: SockJS connection failed");
