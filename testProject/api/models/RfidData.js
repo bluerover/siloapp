@@ -15,7 +15,7 @@ module.exports = {
     timestamp: 'integer',
     statusCode: 'integer',
     rfidTagNum: 'integer',
-    rfidTemperature: 'integer',
+    rfidTemperature: 'float',
     latitude: 'float',
     longitude: 'float',
     speedKPH: 'float',

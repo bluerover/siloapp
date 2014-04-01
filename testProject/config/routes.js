@@ -33,9 +33,8 @@ module.exports.routes = {
   // 
   // (This would also work if you had a file at: `/views/home.ejs`)
   '/': {
-    controller: 'dashboard',
-    action: 'find',
-    id: 1
+    controller: 'user',
+    action: 'login_view'
   },
 
   'get /widget_assets/:type/:file': {

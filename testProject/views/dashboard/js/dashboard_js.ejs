@@ -5,8 +5,55 @@
 <script src="/js/Widget.js"></script>
 <script src="/js/WidgetManager.js"></script>
 <script src="/js/Widget.js"></script>
-<!-- <script src="../js/VirtualSocket.js"></script> -->
-<!-- <script src="../js/SocketMultiplexer.js"></script> -->
+<script src="../js/VirtualSocket.js"></script>
+<script src="../js/SocketMultiplexer.js"></script>
 <script type="text/javascript" src="/js/super-gauge.js"></script>
 <script type="text/javascript" src="/js/line-graph.js"></script>
 <script type="text/javascript" src="/js/snap.svg-min.js"></script>
+<script type="text/javascript">
+  var reconnects = {};
+  var widgetManager = new WidgetManager();
+  var socketMultiplexer = new SocketMultiplexer("<%= host %>", "<%= port %>");
+
+  function connectWidget(selector) {
+    var id = $(selector).attr("data-id");
+    var filter = $(selector).attr("data-filter");
+    var type = $(selector).attr("data-type");
+
+    var objToSend = {
+      id: id,
+      filter: filter,
+      type: type
+    }
+    var socket = socketMultiplexer.newConnection(objToSend);
+
+    var currentWidget = $(selector);
+
+    var options = {};
+    if (currentWidget.attr("data-options")) {
+            //console.log(currentWidget.attr("data-options"));
+            options = JSON.parse(currentWidget.attr("data-options"));
+          }
+
+          if ($(selector).attr('visualization') in window) {
+            var widget = new window[$(selector).attr('visualization')]($(selector), options);
+            socket.onopen = widget.onOpen;
+            socket.onmessage = widget.onMessage;
+            socket.onclose = widget.onClose;
+
+            widgetManager.registerWidget(widget);
+          }
+          else {
+            console.warn("Widget JS not found: " + $(selector).attr('visualization'));
+          }
+        }
+
+        $(document).ready(function() {
+          var widgets = $('.widget');
+
+          widgets.each(function() {
+            connectWidget(this);
+          });
+
+        });
+</script>

@@ -16,9 +16,10 @@ module.exports.policies = {
 
   // Default policy for all controllers and actions
   // (`true` allows public access) 
-  '*': ['isAuthenticated'],
+  '*': ['redirectToLogin'],
 
   UserController: {
+    'login_view': true,
   	'login': true,
   	'create': true
   }
