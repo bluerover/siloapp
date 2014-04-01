@@ -14,12 +14,11 @@ function SocketMultiplexer(domain, port) {
     this.numReconnects = 0;
 
     var onData = function(self, data) {
-        var parsedData = JSON.parse(data.data);
         for (var filter in self.socketDict) {
-            if (filter in parsedData) {
+            if (filter in data) {
                 for (var subscriber in self.socketDict[filter]) {
                     try {
-                        self.socketDict[filter][subscriber].onmessage(parsedData[filter]);
+                        self.socketDict[filter][subscriber].onmessage(data[filter]);
                     }
                     catch(e) { }
                 }
@@ -65,7 +64,7 @@ function SocketMultiplexer(domain, port) {
             self.socket = io.connect();
             self.socket.on('connect', function() { 
                 openConnection(self); 
-                self.socket.on('message', function() {
+                self.socket.on('message', function(d) {
                     onData(self, d);
                 });
                 self.socket.on('disconnect', function() {
