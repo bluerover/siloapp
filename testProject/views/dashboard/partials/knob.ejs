@@ -1,6 +1,6 @@
 <div class='col-lg-3 col-md-4 col-xs-6'>
     <div class='panel panel-default'>
-        <div class="widget large-height" data-filter="<%= widget.data_filter %>" visualization="<%= widget.name %>" data-id="<%= widget.id %>" data-options="<%= widget.options %>">
+        <div class="widget large-height" data-filter="<%= widget.data_filter %>" visualization="<%= widget.name %>" data-id="<%= widget.unique_id %>" data-options="<%= widget.options %>">
             <div class="knob-help">
                 <i class="fa fa-question-circle"></i>
             </div>
@@ -13,17 +13,17 @@
                 <% } %>
                 <span id="knob-timestamp">Connecting to server...</span>
             </div>
-            <div id="knob-content-<%= widget.id %>" class="content">
-                <img id="loader-<%= widget.id %>" style="position: relative; top: calc(50% - 32px + 15px);" src="/images/loading.gif">
+            <div id="knob-content-<%= widget.unique_id %>" class="content">
+                <img id="loader-<%= widget.unique_id %>" style="position: relative; top: calc(50% - 32px + 15px);" src="/images/loading.gif">
                 <div class="knob-header row">
                     <div class="knob-temperature collapse"></div>
                 </div>
                 <div class="row">
-                    <div class="knob-graph" id="knob-graph-<%= widget.id %>"></div>
+                    <div class="knob-graph" id="knob-graph-<%= widget.unique_id %>"></div>
                     <div class="knob-alarm br-lightred collapse"></div>
                 </div>
                 <div class="row">
-                    <div class="knob-line-graph" id="knob-line-graph-<%= widget.id %>">
+                    <div class="knob-line-graph" id="knob-line-graph-<%= widget.unique_id %>">
                     </div>
                 </div>
             </div>

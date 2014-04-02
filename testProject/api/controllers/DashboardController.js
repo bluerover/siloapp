@@ -57,13 +57,16 @@ module.exports = {
       }
 
       Temp_DashboardWidget_Widget.query(
-        "SELECT * FROM dashboard_widget JOIN widget ON dashboard_widget.widget_id = widget.id WHERE dashboard_id = ?", 
+        "SELECT *, dashboard_widget.id AS unique_id FROM dashboard_widget JOIN widget ON dashboard_widget.widget_id = widget.id WHERE dashboard_id = ?", 
         [dashboard_id], 
         function(err, dashboard_widgets) {
           if (err) {
             res.view({layout: "barebones"}, '500');
             return;
           }
+
+          var util = require('util');
+          sails.log.debug(util.inspect(dashboard_widgets));
 
           res.view({
             title: dashboard.name,
