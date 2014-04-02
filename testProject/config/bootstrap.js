@@ -108,10 +108,40 @@ function setupEventListeners() {
     sails.event_emitter.emit('rfid-' + data['rfidTagNum'], data);
   });
 
+  // Save parsed data to database
   sails.event_emitter.on('parsed_data', function(data) {
     RfidData.create(data).done(function (err, rfid_data) {
       if (err) { sails.log.error("Error saving RFID data to database: " + util.inspect(err)); }
       else { sails.log.info("Wrote new RFID data to database"); }
     });
+  });
+
+  // Save parsed data to recent rfid data if the type is rfid
+  sails.event_emitter.on('parsed_data', function (data) {
+    if (typeof(data.rfidTagNum) !== 'undefined' && data.rfidTagNum !== null) {
+      RecentRfidData.find({rfidTagNum: data.rfidTagNum}).done(function (err, recent_data) {
+        if (err) sails.log.error("Error finding recent rfid: " + err);
+
+        // If no row already exists in the database, create it
+        if (recent_data.length === 0) {
+          RecentRfidData.create(data).done(function (err, saved_data) {
+            if (err) { sails.log.error("Error creating new recent data"); }
+            else { sails.log.info("Wrote new recent data"); }
+          });
+        }
+        // Otherwise update the loaded model
+        else {
+          for (var i in data) {
+            if (data.hasOwnProperty(i)) {
+              recent_data[0][i] = data[i];
+            }
+          }
+          recent_data[0].save(function (err) {
+            if (err) { sails.log.error("Error updating recent data"); }
+            else { sails.log.info("Updated recent data"); }
+          });
+        }
+      });
+    }
   });
 }

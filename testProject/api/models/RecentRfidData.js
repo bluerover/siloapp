@@ -1,5 +1,5 @@
 /**
- * RfidData
+ * RecentRfidData
  *
  * @module      :: Model
  * @description :: A short summary of how this model works and what it represents.
@@ -10,11 +10,15 @@ module.exports = {
 
   attributes: {
 
+    rfidTagNum: {
+        type: 'integer',
+        required: true,
+        unique: true
+    },
     accountID: 'string',
     deviceID: 'string',
     timestamp: 'integer',
     statusCode: 'integer',
-    rfidTagNum: 'integer',
     rfidTemperature: 'float',
     latitude: 'float',
     longitude: 'float',

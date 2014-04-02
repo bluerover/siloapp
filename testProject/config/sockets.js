@@ -69,7 +69,13 @@ module.exports.sockets = {
       for (var f in filters) {
         if (filters[f].indexOf('rfid-') === 0) {
           var rfid = parseInt(filters[f].substring(5));
-          // TODO: Emit recent from database
+          RecentRfidData.find({rfidTagNum: rfid}).done(function (err, recent_data) {
+            if (err) sails.log.error("Error loading recent data for socket");
+
+            if (recent_data !== undefined && recent_data !== null && recent_data.length === 1) {
+              sendData(recent_data[0]);
+            }
+          });
         }
 
         sails.socket_listeners[socket.id].push({
