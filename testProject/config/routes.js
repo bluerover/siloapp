@@ -40,6 +40,16 @@ module.exports.routes = {
   'get /widget_assets/:type/:file': {
     controller: 'WidgetAsset',
     action: 'retrieveAsset'
+  },
+
+  // 'get /rfid_data': {
+  //   controller: 'RfidData',
+  //   action: 'get_data'
+  // }
+
+  'get /rfid_data/recent/:id': {
+    controller: 'RfidData',
+    action: 'get_recent_data_for_rfid'
   }
 
   /*

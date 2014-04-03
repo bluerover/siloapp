@@ -95,27 +95,27 @@ function Knob(widgetSelector, options) {
             ["#e74c3c", "#f1c40f", "#aaaaaa"],
             2*60*60);
 
-        // Make GET request for data
-        // $.ajax({
-        //     url: '/data?rfid=' + self.rfid,
-        //     success: function(data) {
-        //         var temps = [];
-        //         for (var event in data) {
-        //             if (data[event]['rfidTemperature'] !== null) {
-        //                 temps.push({temperature: data[event]['rfidTemperature']});
-        //             }
-        //         }
+        //Make GET request for data
+        $.ajax({
+            url: '/rfid_data/recent/' + self.rfid,
+            success: function(data) {
+                var temps = [];
+                for (var event in data) {
+                    if (data[event]['rfidTemperature'] !== null) {
+                        temps.push({temperature: data[event]['rfidTemperature']});
+                    }
+                }
 
-        //         self.lineGraphUpdate = new LineGraph("#knob-line-graph-" + self.dataId,
-        //             temps,
-        //             knobGraph.width(),
-        //             width,
-        //             self.threshold,
-        //             self.minTemp,
-        //             self.maxTemp,
-        //             self.inverted
-        //         );
-        //     }
-        // });
+                self.lineGraphUpdate = new LineGraph("#knob-line-graph-" + self.dataId,
+                    temps,
+                    knobGraph.width(),
+                    width,
+                    self.threshold,
+                    self.minTemp,
+                    self.maxTemp,
+                    self.inverted
+                );
+            }
+        });
     }
 }
