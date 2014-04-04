@@ -84,7 +84,7 @@ module.exports.sockets = {
         });
         sails.socket_listeners[socket.id].push({
           filter: filters[f],
-          f: sendData
+          f: sendAlert
         });
 
         sails.event_emitter.on(filters[f], sendData);

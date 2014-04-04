@@ -65,9 +65,6 @@ module.exports = {
             return;
           }
 
-          var util = require('util');
-          sails.log.debug(util.inspect(dashboard_widgets));
-
           res.view({
             title: dashboard.name,
             organization_name: req.session.organization_name,
