@@ -171,16 +171,12 @@ function setupEventListeners() {
   });
 
   function initializeAlertHandler(tag_id, parsed_data) {
-    // sails.log.debug("Init");
-    // sails.log.debug("init rfid: " + parsed_data.rfidTagNum);
     RfidAlerthandler.find({rfid: parsed_data.rfidTagNum}).done(function (err, alerthandler_data) {
       if (err) { sails.log.error("There was a problem finding the alerthandlers for an rfid: " + err); return; }
 
       if (alerthandler_data === undefined || alerthandler_data === null || alerthandler_data.length === 0) {
         return;
       }
-
-      // sails.log.debug("Got alert handler for " + parsed_data.rfidTagNum);
 
       sails.notification_handlers[tag_id] = [];
       for (var index in alerthandler_data) {
@@ -201,7 +197,6 @@ function setupEventListeners() {
         // TODO: Resume data
         var resume_data = null;
         var config = JSON.parse(alerthandler_data[index].config);
-        // sails.log.debug("before require " + tag_id);
         var alerthandler_module = require('../alerthandlers/' + alerthandler_filename + ".js");
         var alerthandler = new alerthandler_module(mock_event_bus, config, resume_data);
         alerthandler.on('data', parsed_data);
