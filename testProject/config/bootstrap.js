@@ -21,16 +21,17 @@ module.exports.bootstrap = function (cb) {
   };
 
   sails.socket_listeners = {};
-  sails.rfid_history = {};
+  //sails.rfid_history = {}; 
   sails.notification_handlers = {};
+  sails.recent_alerts = {};
 
   createEventEmitters();
   setupTickEvent();
   setupBlueRoverApi();
   setupEventListeners();
+  loadRecentAlerts();
 
-  // It's very important to trigger this callack method when you are finished 
-  // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
+  // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
 };
 
@@ -100,11 +101,12 @@ function setupEventListeners() {
 
   // This listener takes the parsed data and broadcasts on the rfid-* channel
   sails.event_emitter.on('parsed_data', function(data) {
-    if (!(data['rfidTagNum'] in sails.rfid_history)) {
-        sails.rfid_history[data['rfidTagNum']] = new circBuffer(20);
-    }
+    // This is to cache the last 20 events for each rfid in memory (right now we just load it from the DB)
+    // if (!(data['rfidTagNum'] in sails.rfid_history)) {
+    //     sails.rfid_history[data['rfidTagNum']] = new circBuffer(20);
+    // }
 
-    sails.rfid_history[data['rfidTagNum']].push(data);
+    // sails.rfid_history[data['rfidTagNum']].push(data);
 
     sails.event_emitter.emit('rfid-' + data['rfidTagNum'], data);
   });
@@ -186,11 +188,14 @@ function setupEventListeners() {
         var mock_event_bus = {
           rfid: parsed_data.rfidTagNum,
           emit: function(channel, data) {
-            data.timestamp = new Date().getTime();
+            var ms_timestamp = new Date().getTime();
+            data.timestamp = Math.round(ms_timestamp / 1000);
             data.alerthandler_name = alerthandler_filename;
             data.rfidTagNum = this.rfid;
             sails.alert_emitter.emit(tag_id, data);
-            // TODO: Write alert to database
+            AlertData.create(data).done(function(err) {
+              if (err) sails.log.error("AlertData was not saved successfully: " + err);
+            });
           }
         };
 
@@ -208,4 +213,21 @@ function setupEventListeners() {
       }
     });
   }
+}
+
+function loadRecentAlerts () {
+  var query = "SELECT b.* FROM " + 
+    "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM alertdata GROUP BY rfidTagNum) a " + 
+    "INNER JOIN alertdata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
+
+  AlertData.query(query, function (err, alert_data) {
+    if (err) { 
+      sails.log.error("AlertData was not successfully loaded"); 
+      return; 
+    }
+
+    for (i in alert_data) {
+      sails.recent_alerts[alert_data[i].rfidTagNum] = alert_data[i];
+    }
+  });
 }
