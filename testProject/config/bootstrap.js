@@ -15,21 +15,22 @@ module.exports.bootstrap = function (cb) {
   sails.custom_helpers.render_widget = function(widget) {
     var ejs = require('ejs');
     var fs = require('fs');
-    var file = fs.readFileSync(sails.project_path + "/views/dashboard/partials/" + widget.template_filename).toString();
-    rendered = ejs.render(file, { locals: {widget: widget} });
+    var file = fs.readFileSync(sails.project_path + "/views/dashboard/widgets/" + widget.template_filename).toString();
+    var rendered = ejs.render(file, { locals: {widget: widget} });
     return rendered;
   };
 
   sails.socket_listeners = {};
-  //sails.rfid_history = {}; 
   sails.notification_handlers = {};
   sails.recent_alerts = {};
+  sails.recent_rfid_data = {};
 
   createEventEmitters();
   setupTickEvent();
   setupBlueRoverApi();
   setupEventListeners();
   loadRecentAlerts();
+  loadRecentRfidData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
@@ -113,38 +114,17 @@ function setupEventListeners() {
 
   // Save parsed data to database
   sails.event_emitter.on('parsed_data', function(data) {
+    sails.log.debug("Attempting to write rfid data to database: " + data.rfidTagNum);
     RfidData.create(data).done(function (err, rfid_data) {
       if (err) { sails.log.error("Error saving RFID data to database: " + util.inspect(err)); }
-      else { sails.log.info("Wrote new RFID data to database"); }
+      else { sails.log.info("Wrote new RFID data to database: " + rfid_data.rfidTagNum); }
     });
   });
 
   // Save parsed data to recent rfid data if the type is rfid
   sails.event_emitter.on('parsed_data', function (data) {
     if (typeof(data.rfidTagNum) !== 'undefined' && data.rfidTagNum !== null) {
-      RecentRfidData.find({rfidTagNum: data.rfidTagNum}).done(function (err, recent_data) {
-        if (err) sails.log.error("Error finding recent rfid: " + err);
-
-        // If no row already exists in the database, create it
-        if (recent_data.length === 0) {
-          RecentRfidData.create(data).done(function (err, saved_data) {
-            if (err) { sails.log.error("Error creating new recent data"); }
-            else { sails.log.info("Wrote new recent data"); }
-          });
-        }
-        // Otherwise update the loaded model
-        else {
-          for (var i in data) {
-            if (data.hasOwnProperty(i)) {
-              recent_data[0][i] = data[i];
-            }
-          }
-          recent_data[0].save(function (err) {
-            if (err) { sails.log.error("Error updating recent data"); }
-            else { sails.log.info("Updated recent data"); }
-          });
-        }
-      });
+      sails.recent_rfid_data[data.rfidTagNum] = data;
     }
   });
 
@@ -173,6 +153,7 @@ function setupEventListeners() {
   });
 
   function initializeAlertHandler(tag_id, parsed_data) {
+    sails.log.debug("Attempting to find alerthandler from database");
     RfidAlerthandler.find({rfid: parsed_data.rfidTagNum}).done(function (err, alerthandler_data) {
       if (err) { sails.log.error("There was a problem finding the alerthandlers for an rfid: " + err); return; }
 
@@ -193,8 +174,10 @@ function setupEventListeners() {
             data.alerthandler_name = alerthandler_filename;
             data.rfidTagNum = this.rfid;
             sails.alert_emitter.emit(tag_id, data);
-            AlertData.create(data).done(function(err) {
+            sails.log.debug("Attempting to write alert to database");
+            AlertData.create(data).done(function (err, d) {
               if (err) sails.log.error("AlertData was not saved successfully: " + err);
+              sails.log.info("Wrote alert to database");
             });
           }
         };
@@ -220,14 +203,37 @@ function loadRecentAlerts () {
     "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM alertdata GROUP BY rfidTagNum) a " + 
     "INNER JOIN alertdata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
 
+  sails.log.debug("Attempting to find recent alert data");
   AlertData.query(query, function (err, alert_data) {
     if (err) { 
       sails.log.error("AlertData was not successfully loaded"); 
       return; 
     }
 
+    sails.log.debug("Found recent alert data");
+
     for (i in alert_data) {
       sails.recent_alerts[alert_data[i].rfidTagNum] = alert_data[i];
+    }
+  });
+}
+
+function loadRecentRfidData () {
+  var query = "SELECT b.* FROM " + 
+    "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM rfiddata GROUP BY rfidTagNum) a " + 
+    "INNER JOIN rfiddata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
+
+  sails.log.debug("Attempting to find recent RFID data");
+  RfidData.query(query, function (err, rfid_data) {
+    if (err) { 
+      sails.log.error("RfidData was not successfully loaded"); 
+      return; 
+    }
+
+    sails.log.debug("Found recent RFID data");
+
+    for (i in rfid_data) {
+      sails.recent_rfid_data[rfid_data[i].rfidTagNum] = rfid_data[i];
     }
   });
 }

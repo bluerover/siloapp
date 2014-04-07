@@ -34,21 +34,28 @@ module.exports = {
     var ip = require("ip");
     var dashboard_id = req.param('id');
 
+    sails.log.debug("Dashboard controller request");
+
     if (dashboard_id === undefined || dashboard_id === null) {
       res.view({layout: "barebones"}, '404');
       return;
     }
 
-    Dashboard.findOne(dashboard_id).done(function (err, dashboard) {
+    sails.log.debug("Attempting to find dashboard from database for dashboard request");
+    Dashboard.find({id: dashboard_id}).done(function (err, d) {
       if (err) {
         res.view({layout: "barebones"}, '500');
         return;
       }
 
-      if (dashboard === undefined || dashboard === null) {
+      sails.log.debug("Found dashboard");
+
+      if (d === undefined || d === null || d.length === 0) {
         res.view({layout: "barebones"}, '404');
         return;
       }
+
+      var dashboard = d[0];
 
       if (req.session.organization !== dashboard.organization_id) {
         // Return 404 instead of 403 so that users cannot know if a dashboard exists or not
@@ -56,14 +63,17 @@ module.exports = {
         return;
       }
 
+      sails.log.debug("Attempting to find dashboard widget from database for dashboard request");
       Temp_DashboardWidget_Widget.query(
-        "SELECT *, dashboard_widget.id AS unique_id FROM dashboard_widget JOIN widget ON dashboard_widget.widget_id = widget.id WHERE dashboard_id = ?", 
+        "SELECT *, dashboard_widget.id AS unique_id FROM dashboard_widget JOIN widget ON dashboard_widget.widget_id = widget.id WHERE dashboard_id = ? ORDER BY ISNULL(widget_order), widget_order ASC", 
         [dashboard_id], 
         function(err, dashboard_widgets) {
           if (err) {
             res.view({layout: "barebones"}, '500');
             return;
           }
+
+          sails.log.debug("Got widgets");
 
           res.view({
             title: dashboard.name,

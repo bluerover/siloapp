@@ -42,6 +42,7 @@ module.exports = {
    * Logs in user
    */
   login: function (req, res) {
+    sails.log.info("User login request");
     var bcrypt = require('bcrypt');
 
     User.findOneByUsername(req.body.username).done(function (err, user) {
