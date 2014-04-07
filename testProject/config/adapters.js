@@ -12,6 +12,8 @@
  * http://sailsjs.org/#documentation
  */
 
+var mysql_password = process.env.NODE_ENV === 'production' ? 'root' : '';
+
 module.exports.adapters = {
 
   // If you leave the adapter config unspecified 
@@ -23,7 +25,7 @@ module.exports.adapters = {
     host     : 'localhost',
     port     : 3306,
     user     : 'root',
-    password : '',
-    database : 'test_db'
+    password : mysql_password,
+    database : 'food_safety_app'
   }
 };
