@@ -97,8 +97,9 @@ function Knob(widgetSelector, options) {
 
         //Make GET request for data
         $.ajax({
-            url: '/rfid_data/recent/' + self.rfid,
+            url: '/rfid_data/' + self.rfid + '/recent',
             success: function(data) {
+                debugger;
                 var temps = [];
                 for (var event in data) {
                     if (data[event]['rfidTemperature'] !== null) {

@@ -37,19 +37,38 @@ module.exports.routes = {
     action: 'login_view'
   },
 
+  // Widget Assets
   'get /widget_assets/:type/:file': {
     controller: 'WidgetAsset',
     action: 'retrieveAsset'
   },
 
-  // 'get /rfid_data': {
-  //   controller: 'RfidData',
-  //   action: 'get_data'
-  // }
+  // RFID Data
+  'get /rfid_data': {
+    controller: 'RfidData',
+    action: 'get_data'
+  },
 
-  'get /rfid_data/recent/:id': {
+  'get /rfid_data/:id/recent': {
     controller: 'RfidData',
     action: 'get_recent_data_for_rfid'
+  },
+
+  // Handheld Data
+  'get /handheld_data': {
+    controller: 'HandheldData',
+    action: 'get_data'
+  },
+
+  // Reports
+  'get /reports/rfid': {
+    controller: 'Report',
+    action: 'rfid'
+  },
+
+  'get /reports/handheld': {
+    controller: 'Report',
+    action: 'handheld'
   }
 
   /*

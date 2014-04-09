@@ -1,0 +1,77 @@
+<%- include report_js_css.ejs %>
+<script type="text/javascript">
+    $(document).ready(function() {
+        function updateTable(start, end) {
+            $("#download_csv_btn a").attr("href", "/rfid_data?type=csv&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
+            $("#table-loading").show();
+            $("#handheld_table tbody tr").remove();
+            $.ajax({
+                type: "GET",
+                url: "/rfid_data",
+                data: {
+                    range_start: start.format("X"),
+                    range_end: end.format("X")
+                },
+                success: function(response) {
+                    $("#table-loading").hide();
+                    var data = JSON.parse(response);
+                    for (var i in data) {
+                        $("#handheld_table").append("<tr>" +
+                                "<td>" + data[i]['deviceID'] + "</td>" +
+                                "<td>" + data[i]['statusCode'] + "</td>" +
+                                "<td>" + data[i]['rfidTagNum'] + "</td>" +
+                                "<td>" + data[i]['rfidTemperature'] + "</td>" +
+                                "<td>" + (new Date(data[i]['timestamp'] * 1000)).toString() + "</td>" +
+                                "</tr>");
+                    }
+                },
+                error: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                }
+            });
+        }
+
+        var defaultStart = moment().subtract('days', 7);
+        var defaultEnd = moment();
+        updateTable(defaultStart, defaultEnd);
+
+        $('#reportrange span').html(defaultStart.format('MMMM D, YYYY') + ' - ' + defaultEnd.format('MMMM D, YYYY'));
+        $('#reportrange').daterangepicker(
+                {
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                        'Last 7 Days': [moment().subtract('days', 6), moment()],
+                        'Last 30 Days': [moment().subtract('days', 29), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                    },
+                    startDate: moment().subtract('days', 29),
+                    endDate: moment(),
+                    opens: "left",
+                    maxDate: moment()
+                },
+                function(start, end) {
+                    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                    updateTable(start, end);
+                }
+        );
+    });
+</script>
+
+<%- include report_header.ejs %>
+<div id="table-loading" class="collapse">
+    <img src="/images/loading.gif" />
+</div>
+<table id="handheld_table" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Device ID</th>
+            <th>Status Code</th>
+            <th>RFID Tag Number</th>
+            <th>RFID Temperature</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+</table>
