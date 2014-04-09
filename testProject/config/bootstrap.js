@@ -176,6 +176,7 @@ function setupEventListeners() {
             data.alerthandler_name = alerthandler_filename;
             data.rfidTagNum = this.rfid;
             sails.alert_emitter.emit(tag_id, data);
+            sails.recent_alerts[this.rfid] = data;
             sails.log.debug("Attempting to write alert to database");
             AlertData.create(data).done(function (err, d) {
               if (err) sails.log.error("AlertData was not saved successfully: " + err);
