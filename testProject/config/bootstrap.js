@@ -10,6 +10,7 @@
 
 module.exports.bootstrap = function (cb) {
   sails.project_path = "/" + __dirname.substring(1, __dirname.lastIndexOf('/'));
+  sails.handheld_data_path = "/Users/andrew/Downloads/test_files";
 
   sails.custom_helpers = {};
   sails.custom_helpers.render_widget = function(widget) {
@@ -29,6 +30,7 @@ module.exports.bootstrap = function (cb) {
   setupTickEvent();
   setupBlueRoverApi();
   setupEventListeners();
+  setupHandheldDataParser();
   loadRecentAlerts();
   loadRecentRfidData();
 
@@ -196,6 +198,24 @@ function setupEventListeners() {
       }
     });
   }
+}
+
+function setupHandheldDataParser () {
+  var handheldParser = require('../helpers/HandheldParser');
+  setInterval(function () {
+    handheldParser(sails.handheld_data_path, true, function (handheld_data) {
+      for (var row in handheld_data) {
+        HandheldData.create(handheld_data[row]).done(function (err, new_data) {
+          if (err) {
+            sails.log.error("HandheldData was not saved successfully");
+            return;
+          }
+
+          sails.log.info("HandheldData was saved successfully");
+        });
+      }
+    });
+  }, 60000);
 }
 
 function loadRecentAlerts () {

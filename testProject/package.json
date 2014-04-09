@@ -16,7 +16,9 @@
     "node-uuid": "~1.4.1",
     "sails-memory": "~0.9.1",
     "ip": "~0.3.0",
-    "node-bluerover": "~0.1.0"
+    "node-bluerover": "~0.1.0",
+    "xml2js": "~0.4.2",
+    "atob": "~1.1.0"
   },
   "scripts": {
     "start": "node app.js",
