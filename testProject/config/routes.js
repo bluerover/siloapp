@@ -27,11 +27,7 @@
  */
 
 module.exports.routes = {
-
-  // By default, your root route (aka home page) points to a view
-  // located at `views/home/index.ejs`
-  // 
-  // (This would also work if you had a file at: `/views/home.ejs`)
+  // Home
   '/': {
     controller: 'user',
     action: 'login_view'
@@ -69,6 +65,28 @@ module.exports.routes = {
   'get /reports/handheld': {
     controller: 'Report',
     action: 'handheld'
+  },
+
+  // Dashboards
+  'get /dashboard/:id': {
+    controller: 'Dashboard',
+    action: 'find'
+  },
+
+  // User
+  'get /user/login': {
+    controller: 'User',
+    action: 'login_view'
+  },
+
+  'post /user/login': {
+    controller: 'User',
+    action: 'login'
+  },
+
+  'get /user/logout': {
+    controller: 'User',
+    action: 'logout'
   }
 
   /*
