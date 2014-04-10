@@ -104,7 +104,7 @@ function readHandheldData(filename, callback, delete_file) {
         });
     }
     catch (e) {
-        console.log("There was a problem parsing handheld data: " + e);
+        sails.log.error("There was a problem parsing handheld data: " + e);
     }
 }
 
@@ -123,7 +123,7 @@ function readPrzFilesInDirectory(directory, delete_files, callback) {
         }
     }
     catch (e) {
-        console.log("There was a problem reading the directory " + e);
+        sails.log.error("There was a problem reading the directory " + e);
     }
 }
 
