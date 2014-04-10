@@ -35,53 +35,47 @@
 </head>
 <body>
 <div class="navbar navbar-default">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">
-                <%= organization_name %>
-            </a>
-        </div>
-        <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav navbar-left">
-                <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>>
-                    <a href="/">Dashboard</a>
-                </li>
-                <li <%= (typeof(page_category) !== "undefined" && page_category === "reports") ? 'class=active' : '' %>>
-                    <a href="/reports/handheld">Reports</a>
-                </li>
-                <li <%= (typeof(page_category) !== "undefined" && page_category === "analytics") ? 'class=active' : '' %>>
-                    <a href="#">Analytics</a>
-                </li>
-                <li <%= (typeof(page_category) !== "undefined" && page_category === "messages") ? 'class=active' : '' %>>
-                    <a href="#">Messages</a>
-                </li>
-                <li <%= (typeof(page_category) !== "undefined" && page_category === "settings") ? 'class=active' : '' %>>
-                    <a href="#">Account Settings</a>
-                </li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <%= full_name %>
-                        <b class="caret"></b>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Account Settings</a></li>
-                        <li class="divider"></li>
-                        <li class="dropdown-header">Admin</li>
-                        <li><a href="#">Admin Options</a></li>
-                        <li class="divider"></li>
-                        <li><a href="/user/logout">Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div><!-- /.nav-collapse -->
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">
+            <%= organization_name %>
+        </a>
     </div>
+    <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-left">
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>>
+                <a href="/">Dashboard</a>
+            </li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "reports") ? 'class=active' : '' %>>
+                <a href="/reports/handheld">Reports</a>
+            </li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "analytics") ? 'class=active' : '' %>>
+                <a href="#">Analytics</a>
+            </li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "messages") ? 'class=active' : '' %>>
+                <a href="#">Messages</a>
+            </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <li class="dropdown <%= (typeof(page_category) !== "undefined" && page_category === "messages") ? 'active' : '' %>">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <%= full_name %> <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li <%= (typeof(page_category) !== "undefined" && page_category === "settings") ? 'class=active' : '' %>><a href="#">Account Settings</a></li>
+                    <li class="divider"></li>
+                    <li class="dropdown-header">Admin</li>
+                    <li><a href="#">Admin Options</a></li>
+                    <li class="divider"></li>
+                    <li><a href="/user/logout">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div><!-- /.nav-collapse -->
 </div>
 
 <div class="content">

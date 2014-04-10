@@ -182,3 +182,7 @@ h3,h4,h5 {
 .navbar-default {
     height: 52px;
 }
+
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > li:hover > a {
+    font-weight: 400;
+}
