@@ -153,52 +153,59 @@ function setupEventListeners() {
       initializeAlertHandler(tag_id, data);
     }
   });
+}
 
-  function initializeAlertHandler(tag_id, parsed_data) {
-    sails.log.debug("Attempting to find alerthandler from database");
-    RfidAlerthandler.find({rfid: parsed_data.rfidTagNum}).done(function (err, alerthandler_data) {
-      if (err) { sails.log.error("There was a problem finding the alerthandlers for an rfid: " + err); return; }
+function initializeAlertHandler(tag_id, parsed_data, resume_data) {
+  var parsed_rfid = tag_id.substring(5);
+  sails.log.debug("Attempting to find alerthandler from database");
+  RfidAlerthandler.find({rfid: parsed_rfid}).done(function (err, alerthandler_data) {
+    if (err) { sails.log.error("There was a problem finding the alerthandlers for an rfid: " + err); return; }
 
-      if (alerthandler_data === undefined || alerthandler_data === null || alerthandler_data.length === 0) {
-        return;
+    sails.log.info("alerthandler found!");
+
+    if (alerthandler_data === undefined || alerthandler_data === null || alerthandler_data.length === 0) {
+      return;
+    }
+
+    sails.notification_handlers[tag_id] = [];
+    for (var index in alerthandler_data) {
+      var alerthandler_filename = alerthandler_data[index].alerthandler_name;
+
+      // This is to prevent alert handlers from hijacking the real event bus
+      var mock_event_bus = {
+        rfid: parsed_rfid,
+        emit: function(channel, data) {
+          var ms_timestamp = new Date().getTime();
+          data.timestamp = Math.round(ms_timestamp / 1000);
+          data.alerthandler_name = alerthandler_filename;
+          data.rfidTagNum = this.rfid;
+          sails.alert_emitter.emit(tag_id, data);
+          sails.recent_alerts[this.rfid] = data;
+          sails.log.debug("Attempting to write alert to database");
+          AlertData.create(data).done(function (err, d) {
+            if (err) sails.log.error("AlertData was not saved successfully: " + err);
+            sails.log.info("Wrote alert to database");
+          });
+        }
+      };
+
+      var resume = null;
+      if (resume_data !== undefined && resume_data !== null && resume_data.alerthandler_name === alerthandler_filename) {
+        resume = resume_data;
       }
-
-      sails.notification_handlers[tag_id] = [];
-      for (var index in alerthandler_data) {
-        var alerthandler_filename = alerthandler_data[index].alerthandler_name;
-
-        // This is to prevent alert handlers from hijacking the real event bus
-        var mock_event_bus = {
-          rfid: parsed_data.rfidTagNum,
-          emit: function(channel, data) {
-            var ms_timestamp = new Date().getTime();
-            data.timestamp = Math.round(ms_timestamp / 1000);
-            data.alerthandler_name = alerthandler_filename;
-            data.rfidTagNum = this.rfid;
-            sails.alert_emitter.emit(tag_id, data);
-            sails.recent_alerts[this.rfid] = data;
-            sails.log.debug("Attempting to write alert to database");
-            AlertData.create(data).done(function (err, d) {
-              if (err) sails.log.error("AlertData was not saved successfully: " + err);
-              sails.log.info("Wrote alert to database");
-            });
-          }
-        };
-
-        // TODO: Resume data
-        var resume_data = null;
-        var config = JSON.parse(alerthandler_data[index].config);
-        var alerthandler_module = require('../alerthandlers/' + alerthandler_filename + ".js");
-        var alerthandler = new alerthandler_module(mock_event_bus, config, resume_data);
+      var config = JSON.parse(alerthandler_data[index].config);
+      var alerthandler_module = require('../alerthandlers/' + alerthandler_filename + ".js");
+      var alerthandler = new alerthandler_module(mock_event_bus, config, resume);
+      if (parsed_data !== undefined && parsed_data !== null) {
         alerthandler.on('data', parsed_data);
-        sails.event_emitter.on('tick', function (timestamp) {
-          alerthandler.on('tick', timestamp);
-        });
-
-        sails.notification_handlers[tag_id].push(alerthandler);
       }
-    });
-  }
+      sails.event_emitter.on('tick', function (timestamp) {
+        alerthandler.on('tick', timestamp);
+      });
+
+      sails.notification_handlers[tag_id].push(alerthandler);
+    }
+  });
 }
 
 function setupHandheldDataParser () {
@@ -220,6 +227,7 @@ function setupHandheldDataParser () {
 }
 
 function loadRecentAlerts () {
+  // NOTE: This may not work for multiple alerts for each rfid (this query will need to be modified)
   var query = "SELECT b.* FROM " + 
     "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM alertdata GROUP BY rfidTagNum) a " + 
     "INNER JOIN alertdata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
@@ -234,6 +242,7 @@ function loadRecentAlerts () {
     sails.log.debug("Found recent alert data");
 
     for (i in alert_data) {
+      initializeAlertHandler('rfid-' + alert_data[i].rfidTagNum, null, alert_data[i]);
       sails.recent_alerts[alert_data[i].rfidTagNum] = alert_data[i];
     }
   });

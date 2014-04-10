@@ -52,14 +52,15 @@ function TemperatureAboveX (event_bus, config, resume_data) {
   };
 
   this.resumeHandler = function () {
-    this.period_start_timestamp = this.resume_data.timestamp;
-    if (resume_data.status === 'alarm') {
+    this.period_start_timestamp = null;
+    if (this.resume_data.status === 'alarm') {
+      this.period_start_timestamp = (this.resume_data.timestamp * 1000) - this.time_until_alarm;
       this.alert_fired = true;
     }
-    else if (resume_data.status === 'in-progress') {
-      var percent = parseFloat(resume_data.message / 100);
+    else if (this.resume_data.status === 'in-progress') {
+      var percent = parseFloat(this.resume_data.message / 100);
       var time_into = Math.floor(this.time_until_alarm * percent);
-      this.period_start_timestamp = resume_data.timestamp - time_into;
+      this.period_start_timestamp = (this.resume_data.timestamp * 1000) - time_into;
     }
 
     this.tickHandler(new Date().getTime());
@@ -67,10 +68,12 @@ function TemperatureAboveX (event_bus, config, resume_data) {
   };
 
   if (resume_data !== undefined && resume_data !== null &&
-    'rfid' in resume_data && resume_data.rfid !== null &&
-    'message' in resume_data && resume_data.message !== null &&
+    'rfidTagNum' in resume_data && resume_data.rfidTagNum !== null &&
+    'message' in resume_data &&
     'status' in resume_data && resume_data.status !== null &&
     'timestamp' in resume_data && resume_data.timestamp !== null) {
+    this.resume_data = resume_data;
+    this.rfid = resume_data.rfidTagNum;
     this.resumeHandler();
   }
 }
