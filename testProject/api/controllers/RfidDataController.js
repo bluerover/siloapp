@@ -89,7 +89,7 @@ module.exports = {
     RfidData.find({rfidTagNum: rfid}).limit(20).sort('timestamp desc').done(function (err, rfid_data) {
       if (err) sails.log.error("Error loading recent RFID data: " + err);
       if (rfid_data !== undefined && rfid_data !== null) {
-        res.json(rfid_data);
+        res.json(rfid_data.reverse());
       }
     });
   }
