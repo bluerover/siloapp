@@ -94,7 +94,7 @@ module.exports = {
     req.session.organization = null;
     req.session.organization_name = null;
     req.session.authenticated = false;
-    res.view({ layout: 'none' }, 'user/login');
+    res.redirect('/');
   }
   
 };
