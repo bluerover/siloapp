@@ -81,7 +81,7 @@ module.exports = {
       // If the current user does not have access to the data, return blank data
       for (var i in data) {
         if (data[i]['rfidTagNum'] === undefined || data[i]['rfidTagNum']['organization'] !== req.session.organization) {
-          res.json({});
+          res.json(JSON.stringify({}));
           return;
         }
       }
