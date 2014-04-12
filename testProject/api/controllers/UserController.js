@@ -52,7 +52,7 @@ module.exports = {
         bcrypt.compare(req.body.password, user.password, function (err, match) {
           if (err) res.view({layout: "barebones"}, '500');
 
-          Organization.findOne(user.organization_id).done(function (err, org) {
+          Organization.findOne(user.organization).done(function (err, org) {
             if (err || org === undefined || org === null) {
               res.view({layout: "barebones"}, '500');
               return;
@@ -62,7 +62,7 @@ module.exports = {
                 req.session.user = user.id;
                 req.session.username = user.username;
                 req.session.full_name = user.full_name();
-                req.session.organization = user.organization_id;
+                req.session.organization = user.organization;
                 req.session.organization_name = org.name;
                 req.session.authenticated = true;
                 res.redirect(DEFAULT_ROUTE);

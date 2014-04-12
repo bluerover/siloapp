@@ -1,12 +1,12 @@
 <div class='col-lg-6 col-md-8 col-xs-12'>
     <div class='panel panel-default'>
-        <div class="widget large-height" visualization="<%= widget.name %>" data-filter="<%= widget.data_filter %>" data-id="<%= widget.unique_id %>" data-options="<%= widget.options %>">
+        <div class="widget large-height" visualization="<%= widget.widget.name %>" data-filter="<%= widget.data_filter %>" data-id="<%= widget.id %>" data-options="<%= widget.options %>">
             <div class="widget-title" class="row">
                 <%= widget.display_name %>
             </div>
-            <div id="floorplan-content-<%= widget.unique_id %>" class="content">
+            <div id="floorplan-content-<%= widget.id %>" class="content">
                 <div class="loading-div">
-                    <img id="loader-<%= widget.unique_id %>" style="position: relative; top: calc(50% - 32px + 15px);" src="/images/loading.gif">
+                    <img id="loader-<%= widget.id %>" style="position: relative; top: calc(50% - 32px + 15px);" src="/images/loading.gif">
                 </div>
                 <div id="floorplan-svg" class="row">
                 </div>

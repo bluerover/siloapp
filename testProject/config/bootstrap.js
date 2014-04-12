@@ -16,7 +16,7 @@ module.exports.bootstrap = function (cb) {
   sails.custom_helpers.render_widget = function(widget) {
     var ejs = require('ejs');
     var fs = require('fs');
-    var file = fs.readFileSync(sails.project_path + "/views/dashboard/widgets/" + widget.template_filename).toString();
+    var file = fs.readFileSync(sails.project_path + "/views/dashboard/widgets/" + widget.widget.template_filename).toString();
     var rendered = ejs.render(file, { locals: {widget: widget} });
     return rendered;
   };
@@ -26,13 +26,13 @@ module.exports.bootstrap = function (cb) {
   sails.recent_alerts = {};
   sails.recent_rfid_data = {};
 
-  createEventEmitters();
-  setupTickEvent();
-  setupBlueRoverApi();
-  setupEventListeners();
-  setupHandheldDataParser();
-  loadRecentAlerts();
-  loadRecentRfidData();
+  // createEventEmitters();
+  // setupTickEvent();
+  // setupBlueRoverApi();
+  // setupEventListeners();
+  // setupHandheldDataParser();
+  // loadRecentAlerts();
+  // loadRecentRfidData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();

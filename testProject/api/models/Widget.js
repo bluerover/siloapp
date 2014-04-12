@@ -19,7 +19,11 @@ module.exports = {
       required: true
     },
     js_filename: 'string',
-    css_filename: 'string'
+    css_filename: 'string',
+    dashboard_widgets: {
+      collection: 'dashboard_widget',
+      via: 'widget'
+    }
     
   }
 

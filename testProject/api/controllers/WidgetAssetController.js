@@ -16,8 +16,6 @@ module.exports = {
   retrieveAsset: function(req, res) {
     var path = require('path');
     var fs = require('fs');
-
-    // TODO: Validate user can access asset here
     
     var type = req.param('type');
     var file = req.param('file');
@@ -28,15 +26,22 @@ module.exports = {
       return;
     }
 
-    var file_path = path.join(sails.project_path, "widget_assets", type, file);
+    // Stream file to client function
+    var streamFile = function () {
+      var file_path = path.join(sails.project_path, "widget_assets", type, file);
 
-    if (!fs.existsSync(file_path)) {
-      jsonStatus(res, "File not found", 404);
-      return;
-    }
+      if (!fs.existsSync(file_path)) {
+        jsonStatus(res, "File not found", 404);
+        return;
+      }
 
-    var file_stream = fs.createReadStream(file_path);
-    file_stream.pipe(res);
+      var file_stream = fs.createReadStream(file_path);
+      file_stream.pipe(res);
+    };
+
+    // TODO: Check to see if user can access filetype
+    // For now, allow them access to all files
+    streamFile();
   }
   
 };

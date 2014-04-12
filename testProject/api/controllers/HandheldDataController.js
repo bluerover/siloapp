@@ -8,6 +8,7 @@ module.exports = {
     }
   }, 
 
+  // TODO: Add organization association to check if handheld data can be shown
   get_data: function (req, res) {
     var range_start,
       range_end,

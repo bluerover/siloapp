@@ -10,13 +10,13 @@
     <% if (typeof(dashboard_widgets) !== 'undefined') {
         for (var i in dashboard_widgets) {
           var widget = dashboard_widgets[i]; %>
-          <link rel="stylesheet" type="text/css" href="/widget_assets/styles/<%= widget.css_filename %>" />
+          <link rel="stylesheet" type="text/css" href="/widget_assets/styles/<%= widget.widget.css_filename %>" />
     <%  } 
     }%>
     <% if (typeof(dashboard_widgets) !== 'undefined') {
         for (var i in dashboard_widgets) {
           var widget = dashboard_widgets[i]; %>
-          <script type="text/javascript" src="/widget_assets/js/<%= widget.js_filename %>"></script>
+          <script type="text/javascript" src="/widget_assets/js/<%= widget.widget.js_filename %>"></script>
     <%  } 
     }%>
     <link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" />

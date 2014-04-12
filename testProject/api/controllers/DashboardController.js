@@ -57,37 +57,34 @@ module.exports = {
 
       var dashboard = d[0];
 
-      if (req.session.organization !== dashboard.organization_id) {
+      if (req.session.organization !== dashboard.organization) {
         // Return 404 instead of 403 so that users cannot know if a dashboard exists or not
         res.view({layout: "barebones"}, '404');
         return;
       }
 
       sails.log.debug("Attempting to find dashboard widget from database for dashboard request");
-      Temp_DashboardWidget_Widget.query(
-        "SELECT *, dashboard_widget.id AS unique_id FROM dashboard_widget JOIN widget ON dashboard_widget.widget_id = widget.id WHERE dashboard_id = ? ORDER BY ISNULL(widget_order), widget_order ASC", 
-        [dashboard_id], 
-        function(err, dashboard_widgets) {
-          if (err) {
-            res.view({layout: "barebones"}, '500');
-            return;
-          }
+      Dashboard_Widget.find({dashboard: dashboard_id}).populate('widget').sort('widget_order ASC').exec(function (err, dashboard_widgets) {
+        if (err) {
+          res.view({layout: "barebones"}, '500');
+          return;
+        }
 
-          sails.log.debug("Got widgets");
+        sails.log.info("Got widgets");
 
-          res.view({
-            title: dashboard.name,
-            organization_name: req.session.organization_name,
-            page_category: "dashboard",
-            full_name: req.session.full_name,
-            dashboard_widgets: dashboard_widgets,
-            load_dashboard_js: true,
-            header_javascript: "",
-            renderWidget: sails.custom_helpers.render_widget,
-            host: ip.address(),
-            port: process.env.PORT || 1337
-          });
+        res.view({
+          title: dashboard.name,
+          organization_name: req.session.organization_name,
+          page_category: "dashboard",
+          full_name: req.session.full_name,
+          dashboard_widgets: dashboard_widgets,
+          load_dashboard_js: true,
+          header_javascript: "",
+          renderWidget: sails.custom_helpers.render_widget,
+          host: ip.address(),
+          port: process.env.PORT || 1337
         });
+      });
     });
   }
 
