@@ -49,6 +49,7 @@ function Knob(widgetSelector, options) {
                 self.lineGraphUpdate({temperature: temp});
                 break;
             case "alert":
+                self.selector.removeClass("alarm");
                 if (data['status'] === "ok") {
                     self.gauge.updateValue(0, 0);
                 }
@@ -58,6 +59,7 @@ function Knob(widgetSelector, options) {
                         value = 1;
                     }
                     else if (value > 100) {
+                        self.selector.addClass("alarm");
                         value = 100;
                     }
 

@@ -50,7 +50,10 @@ module.exports = {
       type: 'string',
       required: true
     },
-    is_admin: 'boolean',
+    is_admin: {
+      type: 'boolean',
+      defaultsTo: false
+    },
 
     full_name: function() {
       return this.first_name + " " + this.last_name;
