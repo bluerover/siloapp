@@ -68,6 +68,7 @@ module.exports = {
                 req.session.user = user.id;
                 req.session.username = user.username;
                 req.session.full_name = user.full_name();
+                req.session.is_admin = user.is_admin;
                 req.session.organization = user.organization;
                 req.session.organization_name = org.name;
                 req.session.authenticated = true;

@@ -11,8 +11,6 @@
 
 module.exports = function notFound() {
 
-  sails.log.error("Not found");
-
   // Get access to `req`, `res`, `sails`
   var req = this.req;
   var res = this.res;
