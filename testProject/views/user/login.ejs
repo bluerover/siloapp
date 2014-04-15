@@ -20,6 +20,9 @@
             </div>
           <% } %>
           <form action="/user/login" method="post" role="form">
+            <% if (typeof(redirect_to) === 'string') { %>
+              <input type="hidden" name="redirect_to" value="<%= redirect_to %>" />
+            <% } %>
             <div class="form-group">
               <label for="username">Username</label>
               <input type="text" class="form-control" name="username" id="username" placeholder="Enter username" />

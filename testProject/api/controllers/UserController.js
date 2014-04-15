@@ -26,7 +26,11 @@ module.exports = {
    * Overrides for the settings in `config/controllers.js`
    * (specific to UserController)
    */
-  _config: {},
+  _config: {
+    blueprints: {
+      rest: true
+    }
+  },
 
   login_view: function (req, res) {
     if (req.session && req.session.authenticated) {
@@ -34,7 +38,9 @@ module.exports = {
       res.redirect(DEFAULT_ROUTE);
     }
 
-    res.view({ layout: 'none' }, 'user/login');
+    sails.log.debug(require('util').inspect(req.query));
+
+    res.view({ layout: 'none', redirect_to: req.query.redirect_to }, 'user/login');
   },
 
   /**
@@ -65,7 +71,12 @@ module.exports = {
                 req.session.organization = user.organization;
                 req.session.organization_name = org.name;
                 req.session.authenticated = true;
-                res.redirect(DEFAULT_ROUTE);
+                if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
+                  res.redirect(req.body.redirect_to);
+                }
+                else {
+                  res.redirect(DEFAULT_ROUTE);
+                }
               }
               else {
                 if (req.session.user) req.session.user = null;
