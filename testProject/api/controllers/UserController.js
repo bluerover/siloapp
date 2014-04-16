@@ -26,7 +26,11 @@ module.exports = {
    * Overrides for the settings in `config/controllers.js`
    * (specific to UserController)
    */
-  _config: {},
+  _config: {
+    blueprints: {
+      rest: true
+    }
+  },
 
   login_view: function (req, res) {
     if (req.session && req.session.authenticated) {
@@ -34,7 +38,9 @@ module.exports = {
       res.redirect(DEFAULT_ROUTE);
     }
 
-    res.view({ layout: 'none' }, 'user/login');
+    sails.log.debug(require('util').inspect(req.query));
+
+    res.view({ layout: 'none', redirect_to: req.query.redirect_to }, 'user/login');
   },
 
   /**
@@ -52,7 +58,7 @@ module.exports = {
         bcrypt.compare(req.body.password, user.password, function (err, match) {
           if (err) res.view({layout: "barebones"}, '500');
 
-          Organization.findOne(user.organization_id).done(function (err, org) {
+          Organization.findOne(user.organization).done(function (err, org) {
             if (err || org === undefined || org === null) {
               res.view({layout: "barebones"}, '500');
               return;
@@ -62,10 +68,16 @@ module.exports = {
                 req.session.user = user.id;
                 req.session.username = user.username;
                 req.session.full_name = user.full_name();
-                req.session.organization = user.organization_id;
+                req.session.is_admin = user.is_admin;
+                req.session.organization = user.organization;
                 req.session.organization_name = org.name;
                 req.session.authenticated = true;
-                res.redirect(DEFAULT_ROUTE);
+                if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
+                  res.redirect(req.body.redirect_to);
+                }
+                else {
+                  res.redirect(DEFAULT_ROUTE);
+                }
               }
               else {
                 if (req.session.user) req.session.user = null;

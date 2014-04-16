@@ -16,7 +16,7 @@ module.exports.bootstrap = function (cb) {
   sails.custom_helpers.render_widget = function(widget) {
     var ejs = require('ejs');
     var fs = require('fs');
-    var file = fs.readFileSync(sails.project_path + "/views/dashboard/widgets/" + widget.template_filename).toString();
+    var file = fs.readFileSync(sails.project_path + "/views/dashboard/widgets/" + widget.widget.template_filename).toString();
     var rendered = ejs.render(file, { locals: {widget: widget} });
     return rendered;
   };

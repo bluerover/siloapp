@@ -87,6 +87,12 @@ module.exports.routes = {
   'get /user/logout': {
     controller: 'User',
     action: 'logout'
+  },
+
+  // Analytics
+  'get /analytics': {
+    controller: 'Analytics',
+    action: 'index'
   }
 
   /*

@@ -7,18 +7,18 @@
  */
 
 var verifyAssociations = function(attrs, next) {
-  Dashboard.findOne(attrs.dashboard_id).done(function (err, dashboard) {
+  Dashboard.findOne(attrs.dashboard).done(function (err, dashboard) {
     if (err) return next(err);
 
     if (dashboard === undefined) return next({
-      error: "Dashboard ID " + attrs.dashboard_id + " does not exist."
+      error: "Dashboard ID " + attrs.dashboard + " does not exist."
     });
 
-    Widget.findOne(attrs.widget_id).done(function (err, widget) {
+    Widget.findOne(attrs.widget).done(function (err, widget) {
       if (err) return next(err);
 
       if (widget === undefined) return next({
-        error: "Widget ID " + attrs.dashboard_id + " does not exist."
+        error: "Widget ID " + attrs.widget + " does not exist."
       });
 
       return next();
@@ -30,22 +30,24 @@ module.exports = {
 
   attributes: {
 
-    dashboard_id: {
-      type: 'integer',
+    dashboard: {
+      model: 'dashboard',
       required: true
     },
-    widget_id: {
-      type: 'integer',
+    widget: {
+      model: 'widget',
       required: true
     },
     data_filter: {
       type: 'string',
       required: true,
-      maxLength: 3000
+      maxLength: 3000,
+      size: 3000
     },
     options: {
       type: 'string',
-      maxLength: 5000
+      maxLength: 5000,
+      size: 5000
     },
     display_name: {
       type: 'string'

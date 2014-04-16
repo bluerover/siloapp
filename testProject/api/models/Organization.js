@@ -14,7 +14,26 @@ module.exports = {
       type: 'string',
       required: true
     },
-    auth_token: 'string'
+    auth_token: 'string',
+    children: {
+      collection: 'organization',
+      via: 'parent'
+    },
+    parent: {
+      model: 'organization'
+    },
+    dashboards: {
+      collection: 'dashboard',
+      via: 'organization'
+    },
+    rfids: {
+      collection: 'rfid',
+      via: 'organization'
+    },
+    users: {
+      collection: 'user',
+      via: 'organization'
+    }
     
   },
 

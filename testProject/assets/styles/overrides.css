@@ -17,10 +17,6 @@ html, body {
     overflow:hidden;
 }
 
-.widget.alert {
-    
-}
-
 .widget.small-width {
     width: 125px;
 }
@@ -179,10 +175,24 @@ h3,h4,h5 {
     box-shadow:         0px 0px 30px 14px rgba(184, 216, 221, 1);
 }
 
+.widget.alarm {
+    -webkit-box-shadow: 0px 0px 30px 14px rgba(231, 76, 60, 0.6);
+    -moz-box-shadow:    0px 0px 30px 14px rgba(231, 76, 60, 0.6);
+    box-shadow:         0px 0px 30px 14px rgba(231, 76, 60, 0.6);
+}
+
 .navbar-default {
     height: 52px;
 }
 
 .navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > li:hover > a {
     font-weight: 400;
+}
+
+.badge.badge-danger {
+    background-color: #e74c3c;
+}
+
+.ml-5 {
+    margin-left: 5px;
 }

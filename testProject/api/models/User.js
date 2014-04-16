@@ -7,11 +7,11 @@
  */
 
 var verifyAssociations = function(attrs, next) {
-  Organization.findOne(attrs.organization_id).done(function (err, org) {
+  Organization.findOne(attrs.organization).done(function (err, org) {
     if (err) return next(err);
     
     if (org === undefined) return next({
-      error: "Organization ID " + attrs.organization_id + " does not exist."
+      error: "Organization ID " + attrs.organization + " does not exist."
     });
 
     return next();
@@ -38,8 +38,8 @@ module.exports = {
       required: true,
       minLength: 6
     },
-    organization_id: {
-      type: 'integer',
+    organization: {
+      model: 'organization',
       required: true
     },
     first_name: {
@@ -50,7 +50,10 @@ module.exports = {
       type: 'string',
       required: true
     },
-    is_admin: 'boolean',
+    is_admin: {
+      type: 'boolean',
+      defaultsTo: false
+    },
 
     full_name: function() {
       return this.first_name + " " + this.last_name;
