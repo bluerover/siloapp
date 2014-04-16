@@ -115,7 +115,7 @@ module.exports = {
   // GET /rfid_data/:id/recent
   get_recent_data_for_rfid: function (req, res) {
     var rfid = req.param('id');
-    RfidData.find({rfidTagNum: rfid}).populate('rfidTagNum').limit(20).sort('timestamp desc').exec(function (err, rfid_data) {
+    RfidData.find({rfidTagNum: rfid}).populate('rfidTagNum').limit(20).sort('timestamp ' + sort).exec(function (err, rfid_data) {
       if (err) sails.log.error("Error loading recent RFID data: " + err);
       if (rfid_data !== undefined && rfid_data !== null) {
 
