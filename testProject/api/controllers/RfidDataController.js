@@ -95,7 +95,7 @@ module.exports = {
 
     // TODO: Only find data for your org
     sails.log.debug("Attempting to read rfid data for RfidData#get_data");
-    RfidData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp desc').skip(page*limit).limit(limit).populate('rfidTagNum').exec(function (err, data) {
+    RfidData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).skip(page*limit).limit(limit).populate('rfidTagNum').exec(function (err, data) {
       if (err) {
         sails.log.error("There was an error retrieving RFID data: " + err);
         res.json({error: "Internal server error"}, 500);
@@ -103,6 +103,7 @@ module.exports = {
       }
 
       // Filter out RFIDs that aren't for the current user
+      // TODO: Potential security flaw: If you get less than 'limit' then you know how many were filtered out
       data = data.filter(function (i) {
         return i.rfidTagNum !== undefined && i.rfidTagNum.organization === req.session.organization;
       });
@@ -115,7 +116,7 @@ module.exports = {
   // GET /rfid_data/:id/recent
   get_recent_data_for_rfid: function (req, res) {
     var rfid = req.param('id');
-    RfidData.find({rfidTagNum: rfid}).populate('rfidTagNum').limit(20).sort('timestamp ' + sort).exec(function (err, rfid_data) {
+    RfidData.find({rfidTagNum: rfid}).populate('rfidTagNum').limit(20).sort('timestamp desc').exec(function (err, rfid_data) {
       if (err) sails.log.error("Error loading recent RFID data: " + err);
       if (rfid_data !== undefined && rfid_data !== null) {
 

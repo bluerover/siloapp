@@ -12,7 +12,31 @@ module.exports = {
   get_data: function (req, res) {
     var range_start,
       range_end,
-      max_range = 6 * 30 * 24 * 60 * 60; // Approximately 6 months
+      max_range = 6 * 30 * 24 * 60 * 60, // Approximately 6 months
+      page,
+      limit,
+      sort;
+
+    if (req.query.page !== undefined) {
+      page = parseInt(req.query.page);
+    }
+    else {
+      page = 0;
+    }
+
+    if (req.query.limit !== undefined) {
+      limit = parseInt(req.query.limit);
+    }
+    else {
+      limit = 10;
+    }
+
+    if (typeof(req.query.sort) === 'string' && (req.query.sort.toLowerCase() === 'asc' || req.query.sort.toLowerCase() === 'desc')) {
+      sort = req.query.sort;
+    }
+    else {
+      sort = 'asc';
+    }
 
     if (req.query.range_end !== undefined) {
       range_end = parseInt(req.query.range_end);
@@ -46,7 +70,7 @@ module.exports = {
 
     // TODO: Only find data for your org
     sails.log.debug("Attempting to read handheld data for HandheldData#get_data");
-    HandheldData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp').done(function (err, data) {
+    HandheldData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).skip(page*limit).limit(limit).done(function (err, data) {
       if (err) {
         sails.log.error("There was an error retrieving handheld data: " + err);
         res.json({error: "Internal server error"}, 500);

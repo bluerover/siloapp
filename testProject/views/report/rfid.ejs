@@ -78,11 +78,17 @@
         );
 
         $(".next").on('click', function () {
+            if ($(this).hasClass("disabled")) {
+                return false;
+            }
             page++;
             updatePagerStyles();
             updateTable(pickerStart, pickerEnd, page, limit);
         });
         $(".previous").on('click', function () {
+            if ($(this).hasClass("disabled")) {
+                return false;
+            }
             page--;
             updatePagerStyles();
             updateTable(pickerStart, pickerEnd, page, limit);

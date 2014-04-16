@@ -1,7 +1,16 @@
 <%- include report_js_css.ejs %>
 <script type="text/javascript">
     $(document).ready(function() {
-        function updateTable(start, end) {
+        function updatePagerStyles() {
+            if (page !== 0) {
+                $(".previous").removeClass("disabled");
+            }
+            else {
+                $(".previous").addClass("disabled");
+            }
+        }
+
+        function updateTable(start, end, page, limit) {
             $("#download_csv_btn a").attr("href", "/handheld_data?type=csv&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
             $("#table-loading").show();
             $("#handheld_table tbody tr").remove();
@@ -10,14 +19,16 @@
                 url: "/handheld_data",
                 data: {
                     range_start: start.format("X"),
-                    range_end: end.format("X")
+                    range_end: end.format("X"),
+                    page: page,
+                    limit: limit,
+                    sort: 'desc'
                 },
                 success: function(response) {
                     $("#table-loading").hide();
                     var data = JSON.parse(response);
                     for (var i in data) {
                         $("#handheld_table").append("<tr>" +
-                                "<td>" + data[i]['id'] + "</td>" +
                                 "<td>" + data[i]['device_id'] + "</td>" +
                                 "<td>" + data[i]['probe_id'] + "</td>" +
                                 "<td>" + data[i]['item_name'] + "</td>" +
@@ -35,9 +46,13 @@
             });
         }
 
-        var defaultStart = moment().subtract('days', 7);
-        var defaultEnd = moment();
-        updateTable(defaultStart, defaultEnd);
+        var defaultEnd = moment().hour(0).minute(0).second(0).millisecond(0);
+        var defaultStart = moment().hour(0).minute(0).second(0).millisecond(0).subtract('days', 7);
+        var pickerStart = defaultStart;
+        var pickerEnd = defaultEnd;
+        var page = 0;
+        var limit = 20;
+        updateTable(defaultStart, defaultEnd, page, limit);
 
         $('#reportrange span').html(defaultStart.format('MMMM D, YYYY') + ' - ' + defaultEnd.format('MMMM D, YYYY'));
         $('#reportrange').daterangepicker(
@@ -50,16 +65,35 @@
                         'This Month': [moment().startOf('month'), moment().endOf('month')],
                         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
                     },
-                    startDate: moment().subtract('days', 29),
-                    endDate: moment(),
+                    startDate: defaultStart,
+                    endDate: defaultEnd,
                     opens: "left",
                     maxDate: moment()
                 },
                 function(start, end) {
                     $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                    pickerStart = start;
+                    pickerEnd = end;
                     updateTable(start, end);
                 }
         );
+
+        $(".next").on('click', function () {
+            if ($(this).hasClass("disabled")) {
+                return false;
+            }
+            page++;
+            updatePagerStyles();
+            updateTable(pickerStart, pickerEnd, page, limit);
+        });
+        $(".previous").on('click', function () {
+            if ($(this).hasClass("disabled")) {
+                return false;
+            }
+            page--;
+            updatePagerStyles();
+            updateTable(pickerStart, pickerEnd, page, limit);
+        });
     });
 </script>
 
@@ -67,10 +101,13 @@
 <div id="table-loading" class="collapse">
     <img src="/images/loading.gif" />
 </div>
+<ul class="pager">
+  <li class="previous disabled"><a href="#">&larr; Newer</a></li>
+  <li class="next"><a href="#">Older &rarr;</a></li>
+</ul>
 <table id="handheld_table" class="table table-striped">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Device ID</th>
             <th>Probe ID</th>
             <th>Item</th>
@@ -81,3 +118,7 @@
         </tr>
     </thead>
 </table>
+<ul class="pager">
+  <li class="previous disabled"><a href="#">&larr; Newer</a></li>
+  <li class="next"><a href="#">Older &rarr;</a></li>
+</ul>
