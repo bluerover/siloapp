@@ -52,6 +52,14 @@ module.exports.policies = {
     'create': ['isAdmin'],
     'update': ['isAdmin'],
     'destroy': ['isAdmin']
+  },
+
+  Dashboard_WidgetController: {
+    'findAll': ['isAdmin'],
+    'find': ['isAdmin'],
+    'create': ['isAdmin'],
+    'update': ['isAdmin'],
+    'destroy': ['isAdmin']
   }
 
   /*
