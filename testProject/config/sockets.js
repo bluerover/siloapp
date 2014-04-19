@@ -101,8 +101,6 @@ module.exports.sockets = {
               return;
             }
 
-            sails.log.info(rfid_row.id);
-
             if (rfid_row.id in sails.recent_alerts) {
               sendAlert(sails.recent_alerts[rfid_row.id]);
             }
