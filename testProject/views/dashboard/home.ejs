@@ -1,0 +1,12 @@
+<div class="row">
+  <div class="col-xs-12">
+    <h3>Select a dashboard to view</h3>
+    <ul>
+      <% for (var i in dashboards) { %>
+        <li>
+          <a href="/dashboard/<%= dashboards[i].id %>"><%= dashboards[i].name %></a>
+        </li>
+      <% } %>
+    </ul>
+  </div>
+</div>

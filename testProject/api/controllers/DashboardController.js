@@ -33,6 +33,32 @@ module.exports = {
   // index: function (req, res) {
   //   res.json({success: "This will eventually show a list of dashboards"});
   // },
+  
+  home: function (req, res) {
+    Dashboard.find({organization: req.session.organization}).exec(function(err, dashboard_rows) {
+      if (err) {
+        sails.log.error("There was an error retrieving list of dashboards: " + err);
+        return;
+      }
+
+      // There are no dashboards for the user, show 500 (for now)
+      if (dashboard_rows.length === 0) {
+        res.view({layout: "barebones"}, '500');
+      }
+      else if(dashboard_rows.length === 1) {
+        res.redirect('/dashboard/' + dashboard_rows[0].id);
+      }
+      else {
+        res.view({
+          title: "Dashboard Selection",
+          organization_name: req.session.organization_name,
+          page_category: "dashboard",
+          full_name: req.session.full_name,
+          dashboards: dashboard_rows
+        });
+      }
+    });
+  },
 
   show: function(req, res) {
     var ip = require("ip");

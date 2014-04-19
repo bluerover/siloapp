@@ -15,7 +15,7 @@
  * @docs        :: http://sailsjs.org/#!documentation/controllers
  */
 
-var DEFAULT_ROUTE = "dashboard/1";
+var DEFAULT_ROUTE = "dashboards";
 
 module.exports = {
     

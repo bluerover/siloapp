@@ -68,6 +68,11 @@ module.exports.routes = {
   },
 
   // Dashboards
+  'get /dashboards': {
+    controller: 'Dashboard',
+    action: 'home'
+  },
+
   'get /dashboard/:id': {
     controller: 'Dashboard',
     action: 'show'
