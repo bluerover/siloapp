@@ -101,15 +101,27 @@ module.exports.sockets = {
               return;
             }
 
-            if (rfid in sails.recent_alerts) {
-              sendAlert(sails.recent_alerts[rfid]);
+            sails.log.info(rfid_row.id);
+
+            if (rfid_row.id in sails.recent_alerts) {
+              sendAlert(sails.recent_alerts[rfid_row.id]);
             }
 
-            if (rfid in sails.recent_rfid_data) {
-              sendData(sails.recent_rfid_data[rfid]);
+            if (rfid_row.id in sails.recent_rfid_data) {
+              sendData(sails.recent_rfid_data[rfid_row.id]);
             }
 
-            set_listeners();
+            sails.socket_listeners[socket.id].push({
+              filter: 'rfid-' + rfid_row.id,
+              f: sendData
+            });
+            sails.socket_listeners[socket.id].push({
+              filter: 'rfid-' + rfid_row.id,
+              f: sendAlert
+            });
+
+            sails.event_emitter.on('rfid-' + rfid_row.id, sendData);
+            sails.alert_emitter.on('rfid-' + rfid_row.id, sendAlert);
           });
         }
         else {

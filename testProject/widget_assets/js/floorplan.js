@@ -16,6 +16,7 @@ function FloorPlan (selector, options) {
     }
 
     this.onMessage = function(data) {
+        console.log(data);
         var rfid = data.data.rfidTagNum;
 
         // Otherwise update text
