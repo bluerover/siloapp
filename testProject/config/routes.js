@@ -70,7 +70,7 @@ module.exports.routes = {
   // Dashboards
   'get /dashboard/:id': {
     controller: 'Dashboard',
-    action: 'find'
+    action: 'show'
   },
 
   // User

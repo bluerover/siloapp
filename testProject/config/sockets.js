@@ -67,29 +67,54 @@ module.exports.sockets = {
       var filters = widgetInfo['filter'].split(" ");
 
       for (var f in filters) {
-        if (filters[f].indexOf('rfid-') === 0) {
-          var rfid = parseInt(filters[f].substring(5));
-          if (rfid in sails.recent_alerts) {
-            sendAlert(sails.recent_alerts[rfid]);
-          }
+        var set_listeners = function () {
+          sails.socket_listeners[socket.id].push({
+            filter: filters[f],
+            f: sendData
+          });
+          sails.socket_listeners[socket.id].push({
+            filter: filters[f],
+            f: sendAlert
+          });
 
-          if (rfid in sails.recent_rfid_data) {
-            sendData(sails.recent_rfid_data[rfid]);
-          }
-
+          sails.event_emitter.on(filters[f], sendData);
+          sails.alert_emitter.on(filters[f], sendAlert);
         }
 
-        sails.socket_listeners[socket.id].push({
-          filter: filters[f],
-          f: sendData
-        });
-        sails.socket_listeners[socket.id].push({
-          filter: filters[f],
-          f: sendAlert
-        });
+        if (filters[f].indexOf('rfid-') === 0) {
+          var rfid = parseInt(filters[f].substring(5));
+          Rfid.findOne(rfid).exec(function (err, rfid_row) {
+            if (err) {
+              sails.log.error("There was an error finding the rfid for socket.");
+              socket.disconnect();
+              return;
+            }
 
-        sails.event_emitter.on(filters[f], sendData);
-        sails.alert_emitter.on(filters[f], sendAlert);
+            if (rfid_row === undefined || rfid_row === null) {
+              sails.log.info("Undefined/null rfid");
+              return;
+            }
+
+            if (rfid_row.organization !== session.organization) {
+              sails.log.error("Unauthorized RFID filter connection attempt by socket");
+              socket.disconnect();
+              return;
+            }
+
+            if (rfid in sails.recent_alerts) {
+              sendAlert(sails.recent_alerts[rfid]);
+            }
+
+            if (rfid in sails.recent_rfid_data) {
+              sendData(sails.recent_rfid_data[rfid]);
+            }
+
+            set_listeners();
+          });
+        }
+        else {
+          set_listeners();
+        }
       }
     });
   },

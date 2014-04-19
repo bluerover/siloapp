@@ -21,7 +21,8 @@ module.exports = {
   attributes: {
 
     organization: {
-      model: 'organization'
+      model: 'organization',
+      required: true
     },
     name: {
       type: 'string',

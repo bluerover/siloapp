@@ -28,6 +28,30 @@ module.exports.policies = {
     'create': ['isAdmin'],
     'update': ['isAdmin'],
     'destroy': ['isAdmin']
+  },
+
+  DashboardController: {
+    'findAll': ['isAdmin'],
+    'find': ['isAdmin'],
+    'create': ['isAdmin'],
+    'update': ['isAdmin'],
+    'destroy': ['isAdmin']
+  },
+
+  OrganizationController: {
+    'findAll': ['isAdmin'],
+    'find': ['isAdmin'],
+    'create': ['isAdmin'],
+    'update': ['isAdmin'],
+    'destroy': ['isAdmin']
+  },
+
+  RfidController: {
+    'findAll': ['isAdmin'],
+    'find': ['isAdmin'],
+    'create': ['isAdmin'],
+    'update': ['isAdmin'],
+    'destroy': ['isAdmin']
   }
 
   /*

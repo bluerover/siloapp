@@ -24,13 +24,17 @@ module.exports = {
    * Overrides for the settings in `config/controllers.js`
    * (specific to DashboardController)
    */
-  _config: {},
+  _config: {
+    blueprints: {
+      rest: true
+    }
+  },
 
   // index: function (req, res) {
   //   res.json({success: "This will eventually show a list of dashboards"});
   // },
 
-  find: function(req, res) {
+  show: function(req, res) {
     var ip = require("ip");
     var dashboard_id = req.param('id');
 
