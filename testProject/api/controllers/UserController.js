@@ -57,37 +57,35 @@ module.exports = {
       if (user) {
         bcrypt.compare(req.body.password, user.password, function (err, match) {
           if (err) res.view({layout: "barebones"}, '500');
-
-          Organization.findOne(user.organization).done(function (err, org) {
-            if (err || org === undefined || org === null) {
-              res.view({layout: "barebones"}, '500');
-              return;
-            }
-            else {
-              if (match) {
-                req.session.user = user.id;
-                req.session.username = user.username;
-                req.session.full_name = user.full_name();
-                req.session.is_admin = user.is_admin;
-                req.session.organization = user.organization;
-                req.session.organization_name = org.name;
-                req.session.authenticated = true;
-                if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
-                  res.redirect(req.body.redirect_to);
-                }
-                else {
-                  res.redirect(DEFAULT_ROUTE);
-                }
+          if (match) {
+            Organization.findOne(user.organization).done(function (err, org) {
+              if (err || org === undefined || org === null) {
+                res.view({layout: "barebones"}, '500');
+                return;
+              }
+              
+              req.session.user = user.id;
+              req.session.username = user.username;
+              req.session.full_name = user.full_name();
+              req.session.is_admin = user.is_admin;
+              req.session.organization = user.organization;
+              req.session.organization_name = org.name;
+              req.session.authenticated = true;
+              if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
+                res.redirect(req.body.redirect_to);
               }
               else {
-                if (req.session.user) req.session.user = null;
-                res.view({
-                  layout: "none",
-                  error: "Incorrect username and/or password"
-                }, 'user/login');
+                res.redirect(DEFAULT_ROUTE);
               }
-            }
-          });
+            });
+          }
+          else {
+            if (req.session.user) req.session.user = null;
+            res.view({
+              layout: "none",
+              error: "Incorrect username and/or password"
+            }, 'user/login');
+          }
         })
       }
       else {
