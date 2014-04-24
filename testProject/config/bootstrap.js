@@ -214,7 +214,7 @@ function setupHandheldDataParser () {
     handheldParser(sails.handheld_data_path, true, function (handheld_data) {
       for (var row in handheld_data) {
         // Rename the ID column to external ID and delete it
-        handheld_data[row].external_id = id;
+        handheld_data[row].external_id = handheld_data[row].id;
         delete handheld_data[row].id;
         HandheldData.create(handheld_data[row]).done(function (err, new_data) {
           if (err) {
