@@ -70,15 +70,23 @@ module.exports = {
 
     // TODO: Only find data for your org
     sails.log.debug("Attempting to read handheld data for HandheldData#get_data");
-    HandheldData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).skip(page*limit).limit(limit).done(function (err, data) {
+    HandheldData.find().populate('device_id').where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).skip(page*limit).limit(limit).done(function (err, data) {
       if (err) {
         sails.log.error("There was an error retrieving handheld data: " + err);
         res.json({error: "Internal server error"}, 500);
         return;
       }
 
-      sails.log.info("Retrieved handheld data for HandheldData#get_data");
-      res.json(JSON.stringify(data));
+      if (data !== undefined && data !== null) {
+        sails.log.info("Retrieved handheld data for HandheldData#get_data");
+
+        // Filter data
+        data = data.filter(function (i) {
+          return i.device_id[0] !== undefined && i.device_id[0].organization === req.session.organization;
+        });
+
+        res.json(JSON.stringify(data));
+      }
     });
   }
 }
