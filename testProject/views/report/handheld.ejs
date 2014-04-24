@@ -29,7 +29,7 @@
                     var data = JSON.parse(response);
                     for (var i in data) {
                         $("#handheld_table").append("<tr>" +
-                                "<td>" + data[i]['device_id'] + "</td>" +
+                                "<td>" + data[i]['device_id'][0]['device_id'] + "</td>" +
                                 "<td>" + data[i]['probe_id'] + "</td>" +
                                 "<td>" + data[i]['item_name'] + "</td>" +
                                 "<td>" + data[i]['user_name'] + "</td>" +
