@@ -27,12 +27,12 @@ module.exports.bootstrap = function (cb) {
   sails.recent_rfid_data = {};
 
   createEventEmitters();
-  // setupTickEvent();
-  // setupBlueRoverApi();
-  // setupEventListeners();
-  // setupHandheldDataParser();
-  // loadRecentAlerts();
-  // loadRecentRfidData();
+  setupTickEvent();
+  setupBlueRoverApi();
+  setupEventListeners();
+  setupHandheldDataParser();
+  loadRecentAlerts();
+  loadRecentRfidData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
@@ -213,6 +213,9 @@ function setupHandheldDataParser () {
   setInterval(function () {
     handheldParser(sails.handheld_data_path, true, function (handheld_data) {
       for (var row in handheld_data) {
+        // Rename the ID column to external ID and delete it
+        handheld_data[row].external_id = id;
+        delete handheld_data[row].id;
         HandheldData.create(handheld_data[row]).done(function (err, new_data) {
           if (err) {
             sails.log.error("HandheldData was not saved successfully");
