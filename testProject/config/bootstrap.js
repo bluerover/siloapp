@@ -59,8 +59,8 @@ function setupBlueRoverApi() {
   var bluerover = require('node-bluerover');
 
   bluerover.setCredentials({
-    key: "5csNQ8XP38XubTI7oaWPhopjRMROYxwqyBstSmCkU7/3Mek2ej8pLIxj6hQVTQgd",
-    token: "AQm6EiXPCfJAg84T/2tcUr2CDRGOzhtDBK/T9GE6",
+    key: "0OZW0W/dO8KiWlmee24z7S8YxZGqb9ALYDT1x3QUsgpJvYzpiPCgZHoiu7QKUIdQ",
+    token: "v0P6TZqlK3QQ5dHpg8FgEno2GRx6Phh+w9QQQ7vH",
     baseUrl: "http://developers.polairus.com"});
 
     var streamBuffer = "";
