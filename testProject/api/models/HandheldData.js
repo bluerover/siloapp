@@ -1,21 +1,24 @@
 /**
- * Dashboard
+ * HandheldData.js
  *
- * @module      :: Model
- * @description :: A short summary of how this model works and what it represents.
- * @docs    :: http://sailsjs.org/#!documentation/models
+ * @description :: TODO: You might write a short summary of how this model works and what it represents here.
+ * @docs		:: http://sailsjs.org/#!documentation/models
  */
 
 module.exports = {
 
-  attributes: {
+	attributes: {
 
-    id: {
+    external_id: {
       type: 'integer',
       required: true
     },
     device_id: {
+      columnName: 'device_id',
       type: 'string',
+      foreignKey: true,
+      references: 'handheld',
+      on: 'device_id',
       required: true
     },
     probe_id: {
@@ -51,6 +54,6 @@ module.exports = {
       required: false
     }
 
-  }
+	}
 
 };

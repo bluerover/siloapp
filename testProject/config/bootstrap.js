@@ -27,12 +27,12 @@ module.exports.bootstrap = function (cb) {
   sails.recent_rfid_data = {};
 
   createEventEmitters();
-  setupTickEvent();
-  setupBlueRoverApi();
-  setupEventListeners();
-  setupHandheldDataParser();
-  loadRecentAlerts();
-  loadRecentRfidData();
+  // setupTickEvent();
+  // setupBlueRoverApi();
+  // setupEventListeners();
+  // setupHandheldDataParser();
+  // loadRecentAlerts();
+  // loadRecentRfidData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
