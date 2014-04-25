@@ -11,7 +11,7 @@
         }
 
         function updateTable(start, end, page, limit) {
-            $("#download_csv_btn a").attr("href", "/rfid_data?type=csv&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
+            $("#download_csv_btn a").attr("href", "/rfid_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
             $("#table-loading").show();
             $("#handheld_table tbody tr").remove();
             $.ajax({
@@ -34,7 +34,7 @@
                                 "<td>" + data[i]['rfidTagNum']['id'] + "</td>" +
                                 "<td>" + data[i]['rfidTagNum']['display_name'] + "</td>" +
                                 "<td>" + data[i]['rfidTemperature'] + "</td>" +
-                                "<td>" + (new Date(data[i]['timestamp'] * 1000)).toString() + "</td>" +
+                                "<td>" + moment.unix(data[i]['timestamp']).format("MM/DD/YYYY hh:mm:ss a") + "</td>" +
                                 "</tr>");
                     }
                 },
@@ -57,8 +57,8 @@
         $('#reportrange').daterangepicker(
                 {
                     ranges: {
-                        'Today': [moment().subtract('days', 1), moment()],
-                        'Yesterday': [moment().subtract('days', 2), moment().subtract('days', 1)],
+                        'Today': [moment(), moment().add('days', 1)],
+                        'Yesterday': [moment().subtract('days', 1), moment()],
                         'Last 7 Days': [moment().subtract('days', 7), moment()],
                         'Last 30 Days': [moment().subtract('days', 30), moment()],
                         'This Month': [moment().startOf('month'), moment().endOf('month')],
@@ -67,12 +67,14 @@
                     startDate: defaultStart,
                     endDate: defaultEnd,
                     opens: "left",
-                    maxDate: moment()
+                    maxDate: moment().add('days', 1)
                 },
                 function(start, end) {
                     $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
                     pickerStart = start;
                     pickerEnd = end;
+                    page = 0;
+                    limit = 20;
                     updateTable(start, end, page, limit);
                 }
         );
