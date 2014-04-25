@@ -11,7 +11,7 @@
         }
 
         function updateTable(start, end, page, limit) {
-            $("#download_csv_btn a").attr("href", "/handheld_data?type=csv&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
+            $("#download_csv_btn a").attr("href", "/handheld_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
             $("#table-loading").show();
             $("#handheld_table tbody tr").remove();
             $.ajax({
@@ -32,10 +32,10 @@
                                 "<td>" + data[i]['device_id'][0]['device_id'] + "</td>" +
                                 "<td>" + data[i]['probe_id'] + "</td>" +
                                 "<td>" + data[i]['item_name'] + "</td>" +
-                                "<td>" + data[i]['user_name'] + "</td>" +
+                                "<td>" + data[i]['user_id'] + "</td>" +
                                 "<td>" + data[i]['temperature'] + "</td>" +
                                 "<td>" + (parseInt(data[i]['alarm']) === 0 ? "No" : "Yes") + "</td>" +
-                                "<td>" + (new Date(data[i]['timestamp'] * 1000)).toString() + "</td>" +
+                                "<td>" + moment.unix(data[i]['timestamp']).format("MM/DD/YYYY hh:mm:ss a") + "</td>" +
                                 "</tr>");
                     }
                 },
@@ -58,22 +58,24 @@
         $('#reportrange').daterangepicker(
                 {
                     ranges: {
-                        'Today': [moment(), moment()],
-                        'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
-                        'Last 7 Days': [moment().subtract('days', 6), moment()],
-                        'Last 30 Days': [moment().subtract('days', 29), moment()],
+                        'Today': [moment(), moment().add('days', 1)],
+                        'Yesterday': [moment().subtract('days', 1), moment()],
+                        'Last 7 Days': [moment().subtract('days', 7), moment()],
+                        'Last 30 Days': [moment().subtract('days', 30), moment()],
                         'This Month': [moment().startOf('month'), moment().endOf('month')],
                         'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
                     },
                     startDate: defaultStart,
                     endDate: defaultEnd,
                     opens: "left",
-                    maxDate: moment()
+                    maxDate: moment().add('days', 1)
                 },
                 function(start, end) {
                     $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
                     pickerStart = start;
                     pickerEnd = end;
+                    page = 0;
+                    limit = 20;
                     updateTable(start, end);
                 }
         );
@@ -111,7 +113,7 @@
             <th>Device ID</th>
             <th>Probe ID</th>
             <th>Item</th>
-            <th>User</th>
+            <th>User ID</th>
             <th>Temperature</th>
             <th>Alarm</th>
             <th>Timestamp</th>

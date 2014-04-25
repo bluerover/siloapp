@@ -95,6 +95,7 @@ module.exports = {
     }
 
     if (csv === '1') {
+      sails.log.debug("Attempting to read rfid data for RfidData#get_data");
       RfidData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).populate('rfidTagNum').exec(function (err, data) {
         if (err) {
           sails.log.error("There was an error retrieving RFID data: " + err);
