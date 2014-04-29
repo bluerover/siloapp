@@ -71,60 +71,70 @@ module.exports = {
 
     if (csv === '1') {
       sails.log.debug("Attempting to read handheld data for HandheldData#get_data");
-      HandheldData.find().populate('device_id').where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).done(function (err, data) {
-        if (err) {
-          sails.log.error("There was an error retrieving handheld data: " + err);
-          res.json({error: "Internal server error"}, 500);
-          return;
-        }
-
-        if (data !== undefined && data !== null) {
-          sails.log.info("Retrieved handheld data for HandheldData#get_data");
-
-          // Filter data
-          data = data.filter(function (i) {
-            return i.device_id[0] !== undefined && i.device_id[0].organization === req.session.organization;
-          });
-
-          var file = "Device ID,Probe ID,Item Name,User ID,Temperature,Alarm,Timestamp\n";
-          var moment = require('moment');
-          for (var row in data) {
-            file += data[row]['device_id'][0]['device_id'] + ",";
-            file += data[row]['probe_id'] + ",";
-            file += data[row]['item_name'] + ",";
-            file += data[row]['user_id'] + ",";
-            file += data[row]['temperature'] + ",";
-            file += (parseInt(data[row]['alarm']) === 0 ? "No" : "Yes") + ",";
-            file += moment.unix(data[row]['timestamp']).format("MM/DD/YYYY hh:mm:ss a");
-            file += "\n"
+      HandheldData.query("select hd.* " +
+        "from handhelddata as hd join handheld as h on hd.device_id = h.device_id " + 
+        "where timestamp >= ? and timestamp <= ? and organization = ? " + 
+        "order by timestamp " + sort + " limit ? offset ?",
+        [range_start, range_end, req.session.organization, limit, page * limit],
+        function (err, data) {
+          if (err) {
+            sails.log.error("There was an error retrieving handheld data: " + err);
+            res.json({error: "Internal server error"}, 500);
+            return;
           }
-          res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Content-Disposition': "attachment; filename=handheld_" + range_start + "_" + range_end + ".csv"
-          });
-          res.end(file);
-        }
+
+          if (data !== undefined && data !== null) {
+            sails.log.info("Retrieved handheld data for HandheldData#get_data");
+
+            // Filter data
+            data = data.filter(function (i) {
+              return i.device_id[0] !== undefined;
+            });
+
+            var file = "Device ID,Probe ID,Item Name,User ID,Temperature,Alarm,Timestamp\n";
+            var moment = require('moment');
+            for (var row in data) {
+              file += data[row]['device_id'] + ",";
+              file += data[row]['probe_id'] + ",";
+              file += data[row]['item_name'] + ",";
+              file += data[row]['user_id'] + ",";
+              file += data[row]['temperature'] + ",";
+              file += (parseInt(data[row]['alarm']) === 0 ? "No" : "Yes") + ",";
+              file += moment.unix(data[row]['timestamp']).format("MM/DD/YYYY hh:mm:ss a");
+              file += "\n"
+            }
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Content-Disposition': "attachment; filename=handheld_" + range_start + "_" + range_end + ".csv"
+            });
+            res.end(file);
+          }
       });
     }
     else {
       sails.log.debug("Attempting to read handheld data for HandheldData#get_data");
-      HandheldData.find().populate('device_id').where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).skip(page*limit).limit(limit).done(function (err, data) {
-        if (err) {
-          sails.log.error("There was an error retrieving handheld data: " + err);
-          res.json({error: "Internal server error"}, 500);
-          return;
-        }
+      HandheldData.query("select hd.* " +
+        "from handhelddata as hd join handheld as h on hd.device_id = h.device_id " + 
+        "where timestamp >= ? and timestamp <= ? and organization = ? " + 
+        "order by timestamp " + sort + " limit ? offset ?",
+        [range_start, range_end, req.session.organization, limit, page * limit],
+        function (err, data) {
+          if (err) {
+            sails.log.error("There was an error retrieving handheld data: " + err);
+            res.json({error: "Internal server error"}, 500);
+            return;
+          }
 
-        if (data !== undefined && data !== null) {
-          sails.log.info("Retrieved handheld data for HandheldData#get_data");
+          if (data !== undefined && data !== null) {
+            sails.log.info("Retrieved handheld data for HandheldData#get_data");
 
-          // Filter data
-          data = data.filter(function (i) {
-            return i.device_id[0] !== undefined && i.device_id[0].organization === req.session.organization;
-          });
+            // Filter data
+            data = data.filter(function (i) {
+              return i.device_id[0] !== undefined;
+            });
 
-          res.json(JSON.stringify(data));
-        }
+            res.json(JSON.stringify(data));
+          }
       });
     }
   }
