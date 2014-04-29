@@ -31,8 +31,8 @@
                         $("#handheld_table").append("<tr>" +
                                 "<td>" + data[i]['deviceID'] + "</td>" +
                                 "<td>" + data[i]['statusCode'] + "</td>" +
-                                "<td>" + data[i]['rfidTagNum']['id'] + "</td>" +
-                                "<td>" + data[i]['rfidTagNum']['display_name'] + "</td>" +
+                                "<td>" + data[i]['rfidTagNum'] + "</td>" +
+                                "<td>" + data[i]['display_name'] + "</td>" +
                                 "<td>" + data[i]['rfidTemperature'] + "</td>" +
                                 "<td>" + moment.unix(data[i]['timestamp']).format("MM/DD/YYYY hh:mm:ss a") + "</td>" +
                                 "</tr>");

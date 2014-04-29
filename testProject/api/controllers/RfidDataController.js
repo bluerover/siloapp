@@ -95,42 +95,52 @@ module.exports = {
     }
 
     if (csv === '1') {
-      sails.log.debug("Attempting to read rfid data for RfidData#get_data");
-      RfidData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).populate('rfidTagNum').exec(function (err, data) {
-        if (err) {
-          sails.log.error("There was an error retrieving RFID data: " + err);
-          res.json({error: "Internal server error"}, 500);
-          return;
-        }
+      sails.log.debug("Attempting to read rfid data for RfidData#get_data.csv");
+      RfidData.query("select rd.*, r.organization, r.display_name " + 
+        "from rfiddata as rd join rfid as r on rd.rfidTagNum = r.id " +
+        "where timestamp >= ? and timestamp <= ? and organization = ? " + 
+        "order by timestamp " + sort, 
+        [range_start, range_end, req.session.organization, limit, page * limit], 
+        function (err, data) {
+          if (err) {
+            sails.log.error("There was an error retrieving RFID data: " + err);
+            res.json({error: "Internal server error"}, 500);
+            return;
+          }
 
-        // Filter out RFIDs that aren't for the current user
-        data = data.filter(function (i) {
-          return i.rfidTagNum !== undefined && i.rfidTagNum.organization === req.session.organization;
-        });
+          // Filter out RFIDs that aren't for the current user
+          data = data.filter(function (i) {
+            return i.rfidTagNum !== undefined && i.organization === req.session.organization;
+          });
 
-        sails.log.info("Retrieved RFID data for RfidData#get_data");
+          sails.log.info("Retrieved RFID data for RfidData#get_data");
 
-        var file = "Device ID,Status Code,RFID Tag Number,Asset Name,RFID Temperature,Timestamp\n";
-        var moment = require('moment');
-        for (var row in data) {
-          file += data[row]['deviceID'] + ",";
-          file += data[row]['statusCode'] + ",";
-          file += data[row]['rfidTagNum']['id'] + ",";
-          file += data[row]['rfidTagNum']['display_name'] + ",";
-          file += data[row]['rfidTemperature'] + ",";
-          file += moment.unix(data[row]['timestamp']).format("MM/DD/YYYY hh:mm:ss a");
-          file += "\n"
-        }
-        res.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Content-Disposition': "attachment; filename=rfid_" + range_start + "_" + range_end + ".csv"
-        });
-        res.end(file);
+          var file = "Device ID,Status Code,RFID Tag Number,Asset Name,RFID Temperature,Timestamp\n";
+          var moment = require('moment');
+          for (var row in data) {
+            file += data[row]['deviceID'] + ",";
+            file += data[row]['statusCode'] + ",";
+            file += data[row]['rfidTagNum'] + ",";
+            file += data[row]['display_name'] + ",";
+            file += data[row]['rfidTemperature'] + ",";
+            file += moment.unix(data[row]['timestamp']).format("MM/DD/YYYY hh:mm:ss a");
+            file += "\n"
+          }
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Content-Disposition': "attachment; filename=rfid_" + range_start + "_" + range_end + ".csv"
+          });
+          res.end(file);
       });
     }
     else {
       sails.log.debug("Attempting to read rfid data for RfidData#get_data");
-      RfidData.find().where({timestamp: {'>=': range_start, '<=': range_end}}).sort('timestamp ' + sort).skip(page*limit).limit(limit).populate('rfidTagNum').exec(function (err, data) {
+      RfidData.query("select rd.*, r.organization, r.display_name " + 
+        "from rfiddata as rd join rfid as r on rd.rfidTagNum = r.id " +
+        "where timestamp >= ? and timestamp <= ? and organization = ? " + 
+        "order by timestamp " + sort + " limit ? offset ?", 
+        [range_start, range_end, req.session.organization, limit, page * limit], 
+        function (err, data) {
         if (err) {
           sails.log.error("There was an error retrieving RFID data: " + err);
           res.json({error: "Internal server error"}, 500);
@@ -138,9 +148,8 @@ module.exports = {
         }
 
         // Filter out RFIDs that aren't for the current user
-        // TODO: Potential security flaw: If you get less than 'limit' then you know how many were filtered out
         data = data.filter(function (i) {
-          return i.rfidTagNum !== undefined && i.rfidTagNum.organization === req.session.organization;
+          return i.rfidTagNum !== undefined && i.organization === req.session.organization;
         });
 
         sails.log.info("Retrieved RFID data for RfidData#get_data");
