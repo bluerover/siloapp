@@ -1,0 +1,59 @@
+.summary-chart {
+  width: 100%;
+  height: 20px;
+}
+
+.summary-chart > .alarm {
+  display: inline-block;
+  background-color: #FF544C;
+  height: 100%;
+  transition-duration: 0.5s;
+  width: 100%;
+}
+
+.summary-chart > .risk {
+  display: inline-block;
+  background-color: #FFE249;
+  height: 100%;
+  width: 0%;
+  transition-duration: 0.5s;
+}
+
+.summary-chart > .ok {
+  display: inline-block;
+  background-color: #C7EECD;
+  height: 100%;
+  width: 0%;
+  transition-duration: 0.5s;
+}
+
+.summary-content {
+  height: 400px;
+  overflow: auto;
+  margin-bottom: 15px;
+}
+
+.summary-content ol {
+  -webkit-column-count: 3; /* Chrome, Safari, Opera */
+  -moz-column-count: 3; /* Firefox */
+  column-count: 3;
+  list-style: decimal inside;
+}
+
+.summary-content ol > li {
+  padding-top: 5px;
+  font-size: 12pt;
+}
+
+.summary-content ol > li.alarm {
+  color: #FF544C;
+}
+
+.summary-content ol > li.risk {
+  color: #EECA0B;
+}
+
+.summary-content ol > li.ok {
+  color: #455569;
+  font-weight: 200;
+}

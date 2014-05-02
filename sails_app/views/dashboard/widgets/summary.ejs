@@ -1,0 +1,20 @@
+<div class='col-lg-6 col-md-8 col-xs-12'>
+    <div class='panel panel-default'>
+        <div class="widget large-height" visualization="<%= widget.widget.name %>" data-filter="<%= widget.data_filter %>" data-id="<%= widget.id %>" data-options="<%= widget.options %>">
+            <div class="widget-title" class="row">
+                <%= widget.display_name %>
+            </div>
+            <div id="summary-content-<%= widget.id %>" class="content">
+                <div class="summary-content">
+                </div>
+
+                <div class="summary-chart">
+                    <div class="alarm"></div><!-- remove space
+                    --><div class="risk"></div><!-- remove space
+                    --><div class="ok"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
