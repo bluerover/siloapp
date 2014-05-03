@@ -26,15 +26,15 @@ svg polyline[fill="#FBE796"] {
 }
 
 svg .alarm {
-    fill: #FF544C !important;
+    fill: #E3482D !important;
 }
 
 svg .in-progress {
-    fill: #FFE249 !important;
+    fill: #FBCF22 !important;
 }
 
 svg .ok {
-    fill: #C7EECD !important;
+    fill: #4FB848 !important;
 }
 
 polyline[id] {
