@@ -117,7 +117,7 @@ function setupEventListeners() {
   // Save parsed data to database
   sails.event_emitter.on('parsed_data', function(data) {
     sails.log.debug("Attempting to write rfid data to database: " + data.rfidTagNum);
-    RfidData.create(data).done(function (err, rfid_data) {
+    RfidData.create(data).exec(function (err, rfid_data) {
       if (err) { sails.log.error("Error saving RFID data to database: " + util.inspect(err)); }
       else { sails.log.info("Wrote new RFID data to database: " + rfid_data.rfidTagNum); }
     });
@@ -158,7 +158,7 @@ function setupEventListeners() {
 function initializeAlertHandler(tag_id, parsed_data, resume_data) {
   var parsed_rfid = tag_id.substring(5);
   sails.log.debug("Attempting to find alerthandler from database");
-  RfidAlerthandler.find({rfid: parsed_rfid}).done(function (err, alerthandler_data) {
+  RfidAlerthandler.find({rfid: parsed_rfid}).exec(function (err, alerthandler_data) {
     if (err) { sails.log.error("There was a problem finding the alerthandlers for an rfid: " + err); return; }
 
     sails.log.info("alerthandler found!");
@@ -182,7 +182,7 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
           sails.alert_emitter.emit(tag_id, data);
           sails.recent_alerts[this.rfid] = data;
           sails.log.debug("Attempting to write alert to database");
-          AlertData.create(data).done(function (err, d) {
+          AlertData.create(data).exec(function (err, d) {
             if (err) sails.log.error("AlertData was not saved successfully: " + err);
             sails.log.info("Wrote alert to database");
           });
@@ -216,7 +216,7 @@ function setupHandheldDataParser () {
         // Rename the ID column to external ID and delete it
         handheld_data[row].external_id = handheld_data[row].id;
         delete handheld_data[row].id;
-        HandheldData.create(handheld_data[row]).done(function (err, new_data) {
+        HandheldData.create(handheld_data[row]).exec(function (err, new_data) {
           if (err) {
             sails.log.error("HandheldData was not saved successfully");
             return;

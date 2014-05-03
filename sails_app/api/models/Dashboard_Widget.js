@@ -7,14 +7,14 @@
  */
 
 var verifyAssociations = function(attrs, next) {
-  Dashboard.findOne(attrs.dashboard).done(function (err, dashboard) {
+  Dashboard.findOne(attrs.dashboard).exec(function (err, dashboard) {
     if (err) return next(err);
 
     if (dashboard === undefined) return next({
       error: "Dashboard ID " + attrs.dashboard + " does not exist."
     });
 
-    Widget.findOne(attrs.widget).done(function (err, widget) {
+    Widget.findOne(attrs.widget).exec(function (err, widget) {
       if (err) return next(err);
 
       if (widget === undefined) return next({

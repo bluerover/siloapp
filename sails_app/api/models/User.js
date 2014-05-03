@@ -7,7 +7,7 @@
  */
 
 var verifyAssociations = function (attrs, next) {
-  Organization.findOne(attrs.organization).done(function (err, org) {
+  Organization.findOne(attrs.organization).exec(function (err, org) {
     if (err) return next(err);
     
     if (org === undefined) return next({

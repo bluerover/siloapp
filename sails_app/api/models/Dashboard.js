@@ -7,7 +7,7 @@
  */
 
 var verifyAssociations = function(attrs, next) {
-  Organization.findOne(attrs.organization).done(function (err, org) {
+  Organization.findOne(attrs.organization).exec(function (err, org) {
     if (org === undefined) return next({
       error: "Organization ID " + attrs.organization + " does not exist."
     });

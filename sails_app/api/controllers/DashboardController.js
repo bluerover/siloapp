@@ -72,7 +72,7 @@ module.exports = {
     }
 
     sails.log.debug("Attempting to find dashboard from database for dashboard request");
-    Dashboard.find({id: dashboard_id}).done(function (err, d) {
+    Dashboard.find({id: dashboard_id}).exec(function (err, d) {
       if (err) {
         res.view({layout: "barebones"}, '500');
         return;

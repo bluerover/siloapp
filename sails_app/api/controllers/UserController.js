@@ -51,14 +51,14 @@ module.exports = {
     sails.log.info("User login request");
     var bcrypt = require('bcrypt');
 
-    User.findOneByUsername(req.body.username).done(function (err, user) {
+    User.findOneByUsername(req.body.username).exec(function (err, user) {
       if (err) res.view({layout: "barebones"}, '500');
 
       if (user) {
         bcrypt.compare(req.body.password, user.password, function (err, match) {
           if (err) res.view({layout: "barebones"}, '500');
           if (match) {
-            Organization.findOne(user.organization).done(function (err, org) {
+            Organization.findOne(user.organization).exec(function (err, org) {
               if (err || org === undefined || org === null) {
                 res.view({layout: "barebones"}, '500');
                 return;
