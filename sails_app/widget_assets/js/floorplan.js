@@ -10,15 +10,12 @@ function FloorPlan (selector, options) {
     this.svg_loaded = false;
     this.data_backlog = [];
 
-    console.log(this.rfid_data);
-
     this.onClose = function() {
         self.svg_loaded = false;
         self.data_backlog = [];
     }
 
     this.onMessage = function(data) {
-        console.log(data);
         var rfid = data.data.rfidTagNum;
 
         // Otherwise update text
