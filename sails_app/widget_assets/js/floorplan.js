@@ -44,36 +44,34 @@ function FloorPlan (selector, options) {
             self.svg.append(f);
             var g = self.svg.select("g");
 
-            // var clickHandler = function () {
-            //     var rfid = this.node.id.replace("floorplan-", "").replace("-text", "");
-            //     var $selector = $("[data-filter='rfid-" + rfid + "']");
-            //     $selector.addClass("highlight");
-            //     setTimeout(function() {
-            //         $selector.removeClass("highlight")
-            //     }, 2000);
+            $('[id*="-indicator"]').each(function () {
+                var indicator = $(this);
+                indicator.on('click', function () {
+                    var asset_id = indicator.attr('id').slice(0, -"-indicator".length);
+                    var rfid = null;
+                    for (var i in self.rfid_data) {
+                        if (self.rfid_data[i].id === asset_id) {
+                            rfid = i;
+                            break;
+                        }
+                    }
 
-            //     $('html, body').animate({
-            //         scrollTop: $selector.offset().top - 10
-            //     }, 500);
-            // };
-            
+                    var $selector = $("[data-filter='rfid-" + rfid + "']");
+                    $selector.addClass("highlight");
+                    setTimeout(function() {
+                        $selector.removeClass("highlight")
+                    }, 2000);
+
+                    $('html, body').animate({
+                        scrollTop: $selector.offset().top - 10
+                    }, 500);
+                })
+            });
+
             self.svg_loaded = true;
             for (var i in self.data_backlog) {
                 self.onMessage(self.data_backlog[i]);
             }
-
-            // $("polyline[id]").on('click', function() {
-            //     var rfid = this.id.replace("floorplan-", "").replace("-text", "");
-            //     var $selector = $("[data-filter='rfid-" + rfid + "']");
-            //     $selector.addClass("highlight");
-            //     setTimeout(function() {
-            //         $selector.removeClass("highlight")
-            //     }, 2000);
-
-            //     $('html, body').animate({
-            //         scrollTop: $selector.offset().top - 10
-            //     }, 500);
-            // });
         });
     };
 }

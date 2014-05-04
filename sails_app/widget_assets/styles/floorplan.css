@@ -13,16 +13,8 @@
     max-height: 90%;
 }
 
-svg text.floorplan_label {
-    font-family: "Lato", sans-serif;
-    font-weight: bold;
-    font-size: 22pt;
-    fill: #455569;
+svg .alarm, svg .in-progress, svg .ok {
     cursor: pointer;
-}
-
-svg polyline[fill="#FBE796"] {
-    fill: #C7EECD;
 }
 
 svg .alarm {
@@ -35,8 +27,4 @@ svg .in-progress {
 
 svg .ok {
     fill: #4FB848 !important;
-}
-
-polyline[id] {
-    cursor: pointer;
 }
