@@ -43,6 +43,7 @@
 .summary-content ol > li {
   padding-top: 5px;
   font-size: 12pt;
+  cursor: pointer;
 }
 
 .summary-content ol > li.alarm {

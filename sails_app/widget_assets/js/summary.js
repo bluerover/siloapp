@@ -17,6 +17,19 @@ function Summary (selector, options) {
         var rfid_num = self.rfid_nums[i];
         self.status_data[rfid_num] = 'alarm';
         list.append('<li id="summary-' + rfid_num + '" class="alarm">' + self.rfid_data[rfid_num] + '</li>');
+
+	$("li#summary-" + rfid_num).on('click', function() {
+	    var rfid_num = $(this).attr("id").slice("summary-".length);
+            var $selector = $("[data-filter='rfid-" + rfid_num + "']");
+            $selector.addClass("highlight");
+            setTimeout(function() {
+                $selector.removeClass("highlight")
+            }, 2000);
+
+            $('html, body').animate({
+                scrollTop: $selector.offset().top - 10
+            }, 500);
+        });
     }
 
     console.log(self.rfid_nums);
