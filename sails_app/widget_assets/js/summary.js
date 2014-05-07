@@ -8,13 +8,12 @@ function Summary (selector, options) {
     self.total_rfids = self.rfid_nums.length;
     self.data_id = self.selector.attr("data-id");
     self.status_data = {};
-
     self.selector.find('.summary-content').append('<ol></ol>');
     var list = self.selector.find('.summary-content ol');
 
     // Set initial data to be alarm for everything
     for (var i in self.rfid_nums) {
-        var rfid_num = self.rfid_nums[i];
+        var rfid_num = self.rfids[i].slice("rfid-".length);
         self.status_data[rfid_num] = 'alarm';
         list.append('<li id="summary-' + rfid_num + '" class="alarm">' + self.rfid_data[rfid_num] + '</li>');
 
