@@ -1,6 +1,6 @@
 .summary-chart {
   width: 100%;
-  height: 20px;
+  height: 25px;
 }
 
 .summary-chart > .alarm {
@@ -25,6 +25,16 @@
   height: 100%;
   width: 0%;
   transition-duration: 0.5s;
+}
+
+.summary-chart span {
+  display: inline-block;
+  color: #455569;
+  height:100%;
+  padding-top:3px;
+  text-align: center;
+  width: 100%;
+  vertical-align: middle;
 }
 
 .summary-content {

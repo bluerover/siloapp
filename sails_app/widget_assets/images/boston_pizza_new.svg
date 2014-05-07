@@ -3,8 +3,8 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1"
 	 id="Woodstock_BP" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="735px" height="521.635px"
-	 viewBox="28.5 0 735 521.635" enable-background="new 28.5 0 735 521.635" xml:space="preserve">
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="125px" width="735px" height="400.635px"
+	 viewBox="28.5 125 735 400.635" enable-background="new 28.5 125 735 400.635" xml:space="preserve">
 <g>
 	<defs>
 		<rect id="SVGID_1_" x="28.5" y="181.713" width="735" height="339"/>
@@ -10038,7 +10038,7 @@
 		</g>
 	</g>
 </g>
-<g id="g9058">
+<!--<g id="g9058">
 	<path id="path9060" fill="#4C286D" d="M38.393,52.101h-2.551v-0.589c1.499-0.098,2.438-0.252,2.731-1.946h0.715v9.875h-0.896
 		V52.101z"/>
 	<path id="path9062" fill="#4C286D" d="M43.165,59.441v-1.232h1.022v1.232H43.165z"/>
@@ -10966,5 +10966,5 @@
 		c0,1.387-1.247,2.115-2.955,2.115c-1.709,0-2.688-1.093-2.76-2.466L644.04,117.171L644.04,117.171z"/>
 	<path id="path9672" fill="#4C286D" d="M650.115,122.116c1.331-1.934,2.145-4.202,2.145-6.556c0-2.325-0.854-4.553-2.145-6.472
 		h0.715c1.541,2.129,2.396,3.88,2.396,6.541c0,2.563-0.883,4.469-2.396,6.486L650.115,122.116L650.115,122.116z"/>
-</g>
+</g> -->
 </svg>

@@ -77,9 +77,13 @@ function Summary (selector, options) {
             var percent_risk = Math.floor(100 * risk / self.total_rfids);
             var percent_ok = Math.floor(100 * ok / self.total_rfids);
 
-            self.selector.find('.summary-chart > .alarm').css({width: percent_alarm + "%"});
-            self.selector.find('.summary-chart > .risk').css({width: percent_risk + "%"});
-            self.selector.find('.summary-chart > .ok').css({width: percent_ok + "%"});
+            //delete the counts inside and replace it with our current counts
+
+            self.selector.find('.summary-chart > .alarm').css({width: percent_alarm + "%"}).empty().append("<span>"+alarm+"</span>");
+            self.selector.find('.summary-chart > .risk').css({width: percent_risk + "%"}).empty().append("<span>"+risk+"</span>");
+            self.selector.find('.summary-chart > .ok').css({width: percent_ok + "%"}).empty().append("<span>"+ok+"</span>");
+
+
         }
     };
 
