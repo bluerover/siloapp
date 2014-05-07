@@ -65,7 +65,7 @@ function FloorPlan (selector, options) {
                     $('html, body').animate({
                         scrollTop: $selector.offset().top - 10
                     }, 500);
-                })
+                }).css('cursor','pointer');
             });
 
             self.svg_loaded = true;
