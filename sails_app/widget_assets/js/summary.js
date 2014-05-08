@@ -15,7 +15,12 @@ function Summary (selector, options) {
     for (var i in self.rfid_nums) {
         var rfid_num = self.rfids[i].slice("rfid-".length);
         self.status_data[rfid_num] = 'alarm';
-        list.append('<li id="summary-' + rfid_num + '" class="alarm">' + self.rfid_data[rfid_num] + '</li>');
+        list.append('<div><li id="summary-' + rfid_num + '" class="alarm">' + self.rfid_data[rfid_num] + '</li></div>');
+	
+	//it's a right div, put some margin on it
+	if(i % 2 == 1) {
+		list.find("div:last-child").css("margin-left","25px");
+	}
 
 	$("li#summary-" + rfid_num).on('click', function() {
 	    var rfid_num = $(this).attr("id").slice("summary-".length);
