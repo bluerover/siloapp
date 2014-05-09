@@ -46,9 +46,9 @@
 }
 
 .summary-content ol {
-  -webkit-column-count: 1; /* Chrome, Safari, Opera */
-  -moz-column-count: 1; /* Firefox */
-  column-count: 1;
+  -webkit-column-count: 2; /* Chrome, Safari, Opera */
+  -moz-column-count: 2; /* Firefox */
+  column-count: 2;
   list-style: decimal inside;
 }
 
@@ -58,20 +58,16 @@
   cursor: pointer;
 }
 
-.summary-content ol div {
-  display: inline-block;
-  width: 45%;
-}
 
-.summary-content ol li.alarm {
+.summary-content ol > li.alarm {
   color: #FF544C;
 }
 
-.summary-content ol li.risk {
+.summary-content ol > li.risk {
   color: #EECA0B;
 }
 
-.summary-content ol li.ok {
+.summary-content ol > li.ok {
   color: #455569;
   font-weight: 200;
 }
