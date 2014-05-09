@@ -51,6 +51,7 @@ html, body {
 body {
     background-color:white;
     -webkit-font-smoothing: antialiased;
+    padding-top: 70px;
 }
 .navbar-default {background-color:#EEEEEE;border-width:0;z-index:5;}
 .navbar-default .navbar-nav > .active > a,.navbar-default .navbar-nav > li:hover > a {border:0 solid #4285f4;border-bottom-width:2px;font-weight:800;background-color:transparent;}
