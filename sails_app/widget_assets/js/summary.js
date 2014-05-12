@@ -26,7 +26,7 @@ function Summary (selector, options) {
             }, 2000);
 
             $('html, body').animate({
-                scrollTop: $selector.offset().top - 10
+                scrollTop: $selector.offset().top - 60
             }, 500);
         });
     }
