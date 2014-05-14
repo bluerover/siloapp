@@ -12,7 +12,7 @@
  * http://sailsjs.org/#documentation
  */
 
-var mysql_password = process.env.NODE_ENV === 'production' ? '' : '';
+var mysql_password = process.env.NODE_ENV === 'production' ? 'root' : '';
 
 module.exports.adapters = {
 
