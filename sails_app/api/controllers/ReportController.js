@@ -11,6 +11,7 @@ module.exports = {
   rfid: function (req, res) {
     res.view({
       title: "RFID Sensor Report",
+      organization_num: req.session.organization,
       organization_name: req.session.organization_name,
       page_category: "reports",
       full_name: req.session.full_name,
@@ -21,6 +22,7 @@ module.exports = {
   handheld: function (req, res) {
     res.view({
       title: "Handheld Temperature Sensor Report",
+      organization_num: req.session.organization,
       organization_name: req.session.organization_name,
       page_category: "reports",
       full_name: req.session.full_name,
