@@ -71,3 +71,9 @@
   color: #455569;
   font-weight: 200;
 }
+
+.summary-content ol > li.off {
+  color: #455569;
+  font-weight: 200;
+  text-decoration: line-through;
+}

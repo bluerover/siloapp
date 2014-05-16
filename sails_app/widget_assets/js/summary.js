@@ -14,9 +14,13 @@ function Summary (selector, options) {
     // Set initial data to be alarm for everything
     for (var i in self.rfid_nums) {
         var rfid_num = self.rfids[i].slice("rfid-".length);
-        self.status_data[rfid_num] = 'alarm';
-        list.append('<li id="summary-' + rfid_num + '" class="alarm">' + self.rfid_data[rfid_num] + '</li>');
-	
+	//currently used to represent off
+	if(rfid_num < 0) {
+        	list.append('<li id="summary-' + rfid_num + '" class="off">' + self.rfid_data[rfid_num] + '</li>');
+	} else {
+        	self.status_data[rfid_num] = 'alarm';
+        	list.append('<li id="summary-' + rfid_num + '" class="alarm">' + self.rfid_data[rfid_num] + '</li>');
+	}
 	$("li#summary-" + rfid_num).on('click', function() {
 	    var rfid_num = $(this).attr("id").slice("summary-".length);
             var $selector = $("[data-filter='rfid-" + rfid_num + "']");
