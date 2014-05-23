@@ -18,7 +18,7 @@ function TemperatureAboveX (event_bus, config, resume_data) {
       var amount = (Math.round(this.last_tick/1000) - Math.round(this.period_start_timestamp/1000))/Math.round(consecutive_time/1000);
       if (amount < 1) {
         var sendEmail = false;
-        if(amount > 0.5 && this.first_email_alert === false) {
+        if(amount > 0.75 && this.first_email_alert === false) {
           sendEmail = true;
           this.first_email_alert = true;
         }
@@ -69,7 +69,7 @@ function TemperatureAboveX (event_bus, config, resume_data) {
       var percent = parseFloat(this.resume_data.message / 100);
       var time_into = Math.floor(this.time_until_alarm * percent);
       this.period_start_timestamp = (this.resume_data.timestamp * 1000) - time_into;
-      if (percent > 0.5) {
+      if (percent > 0.75) {
         this.first_email_alert = true;
       }
     }

@@ -181,14 +181,14 @@ function setupEventListeners() {
             }
             var nodemailer = require("nodemailer");
             var smtpTransport = nodemailer.createTransport("sendmail");
-            var alertTime = data.status === "alarm" ? 2 : 1;
+            var alertTime = data.status === "alarm" ? 2 : 1.5;
             for (var index in users) {
               smtpTransport.sendMail({
-               from: "BlueRover Alerts <alerts@blueRover.com>", // sender address
+               from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
                to: users[index].full_name() + "<" + users[index].email + ">", // comma separated list of receivers
                subject: organization.name + " Temperature Alert", // Subject line
                html: "<p>Hi " + users[index].first_name + ",<br/><br/>"
-                     + rfid.display_name + "(" + rfid.display_name_2 + ") at " + organization.name
+                     + rfid.display_name + " (" + rfid.display_name_2 + ") at " + organization.name
                      + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/>"
                      + "To check the dashboard for " + organization.name + ", please login at "
                      + "<a href='safefood.bluerover.us/dashboard/" + dashboard_rows[0].id +"'>safefood.bluerover.us</a></p>"
