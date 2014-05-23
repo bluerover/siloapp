@@ -19,7 +19,8 @@
     "node-bluerover": "~0.1.0",
     "xml2js": "~0.4.2",
     "atob": "~1.1.0",
-    "moment": "~2.6.0"
+    "moment": "~2.6.0",
+    "nodemailer": "0.6.5"
   },
   "scripts": {
     "start": "node app.js",
