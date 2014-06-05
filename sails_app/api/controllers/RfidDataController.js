@@ -115,7 +115,7 @@ module.exports = {
 
           sails.log.info("Retrieved RFID data for RfidData#get_data");
 
-          var file = "Device ID,Status Code,RFID Tag Number,Asset Name, Asset Type,RFID Temperature,Timestamp\n";
+          var file = "Device ID,Status Code,RFID Tag Number,Asset Name,Sensor Type,RFID Temperature,Timestamp\n";
           var moment = require('moment');
           for (var row in data) {
             file += data[row]['deviceID'] + ",";
@@ -136,7 +136,7 @@ module.exports = {
     }
     else {
       sails.log.debug("Attempting to read rfid data for RfidData#get_data");
-      RfidData.query("select rd.*, r.organization, r.display_name " + 
+      RfidData.query("select rd.*, r.organization, r.display_name, r.display_name_2 " + 
         "from rfiddata as rd join rfid as r on rd.rfidTagNum = r.id " +
         "where timestamp >= ? and timestamp <= ? and organization = ? " + 
         "order by timestamp " + sort + " limit ? offset ?", 

@@ -33,6 +33,7 @@
                                 "<td>" + data[i]['statusCode'] + "</td>" +
                                 "<td>" + data[i]['rfidTagNum'] + "</td>" +
                                 "<td>" + data[i]['display_name'] + "</td>" +
+                                "<td>" + data[i]['display_name_2'] + "</td>" +
                                 "<td>" + data[i]['rfidTemperature'] + "</td>" +
                                 "<td>" + moment.unix(data[i]['timestamp']).format("MM/DD/YYYY hh:mm:ss a") + "</td>" +
                                 "</tr>");
@@ -113,6 +114,7 @@
             <th>Status Code</th>
             <th>RFID Tag Number</th>
             <th>Asset Name</th>
+            <th>Sensor Type</th>
             <th>RFID Temperature</th>
             <th>Timestamp</th>
         </tr>
