@@ -160,10 +160,6 @@ function setupEventListeners() {
         sails.log.error("No rfid found for rfid #" + data.rfidTagNum + ": " + err);
         return;
       }
-
-      //Currently, only UWO has emails
-      if (rfid.organization !== 6) return;
-
       User.find({organization: rfid.organization}).exec(function (err, users) {
         if(err) {
           sails.log.error("No users found for organization #" + rfid.organization + ": " + err);
@@ -174,31 +170,33 @@ function setupEventListeners() {
             sails.log.error("No organization found for organization #" + rfid.organization + ": " + err);
             return;
           }
-          Dashboard.find({organization: rfid.organization}).exec(function (err, dashboard_rows) {
+          Dashboard.findOne(rfid.organization).exec(function (err, dashboard) {
             if(err) {
-              sails.log.error("No organization found for organization #" + rfid.organization + ": " + err);
+              sails.log.error("No dashboard found for organization #" + rfid.organization + ": " + err);
               return;
             }
             var nodemailer = require("nodemailer");
             var smtpTransport = nodemailer.createTransport("sendmail");
             var alertTime = data.status === "alarm" ? 2 : 1.5;
             for (var index in users) {
-              smtpTransport.sendMail({
-               from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
-               to: users[index].full_name() + "<" + users[index].email + ">", // comma separated list of receivers
-               subject: organization.name + " Temperature Alert", // Subject line
-               html: "<p>Hi " + users[index].first_name + ",<br/><br/>"
-                     + rfid.display_name + " (" + rfid.display_name_2 + ") at " + organization.name
-                     + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/>"
-                     + "To check the dashboard for " + organization.name + ", please login at "
-                     + "<a href='safefood.bluerover.us/dashboard/" + dashboard_rows[0].id +"'>safefood.bluerover.us</a></p>"
-              },function(error, response) {
-                if(error) {
-                   sails.log.error("Email not sent to " + users[index].full_name() + ": " + error);
-                 } else {
-                   sails.log.info("Message sent to : " + users[index].full_name() + ": " + response.message);
-                }
-              });
+              if(users[index].is_alert_active) {
+                smtpTransport.sendMail({
+                 from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
+                 to: users[index].full_name() + "<" + users[index].email + ">", // comma separated list of receivers
+                 subject: organization.name + " Temperature Alert", // Subject line
+                 html: "<p>Hi " + users[index].first_name + ",<br/><br/>"
+                       + rfid.display_name + " (" + rfid.display_name_2 + ") at " + organization.name
+                       + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/>"
+                       + "To check the dashboard for " + organization.name + ", please login at "
+                       + "<a href='safefood.bluerover.us/dashboard/" + dashboard.id +"'>safefood.bluerover.us</a></p>"
+                },function(error, response) {
+                  if(error) {
+                     sails.log.error("Email not sent to " + users[index].full_name() + ": " + error);
+                   } else {
+                     sails.log.info("Message sent to : " + users[index].full_name() + ": " + response.message);
+                  }
+                });
+              }
             }
           });
         });

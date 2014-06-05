@@ -69,7 +69,10 @@ module.exports = {
       type: 'boolean',
       defaultsTo: false
     },
-
+    is_alert_active: {
+      type: 'boolean',
+      defaultsTo: false
+    },
     full_name: function() {
       return this.first_name + " " + this.last_name;
     }
