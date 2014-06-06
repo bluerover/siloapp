@@ -170,7 +170,7 @@ function setupEventListeners() {
             sails.log.error("No organization found for organization #" + rfid.organization + ": " + err);
             return;
           }
-          Dashboard.findOne(rfid.organization).exec(function (err, dashboard) {
+          Dashboard.findOne({organization: organization.id}).exec(function (err, dashboard) {
             if(err) {
               sails.log.error("No dashboard found for organization #" + rfid.organization + ": " + err);
               return;
