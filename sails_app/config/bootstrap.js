@@ -185,10 +185,10 @@ function setupEventListeners() {
                  to: users[index].full_name() + "<" + users[index].email + ">", // comma separated list of receivers
                  subject: organization.name + " Temperature Alert", // Subject line
                  html: "<p>Hi " + users[index].first_name + ",<br/><br/>"
-                       + rfid.display_name + " (" + rfid.display_name_2 + ") at " + organization.name
-                       + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/>"
-                       + "To check the dashboard for " + organization.name + ", please login at "
-                       + "<a href='safefood.bluerover.us/dashboard/" + dashboard.id +"'>safefood.bluerover.us</a></p>"
+                       + "Please check your dashboard for " + organization.name + " at "
+                       + "<a href='safefood.bluerover.us/dashboard/" + dashboard.id +"'>safefood.bluerover.us</a><br/><br/>"
+                       + "Reason: <b>" + rfid.display_name + " (" + rfid.display_name_2 + ")</b> at " + organization.name
+                       + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/></p>"
                 },function(error, response) {
                   if(error) {
                      sails.log.error("Email not sent to " + users[index].full_name() + ": " + error);
