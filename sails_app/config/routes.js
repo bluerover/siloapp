@@ -98,6 +98,12 @@ module.exports.routes = {
   'get /analytics': {
     controller: 'Analytics',
     action: 'index'
+  },
+
+  //Notifications
+  'get /notifications': {
+    controller: 'Notifications',
+    action: 'index'
   }
 
   /*
