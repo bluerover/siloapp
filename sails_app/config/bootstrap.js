@@ -56,7 +56,7 @@ function setupTickEvent() {
 }
 
 function setupBlueRoverApi() {
-  var bluerover = require('node-bluerover');
+  var bluerover = require('node-bluerover-api');
 
   bluerover.setCredentials({
     key: "0OZW0W/dO8KiWlmee24z7S8YxZGqb9ALYDT1x3QUsgpJvYzpiPCgZHoiu7QKUIdQ",
@@ -72,7 +72,6 @@ function setupBlueRoverApi() {
         // This is an empty buffer from the API
         var emptyBuffer = new Buffer([13, 10]);
         var str = e.toString();
-
         // If the data isn't empty, parse it and emit the object
         if (str !== emptyBuffer.toString()) {
             try {
