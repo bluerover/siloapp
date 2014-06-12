@@ -56,7 +56,18 @@ module.exports.routes = {
     action: 'get_data'
   },
 
+  // Compliance Data
+  'get /compliance_data': {
+    controller: 'ComplianceData',
+    action: 'get_data'
+  },
+
   // Reports
+  'get /reports/compliance': {
+    controller: 'Report',
+    action: 'compliance'
+  },
+
   'get /reports/rfid': {
     controller: 'Report',
     action: 'rfid'
