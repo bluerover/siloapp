@@ -58,8 +58,13 @@ module.exports.routes = {
 
   // Compliance Data
   'get /compliance_data': {
-    controller: 'ComplianceData',
+    controller: 'Compliance',
     action: 'get_data'
+  },
+
+  'get /compliance_settings': {
+    controller: 'Compliance',
+    action: 'get_settings'
   },
 
   // Reports

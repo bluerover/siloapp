@@ -21,7 +21,6 @@ module.exports.policies = {
   UserController: {
     'login_view': true,
   	'login': true,
-  	'create': true,
     // REST admin actions
     'findAll': ['isAdmin'],
     'find': ['isAdmin'],

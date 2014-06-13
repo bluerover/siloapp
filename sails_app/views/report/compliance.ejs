@@ -1,14 +1,16 @@
 <%- include report_js_css.ejs %>
+<script src="/js/bootstrap-timepicker.min.js" type="text/javascript"></script>
+<link rel="stylesheet" href="/styles/bootstrap-timepicker.min.css" />
 <script type="text/javascript">
     $(document).ready(function() {
-        function updatePagerStyles() {
-            if (page !== 0) {
-                $(".previous").removeClass("disabled");
-            }
-            else {
-                $(".previous").addClass("disabled");
-            }
-        }
+        // function updatePagerStyles() {
+        //     if (page !== 0) {
+        //         $(".previous").removeClass("disabled");
+        //     }
+        //     else {
+        //         $(".previous").addClass("disabled");
+        //     }
+        // }
 
         function updateTable(start, end, page, limit) {
             $("#download_csv_btn a").attr("href", "/compliance_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
@@ -47,14 +49,39 @@
             });
         }
 
+        function getRfid() {
+             $.ajax({
+                type: "GET",
+                url: "/compliance_settings",
+                success: function(response) {
+                    $("#table-loading").hide();
+                    var data = JSON.parse(response);
+                    console.log(data);
+                    for (var i in data) {
+                        console.log(data[i].threshold === undefined);
+                        $("#rfidList").append("<tr>" +
+                                "<td>" + data[i].id + "</td>" +
+                                "<td>" + data[i].display_name + "</td>" +
+                                "<td>" + data[i].display_name_2 + "</td>" +
+                                "<td><input class='input-small' type='text' id='" + data[i].id + "_threshold' " + "value='" +
+                                (data[i].threshold === undefined ? 0 : data[i].threshold) + "'></td>" +
+                                "</tr>");
+                    }
+                },
+                error: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                }
+            });
+        }
         var defaultEnd = moment().hour(0).minute(0).second(0).millisecond(0);
         var defaultStart = moment().hour(0).minute(0).second(0).millisecond(0).subtract('days', 1);
         var pickerStart = defaultStart;
         var pickerEnd = defaultEnd;
         var page = 0;
         var limit = 20;
-        updateTable(defaultStart, defaultEnd, page, limit);
-
+        getRfid();
+        //updateTable(defaultStart, defaultEnd, page, limit);
         $('#reportrange span').html(defaultStart.format('MMMM D, YYYY') + ' - ' + defaultEnd.format('MMMM D, YYYY'));
         $('#reportrange').daterangepicker(
                 {
@@ -101,26 +128,51 @@
 </script>
 
 <%- include report_header.ejs %>
-<div id="table-loading" class="collapse">
-    <img src="/images/loading.gif" />
-</div>
-<ul class="pager">
-  <li class="previous disabled"><a href="#">&larr; Newer</a></li>
-  <li class="next"><a href="#">Older &rarr;</a></li>
-</ul>
-<table id="compliance_table" class="table table-striped">
-    <thead>
-        <tr>
+<form class="form-horizontal" role="form">
+    <div class="col-md-3" id="filters" style="vertical-align:top;">
+        <legend>Filters</legend>
+        <div class="form-group">
+            <label class="col-sm-4 control-label">Start Time</label>
+            <div class="col-sm-8 bootstrap-timepicker">
+                <input name="startTime" type="time" class="input-small form-control">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-4 control-label">End Time</label>
+            <div class="col-sm-8 bootstrap-timepicker">
+                <input name="endTime" type="time" class="input-small form-control">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-4 control-label">Timezone</label>
+            <div class="col-sm-8">
+                <select class="form-control input-small" name="timezone">
+                    <option value="EST">EST</option>
+                    <option value="EDT">EDT</option>
+                    <option value="PST">PST</option>
+                    <option value="PDT">PDT</option>
+                    <option value="MST">MST</option>
+                    <option value="MDT">MDT</option>
+                    <option value="CST">CST</option>
+                    <option value="CDT">CDT</option>
+                    <option value="AST">AST</option>
+                    <option value="ADT">ADT</option>
+                </select>
+            </div>
+        </div>
+        <input type="submit" name="submit">
+    </div>
+    <div class="col-md-5">
+        <div id="table-loading" class="collapse">
+            <img src="/images/loading.gif" />
+        </div>
+        <table id="rfidList" class="table table-condensed">
             <th>RFID Tag Number</th>
             <th>Asset Name</th>
             <th>Sensor Type</th>
-            <th>RFID Avg Temp</th>
-            <th>RFID Var Temp</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-</table>
-<ul class="pager">
-  <li class="previous disabled"><a href="#">&larr; Newer</a></li>
-  <li class="next"><a href="#">Older &rarr;</a></li>
-</ul>
+            <th>Threshold</th>
+        </table>
+    </div>
+</form>
+<div class="col-md-4" id="results">
+</div>
