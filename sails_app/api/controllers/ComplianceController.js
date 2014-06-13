@@ -210,25 +210,26 @@ module.exports = {
 
   get_settings: function(req, res) {
   	Compliance.find({organization: req.session.organization}).exec(function (err, compliance) {
-		if (err) {
-			sails.log.error("There was an error retrieving compliance data: " + err);
-			return;
-		}
-		Rfid.query("select rfid.id, display_name, display_name_2 from rfid " +
-		"left join rfidreportdata as rrd on rfid.id = rrd.rfid where organization = ?",
-		[req.session.organization], function (err, rfidData) {
-			if (err) {
-				sails.log.error("There was an error retrieving rfid data: " + err);
-				return;
-			}
-			if (compliance.length === 0) {
-				//only send the rfid data
-				res.json(JSON.stringify(rfidData));
-			} else {
-				//we have both, combine to one json object and send it
-				res.json(JSON.stringify(compliance).concat(JSON.stringify(rfidData)));
-			}
-		});
+  		if (err) {
+  			sails.log.error("There was an error retrieving compliance data: " + err);
+  			return;
+  		}
+  		Rfid.query("select rfid.id, display_name, display_name_2 from rfid " +
+    		"left join rfidreportdata as rrd on rfid.id = rrd.rfid where organization = ? " +
+        "order by display_name asc, display_name_2 asc",
+    		[req.session.organization], function (err, rfidData) {
+  			if (err) {
+  				sails.log.error("There was an error retrieving rfid data: " + err);
+  				return;
+  			}
+  			if (compliance.length === 0) {
+  				//only send the rfid data
+  				res.json(JSON.stringify(rfidData));
+  			} else {
+  				//we have both, combine to one json object and send it
+  				res.json(JSON.stringify(compliance).concat(JSON.stringify(rfidData)));
+  			}
+		  });
   	});
   }
 };
