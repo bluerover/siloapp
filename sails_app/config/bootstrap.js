@@ -61,7 +61,7 @@ function setupBlueRoverApi() {
   bluerover.setCredentials({
     key: "0OZW0W/dO8KiWlmee24z7S8YxZGqb9ALYDT1x3QUsgpJvYzpiPCgZHoiu7QKUIdQ",
     token: "v0P6TZqlK3QQ5dHpg8FgEno2GRx6Phh+w9QQQ7vH",
-    baseUrl: "http://developers.polairus.com"});
+    baseUrl: "http://developers.bluerover.us"});
 
     var streamBuffer = "";
     // Open the BlueRover API stream
