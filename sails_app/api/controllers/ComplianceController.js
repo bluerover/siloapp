@@ -224,7 +224,7 @@ module.exports = {
                         .set("year",moment().get("year"))
                         .set("month", moment().get("month"))
                         .set("date", moment().get("date"));
-        timeFilters.push([startTime.unix(),endTime.unix()]);
+        timeFilters.push([startTime.subtract("days",20).unix(),endTime.subtract("days",19).unix()]);
       } else {
         var response = attributeName.split("_");
         rfidThresholds[response[0]] = {"type": response[1], "threshold": req.query[attributeName]};
@@ -263,14 +263,6 @@ module.exports = {
         res.json(JSON.stringify(job_data));
       }
     });
-
-
-
-    
-    //once we send the jobs, want to store total jobs, a msgID for them so that
-    //we can search through the reportdata table when all the jobs are done
-
-
   },
 
   get_settings: function(req, res) {
@@ -280,7 +272,7 @@ module.exports = {
   			return;
   		}
   		Rfid.query("select rfid.id, display_name, display_name_2 from rfid " +
-    		"left join rfidreportdata as rrd on rfid.id = rrd.rfid where organization = ? " +
+    		"left join rfidcompliancethreshold as rct on rfid.id = rct.rfid where organization = ? " +
         "order by display_name asc, display_name_2 asc",
     		[req.session.organization], function (err, rfidData) {
   			if (err) {

@@ -143,8 +143,8 @@
                 url: "/compliance_data",
                 data: values,
                 success: function(response) {
-                    //we'll return a msgID and then we need to poll somewhere to see when the message is done
-                    console.log(response);
+                    var json = JSON.parse(response);
+                    
                 },
                 error: function(response) {
                     console.log("Error");
