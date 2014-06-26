@@ -67,6 +67,11 @@ module.exports.routes = {
     action: 'get_settings'
   },
 
+  'get /save_compsettings': {
+    controller: 'Compliance',
+    action: 'save_settings'
+  },
+
   // Reports
   'get /reports/compliance': {
     controller: 'Report',

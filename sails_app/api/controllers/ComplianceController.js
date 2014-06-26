@@ -281,16 +281,39 @@ module.exports = {
   			}
   			if (compliance.length === 0) {
   				//only send the rfid data
-  				res.json(JSON.stringify(rfidData));
+  				res.json("{\"rfids\" : " + JSON.stringify(rfidData) + "}");
   			} else {
   				//we have both, combine to one json object and send it
-  				res.json(JSON.stringify(compliance).concat(JSON.stringify(rfidData)));
+  				res.json("{\"compliance\" : " + JSON.stringify(compliance) + "," +
+                   " \"rfids\" : " + JSON.stringify(rfidData) + "}");
   			}
 		  });
   	});
   },
 
   save_settings: function(req,res) {
+    //get the data, add the organization to json object, put it in compliance
+    timeFilters = {};
+    for(var attributeName in req.query) {
+      if(attributeName.indexOf("_threshold") != -1) {
+        break;
+      } else {
+        timeFilters[attributeName] = req.query[attributeName];
+        delete req.query[attributeName];
+      }
+    }
 
+    Compliance.create({organization: req.session.organization, timefilters: JSON.stringify(timeFilters),
+                       thresholds: JSON.stringify(req.query)}).exec(function (err, complianceData) {
+      if (err) {
+        sails.log.error("Error saving compliance data to database: " + err);
+        res.json({"error": err}, 500);
+      }
+      else {
+       sails.log.info("Compliance data saved in database");
+       res.json({},200);
+     }
+    });
+    
   }
 };

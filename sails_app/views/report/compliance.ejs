@@ -2,6 +2,14 @@
 <script type="text/javascript">
     $(document).ready(function() {
 
+        Object.size = function(obj) {
+            var size = 0, key;
+            for (key in obj) {
+                if (obj.hasOwnProperty(key)) size++;
+            }
+            return size;
+        };
+
         function updateTable(start, end, page, limit) {
             $("#download_csv_btn a").attr("href", "/compliance_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
             $("#table-loading").show();
@@ -39,22 +47,39 @@
             });
         }
 
-        function getRfid() {
+        function createForm() {
              $.ajax({
                 type: "GET",
                 url: "/compliance_settings",
                 success: function(response) {
                     $("#table-loading").hide();
                     var data = JSON.parse(response);
-                    for (var i in data) {
+                    var thresholds = {};
+                    var timeFilters = {};
+                    if(Object.size(data) > 1) {
+                        thresholds = JSON.parse(data["compliance"][0]["thresholds"]);
+                        timeFilters = JSON.parse(data["compliance"][0]["timefilters"]);
+                    }
+                    
+                    for (var i in data["rfids"]) {
                         $("#rfidList").append("<tr>" +
-                                "<td>" + data[i].id + "</td>" +
-                                "<td>" + data[i].display_name + "</td>" +
-                                "<td>" + data[i].display_name_2 + "</td>" +
-                                "<td><input class='input-small' type='text' id='" + data[i].id +
-                                (data[i].display_name_2 === null ? "_max" : "_min") + "_threshold' " + "value='" +
-                                (data[i].threshold === undefined ? 0 : data[i].threshold) + "'></td>" +
+                                "<td>" + data["rfids"][i].id + "</td>" +
+                                "<td>" + data["rfids"][i].display_name + "</td>" +
+                                "<td>" + data["rfids"][i].display_name_2 + "</td>" +
+                                "<td><input class='input-small' type='text' id='" + data["rfids"][i].id +
+                                (data["rfids"][i].display_name_2 === null ? "_max" : "_min") + "_threshold' " + "value='0'></td>" +
                                 "</tr>");
+                    }
+                    for (var thresholdID in thresholds) {
+                        $('#' + thresholdID).val(thresholds[thresholdID]);
+                    }
+                    for(var filter in timeFilters) {
+                        if($('input[name=startTime_' + filter + ']').length == 0) {
+                            addFilter();
+                        }
+                        $('input[name=startTime_' + filter + ']').val(timeFilters[filter][0]);
+                        $('input[name=endTime_' + filter + ']').val(timeFilters[filter][1]);
+                        $('input[name=timezone_' + filter + ']').val(timeFilters[filter][2]);
                     }
                 },
                 error: function(response) {
@@ -63,36 +88,10 @@
                 }
             });
         }    
-        var page = 0;
-        getRfid();
-        var filterNum = 0;
-        //updateTable(defaultStart, defaultEnd, page, limit);
 
-        $(".form-horizontal").keypress(function(e) {
-            if ( e.which == 13 ) {
-                e.preventDefault();
-            }
-        });
-
-        $('#addFilter').on('click', function() {
-            var filter = $('#filters > div').first().clone().insertBefore('#filters > .btn');
-            filter.attr('id', 'filter' + (filterNum+1));
-            filter.find('input[name*=startTime]').attr('name','startTime_' + (filterNum+1));
-            filter.find('input[name*=endTime]').attr('name','endTime_' + (filterNum+1));
-            filter.find('select[name*=timezone]').attr('name','timezone_' + (filterNum+1));
-            filterNum += 1;
-
-            $('.removeFilter').on('click', function() {
-                if($('#filters > div').length > 1) {
-                    $(this).parent().parent().remove();
-                }
-            });
-        });
-
-        $('#generateReport').on('click', function() {
-            
+        function getFormValues() {
             var values = {};
-            var dangerFlag = false;
+            dangerFlag = false;
             $('.errorMessage, #errorBlock').empty().collapse('hide');
             $('#rfidList .alert-danger').removeClass("alert-danger");
 
@@ -133,24 +132,79 @@
 
             if(dangerFlag) {
                 $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").collapse("show");
-                return;
             }
 
-            console.log(values);
-            //$('#compliance_settings').addClass('collapse');
-            $.ajax({
-                type: "GET",
-                url: "/compliance_data",
-                data: values,
-                success: function(response) {
-                    var json = JSON.parse(response);
-                    
-                },
-                error: function(response) {
-                    console.log("Error");
-                    console.log(response);
+            return values;
+        }
+
+        function addFilter() {
+            var filter = $('#filters > div').first().clone().insertAfter($('#filters > div').last());
+            filter.attr('id', 'filter' + (filterNum+1));
+            filter.find('input[name*=startTime]').attr('name','startTime_' + (filterNum+1));
+            filter.find('input[name*=endTime]').attr('name','endTime_' + (filterNum+1));
+            filter.find('select[name*=timezone]').attr('name','timezone_' + (filterNum+1));
+            filterNum += 1;
+
+            $('.removeFilter').on('click', function() {
+                if($('#filters > div').length > 1) {
+                    $(this).parent().parent().remove();
                 }
             });
+        }
+
+        var dangerFlag;
+       
+        var filterNum = 0;
+        createForm();
+
+        $(".form-horizontal").keypress(function(e) {
+            if ( e.which == 13 ) {
+                e.preventDefault();
+            }
+        });
+
+        $('#addFilter').on('click', function() {
+            addFilter();
+        });
+
+        $('#saveSettings').on('click', function() {
+            var values = getFormValues();
+            if(!dangerFlag) {
+               $.ajax({
+                    type: "GET",
+                    url: "/save_compsettings",
+                    data: values,
+                    success: function(response) {
+                        if(Object.size(response) === 0) {
+                            alert("compliance settings saved");
+                        }
+                    },
+                    error: function(response) {
+                        console.log("Error");
+                        console.log(response);
+                    }
+                });
+            }
+        });
+
+        $('#generateReport').on('click', function() {
+            var values = getFormValues();
+            if(!dangerFlag) {
+                 //$('#compliance_settings').addClass('collapse');
+                $.ajax({
+                    type: "GET",
+                    url: "/compliance_data",
+                    data: values,
+                    success: function(response) {
+                        var json = JSON.parse(response);
+
+                    },
+                    error: function(response) {
+                        console.log("Error");
+                        console.log(response);
+                    }
+                });
+            }
         });
     });
 </script>
@@ -204,11 +258,13 @@
                         </select>
                          <div class="errorMessage alert alert-danger collapse"></div>
                     </div>
-                   
                 </div>
             </div>
             <button type="button" class="btn btn-default" id="addFilter">
                  <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add filter
+            </button>
+             <button type="button" class="btn btn-default btn-lrg" id="saveSettings">
+                 Save Settings
             </button>
         </div>
         <div class="col-md-offset-1 col-md-7">

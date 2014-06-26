@@ -10,20 +10,17 @@ module.exports = {
 
   attributes: {
 
-    start_time: {
-      type: 'integer',
-      required: true
-    },
-    end_time: {
-      type: 'integer',
-      required: true
-    },
-    timezone: {
-      type: 'string',
-      required: true
-    },
+    
     organization: {
         model: 'organization'
+    },
+    timefilters: {
+      type: 'string',
+      maxLength: 3000
+    },
+    thresholds: {
+      type: 'string',
+      maxLength: 5000
     }
 
   }
