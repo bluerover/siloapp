@@ -51,7 +51,8 @@
                                 "<td>" + data[i].id + "</td>" +
                                 "<td>" + data[i].display_name + "</td>" +
                                 "<td>" + data[i].display_name_2 + "</td>" +
-                                "<td><input class='input-small' type='text' id='" + data[i].id + "_threshold' " + "value='" +
+                                "<td><input class='input-small' type='text' id='" + data[i].id +
+                                (data[i].display_name_2 === null ? "_max" : "_min") + "_threshold' " + "value='" +
                                 (data[i].threshold === undefined ? 0 : data[i].threshold) + "'></td>" +
                                 "</tr>");
                     }
@@ -61,41 +62,11 @@
                     console.log(response);
                 }
             });
-        }
-        var defaultEnd = moment().hour(0).minute(0).second(0).millisecond(0);
-        var defaultStart = moment().hour(0).minute(0).second(0).millisecond(0).subtract('days', 1);
-        var pickerStart = defaultStart;
-        var pickerEnd = defaultEnd;
+        }    
         var page = 0;
-        var limit = 20;
         getRfid();
         var filterNum = 0;
         //updateTable(defaultStart, defaultEnd, page, limit);
-        $('#reportrange span').html(defaultStart.format('MMMM D, YYYY') + ' - ' + defaultEnd.format('MMMM D, YYYY'));
-        $('#reportrange').daterangepicker(
-                {
-                    ranges: {
-                        'Today': [moment(), moment().add('days', 1)],
-                        'Yesterday': [moment().subtract('days', 1), moment()],
-                        'Last 7 Days': [moment().subtract('days', 7), moment()],
-                        'Last 30 Days': [moment().subtract('days', 30), moment()],
-                        'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
-                    },
-                    startDate: defaultStart,
-                    endDate: defaultEnd,
-                    opens: "left",
-                    maxDate: moment().add('days', 1)
-                },
-                function(start, end) {
-                    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-                    pickerStart = start;
-                    pickerEnd = end;
-                    page = 0;
-                    limit = 20;
-                    updateTable(start, end, page, limit);
-                }
-        );
 
         $(".form-horizontal").keypress(function(e) {
             if ( e.which == 13 ) {
@@ -106,9 +77,9 @@
         $('#addFilter').on('click', function() {
             var filter = $('#filters > div').first().clone().insertBefore('#filters > .btn');
             filter.attr('id', 'filter' + (filterNum+1));
-            filter.find('input[name*=startTime]').attr('name','startTime' + (filterNum+1));
-            filter.find('input[name*=endTime]').attr('name','endTime' + (filterNum+1));
-            filter.find('select[name*=timezone]').attr('name','timezone' + (filterNum+1));
+            filter.find('input[name*=startTime]').attr('name','startTime_' + (filterNum+1));
+            filter.find('input[name*=endTime]').attr('name','endTime_' + (filterNum+1));
+            filter.find('select[name*=timezone]').attr('name','timezone_' + (filterNum+1));
             filterNum += 1;
 
             $('.removeFilter').on('click', function() {
@@ -119,37 +90,75 @@
         });
 
         $('#generateReport').on('click', function() {
-            //$('#compliance_settings').addClass('collapse');
             
             var values = {};
-            
-            //check for null/und values in the form
-            $.each($('#compliance_settings > form').serializeArray(), function(i, field) {
-                if(field.value === undefined || !(field.value)){
+            var dangerFlag = false;
+            $('.errorMessage, #errorBlock').empty().collapse('hide');
+            $('#rfidList .alert-danger').removeClass("alert-danger");
+
+            //check for null/und values in the time form
+            var timeData = [];
+            var counter = 0;
+            var array = $('#compliance_settings > form').serializeArray();
+            $.each(array, function(i, field) {
+                if(field.value === undefined || !(field.value)) {
                     //put alert under that tag
-                    $('<div class="alert alert-danger">' + 'please fix this value' + '</div>').insertAfter('input[name*='+ field.name + ']');
+                    $('input[name*='+ field.name + ']').siblings(".errorMessage").append("please fix this value").collapse("show");
+                    dangerFlag = true;
                 } else {
-                    values[field.name] = field.value;
+                    if(i % 3 == 0) {
+                        if(Date.parse("01/01/2011 " + array[i].value) > Date.parse("01/01/2011 " + array[i+1].value)) {
+                            $('input[name*='+ field.name + ']').siblings(".errorMessage").append("start time greater than end time").collapse("show");
+                            dangerFlag = true;
+                        }
+                    }
+                    timeData.push(field.value);
+                    if(timeData.length == 3) {
+                        values[counter.toString()] = timeData;
+                        timeData = [];
+                        counter++;
+                    }
+                }
+            });
+            
+            $('#rfidList input').each(function(i, input) {
+                var value = $(input).val();
+                if(value === undefined || !(value) || !($.isNumeric(value))) {
+                    $(input).parent().parent().addClass('alert-danger');
+                    dangerFlag = true;
+                } else {
+                    values[$(input).attr('id')] = value;
                 }
             });
 
-            $('#rfidList input').each(function(i, input) {
-                if($(input).val() === undefined || !($(input).val())) {
-                    $(input).parent().parent().addClass('danger');
-                } else {
-                    values[$(input).attr('id')] = $(input).val();
-                }
-            });
+            if(dangerFlag) {
+                $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").collapse("show");
+                return;
+            }
 
             console.log(values);
+            //$('#compliance_settings').addClass('collapse');
+            $.ajax({
+                type: "GET",
+                url: "/compliance_data",
+                data: values,
+                success: function(response) {
+                    //we'll return a msgID and then we need to poll somewhere to see when the message is done
+                    console.log(response);
+                },
+                error: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                }
+            });
         });
     });
 </script>
 
 <%- include report_header.ejs %>
-<div class="center-block" style="text-align:center;margin-bottom:10px;">
-    <a href="javascript:;" class="btn btn-primary btn-lg" id="generateReport">Generate Report</a>
+<div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger collapse" style="text-align:center;">
 </div>
+<div class="col-sm-offset-3"></div>
 <div id="results">
 </div>
 <div id="compliance_settings">
@@ -163,33 +172,39 @@
                 <div class="form-group">
                     <label class="col-sm-4 control-label">Start Time</label>
                     <div class="input-group col-sm-8">
-                        <input name="startTime0" type="time" class="form-control">
+                        <input name="startTime_0" type="time" class="form-control">
+                        <div class="errorMessage alert alert-danger collapse"></div>
                         <!--<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> -->
                     </div>
+                    
                 </div>
                 <div class="form-group">
                     <label class="col-sm-4 control-label">End Time</label>
                     <div class="input-group col-sm-8">
-                        <input name="endTime0" type="time" class="form-control">
+                        <input name="endTime_0" type="time" class="form-control">
+                        <div class="errorMessage alert alert-danger collapse"></div>
                         <!--<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> -->
                     </div>
+                     
                 </div>
                 <div class="form-group">
                     <label class="col-sm-4 control-label">Timezone</label>
                     <div class="input-group col-sm-8">
-                        <select class="form-control" name="timezone0">
-                            <option value="EST">EST</option>
-                            <option value="EDT">EDT</option>
-                            <option value="PST">PST</option>
-                            <option value="PDT">PDT</option>
-                            <option value="MST">MST</option>
-                            <option value="MDT">MDT</option>
-                            <option value="CST">CST</option>
-                            <option value="CDT">CDT</option>
-                            <option value="AST">AST</option>
-                            <option value="ADT">ADT</option>
+                        <select class="form-control" name="timezone_0">
+                            <option value="-05:00">EST</option>
+                            <option value="-04:00">EDT</option>
+                            <option value="-08:00">PST</option>
+                            <option value="-07:00">PDT</option>
+                            <option value="-07:00">MST</option>
+                            <option value="-06:00">MDT</option>
+                            <option value="-06:00">CST</option>
+                            <option value="-05:00">CDT</option>
+                            <option value="-04:00">AST</option>
+                            <option value="-03:00">ADT</option>
                         </select>
+                         <div class="errorMessage alert alert-danger collapse"></div>
                     </div>
+                   
                 </div>
             </div>
             <button type="button" class="btn btn-default" id="addFilter">

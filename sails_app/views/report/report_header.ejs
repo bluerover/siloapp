@@ -7,9 +7,12 @@
         </ul>
     </div>
     <div class="rangepicker_area">
-        <div id="reportrange" class="btn btn-default">
+        <div id="reportrange" class="btn btn-default" <%= report_type === 'compliance' ? 'style=display:none;' : '' %>>
             <i class="fa fa-calendar fa-lg"></i>
             <span></span>
+        </div>
+        <div <%= report_type === 'compliance' ? 'style=display:inline-block;' : 'style=display:none;' %>>
+            <a href="javascript:;" class="btn btn-primary" id="generateReport">Generate Report</a>
         </div>
         <div id="download_csv_btn">
             <a href="#" class="btn btn-default"><i class="fa fa-arrow-circle-o-down"></i> Download CSV</a>
