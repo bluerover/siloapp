@@ -92,7 +92,7 @@
         function getFormValues() {
             var values = {};
             dangerFlag = false;
-            $('.errorMessage, #errorBlock').empty().collapse('hide');
+            $('.errorMessage, #errorBlock').empty().hide("slow");
             $('#rfidList .alert-danger').removeClass("alert-danger");
 
             //check for null/und values in the time form
@@ -152,9 +152,98 @@
             });
         }
 
+        function pollJob(job_id) {
+            //poll the job status until it is complete
+            var values = {};
+            values["job_id"] = job_id.toString();
+            var pollId = setInterval(function() {
+                $.ajax({
+                    type: "GET",
+                    url: "/poll_job",
+                    data: values,
+                    success: function(new_job_data) {
+                        var newJob = JSON.parse(new_job_data);
+                        var status = newJob["status"];
+                        if(status === undefined || !(status)) {
+                            console.log("all done");
+                            clearInterval(pollId);
+                            reportJSON = newJob;
+                            setupComplianceTable(newJob);
+                        }
+                    },
+                    error: function(response) {
+                        console.log("Error");
+                        console.log(response);
+                    }
+                });
+            },700);
+        }
+
+        function setupComplianceTable(reportData) {
+            $('#compliance_settings').addClass('collapse');
+            var report = JSON.parse(reportData);
+            console.log(report);
+            var appendString = "<table class='table table-condensed'>" +
+                               "<th>Asset Name</th>" +
+                               "<th>Sensor Type</th>" +
+                               "<th>Threshold</th>";
+            for(var timeframe in report) {
+                var times = timeframe.split("_");
+                var headerString = "<th colspan='2'>";
+                headerString += moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
+                headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z") + "</th>";
+                appendString += headerString;
+            }
+
+            for (var dummyTimeFrame in report) {
+                for(var asset in report[dummyTimeFrame]) {
+                    appendString += "<tr><td>" + report[dummyTimeFrame][asset].display_name + "</td><td>" +
+                                    report[dummyTimeFrame][asset].display_name_2 + "</td><td style='border-right: 1px solid #ddd;'>" +
+                                    report[dummyTimeFrame][asset].threshold + "</td>";
+                    for(var timeframe in report) {
+                        appendString += "<td> Avg: " + report[timeframe][asset].avgTemp +
+                                        "<br/> Var: " + report[timeframe][asset].varTemp + 
+                                        "</td><td style='border-right: 1px solid #ddd;'> Per: " + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>";
+                    }
+                    appendString += "</tr>";
+                }
+                appendString += "</table>";
+                $('#results').append(appendString);
+                break;
+            }
+            $('#results').removeClass('collapse');
+            $('#flipButton').empty().append("Back to settings").unbind('click').on('click', function() {
+                $('#results').empty().addClass('collapse');
+                $('#compliance_settings').removeClass('collapse');
+                $('#flipButton').empty().append("Generate Report").unbind('click').on('click', function() {
+                    generateReport();
+                });
+            });
+        }
+
+        function generateReport() {
+            var values = getFormValues();
+            if(!dangerFlag) {
+                $.ajax({
+                    type: "GET",
+                    url: "/compliance_data",
+                    data: values,
+                    success: function(job_data) {
+                        var job = JSON.parse(job_data);
+                        console.log(job);
+                        setTimeout(pollJob(job["id"]),100);
+                    },
+                    error: function(response) {
+                        console.log("Error");
+                        console.log(response);
+                    }
+                });
+            }
+        }
+
         var dangerFlag;
-       
         var filterNum = 0;
+        var reportJSON = "";
         createForm();
 
         $(".form-horizontal").keypress(function(e) {
@@ -187,24 +276,8 @@
             }
         });
 
-        $('#generateReport').on('click', function() {
-            var values = getFormValues();
-            if(!dangerFlag) {
-                 //$('#compliance_settings').addClass('collapse');
-                $.ajax({
-                    type: "GET",
-                    url: "/compliance_data",
-                    data: values,
-                    success: function(response) {
-                        var json = JSON.parse(response);
-
-                    },
-                    error: function(response) {
-                        console.log("Error");
-                        console.log(response);
-                    }
-                });
-            }
+        $('#flipButton').on('click', function() {
+            generateReport();
         });
     });
 </script>
@@ -212,8 +285,8 @@
 <%- include report_header.ejs %>
 <div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger collapse" style="text-align:center;">
 </div>
-<div class="col-sm-offset-3"></div>
-<div id="results">
+<div class="col-sm-offset-3">&nbsp;</div>
+<div id="results" class="col-sm-12 collapse">
 </div>
 <div id="compliance_settings">
     <form class="form-horizontal" role="form">
@@ -227,7 +300,7 @@
                     <label class="col-sm-4 control-label">Start Time</label>
                     <div class="input-group col-sm-8">
                         <input name="startTime_0" type="time" class="form-control">
-                        <div class="errorMessage alert alert-danger collapse"></div>
+                        <div class="errorMessage alert alert-danger"></div>
                         <!--<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> -->
                     </div>
                     
@@ -236,7 +309,7 @@
                     <label class="col-sm-4 control-label">End Time</label>
                     <div class="input-group col-sm-8">
                         <input name="endTime_0" type="time" class="form-control">
-                        <div class="errorMessage alert alert-danger collapse"></div>
+                        <div class="errorMessage alert alert-danger"></div>
                         <!--<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> -->
                     </div>
                      
@@ -256,7 +329,7 @@
                             <option value="-04:00">AST</option>
                             <option value="-03:00">ADT</option>
                         </select>
-                         <div class="errorMessage alert alert-danger collapse"></div>
+                         <div class="errorMessage alert alert-danger"></div>
                     </div>
                 </div>
             </div>

@@ -72,6 +72,11 @@ module.exports.routes = {
     action: 'save_settings'
   },
 
+  'get /poll_job': {
+    controller: 'Compliance',
+    action: 'poll_job'
+  },
+
   // Reports
   'get /reports/compliance': {
     controller: 'Report',

@@ -1,5 +1,5 @@
 /**
- * JobController
+ * ComplianceReportController
  *
  * @module      :: Controller
  * @description	:: A set of functions called `actions`.

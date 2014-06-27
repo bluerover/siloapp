@@ -67,7 +67,7 @@ module.exports = {
 //     if (req.query.range_end !== undefined) {
 //       range_end = parseInt(req.query.range_end);
 //     }
-//     else {
+//     else { 
 //       range_end = Math.round(new Date().getTime() / 1000);
 //     }
 
@@ -239,7 +239,7 @@ module.exports = {
     //first we create a row in the db so that we can query from it
     var util = require('util');
 
-    Job.create({"job_type": "dbjob"}).exec(function (err, job_data) {
+    ComplianceReport.create({"job_type": "dbjob"}).exec(function (err, job_data) {
       if (err) {
         sails.log.error("Error saving job to database: " + util.inspect(err));
         res.json(JSON.stringify(err),500);
@@ -266,7 +266,7 @@ module.exports = {
   },
 
   get_settings: function(req, res) {
-  	Compliance.find({organization: req.session.organization}).exec(function (err, compliance) {
+  	Compliance.find({organization: req.session.organization}).sort('createdAt desc').exec(function (err, compliance) {
   		if (err) {
   			sails.log.error("There was an error retrieving compliance data: " + err);
   			return;
@@ -312,8 +312,28 @@ module.exports = {
       else {
        sails.log.info("Compliance data saved in database");
        res.json({},200);
-     }
+      }
     });
-    
+  },
+
+  poll_job: function(req,res) {
+    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+      if (err) {
+        sails.log.error("Error retrieving job from database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      if(reportData.status === 'in-progress') {
+        res.json(JSON.stringify(reportData));
+      } else {
+        var zlib = require('zlib');
+        zlib.unzip(new Buffer(reportData.report,'base64'), function(err,buffer) {
+          if (err) {
+            sails.log.error("Error with gzip: " + err);
+            res.json(JSON.stringify(err),500);
+          }
+          res.json(JSON.stringify(buffer.toString()));
+        });
+      }
+    });
   }
 };
