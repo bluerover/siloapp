@@ -77,6 +77,11 @@ module.exports.routes = {
     action: 'poll_job'
   },
 
+  'get /save_as_csv': {
+    controller: 'Compliance',
+    action: 'save_as_csv'
+  },
+
   // Reports
   'get /reports/compliance': {
     controller: 'Report',

@@ -10,6 +10,8 @@
             return size;
         };
 
+        $('#download_csv_btn').hide();
+
         function updateTable(start, end, page, limit) {
             $("#download_csv_btn a").attr("href", "/compliance_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
             $("#table-loading").show();
@@ -54,13 +56,13 @@
                 success: function(response) {
                     $("#table-loading").hide();
                     var data = JSON.parse(response);
+                    console.log(data);
                     var thresholds = {};
-                    var timeFilters = {};
+                    var timeFilters;
                     if(Object.size(data) > 1) {
                         thresholds = JSON.parse(data["compliance"][0]["thresholds"]);
                         timeFilters = JSON.parse(data["compliance"][0]["timefilters"]);
                     }
-                    
                     for (var i in data["rfids"]) {
                         $("#rfidList").append("<tr>" +
                                 "<td>" + data["rfids"][i].id + "</td>" +
@@ -77,10 +79,15 @@
                         if($('input[name=startTime_' + filter + ']').length == 0) {
                             addFilter();
                         }
-                        $('input[name=startTime_' + filter + ']').val(timeFilters[filter][0]);
-                        $('input[name=endTime_' + filter + ']').val(timeFilters[filter][1]);
-                        $('input[name=timezone_' + filter + ']').val(timeFilters[filter][2]);
+                        var startTime = moment.unix(timeFilters[filter][0]);
+                        var endTime = moment.unix(timeFilters[filter][1]);
+                        $('input[name=startTime_' + filter + ']').val(startTime.format("HH:mm"));
+                        $('input[name=endTime_' + filter + ']').val(endTime.format("HH:mm"));
+                        $('input[name=timezone_' + filter + ']').val("EDT");
                     }
+                    var newStart = moment.unix(timeFilters[0][0]).format('MMMM D, YYYY');
+                    var newEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1).format('MMMM D, YYYY');
+                    $('#reportrange span').html(newStart + ' - ' + newEnd);
                 },
                 error: function(response) {
                     console.log("Error");
@@ -97,6 +104,7 @@
 
             //check for null/und values in the time form
             var timeData = [];
+            var timeArray = [];
             var counter = 0;
             var array = $('#compliance_settings > form').serializeArray();
             $.each(array, function(i, field) {
@@ -113,12 +121,23 @@
                     }
                     timeData.push(field.value);
                     if(timeData.length == 3) {
-                        values[counter.toString()] = timeData;
+                        timeArray[counter.toString()] = timeData;
                         timeData = [];
                         counter++;
                     }
                 }
             });
+            values["timeFilters"] = [];
+            var startDate = pickerStart;
+            while(startDate.unix() < pickerEnd.unix()) {
+                for(var index in timeArray) {
+                    var tmpArray = [];
+                    tmpArray[0] = startDate.hour(timeArray[index][0].split(":")[0]).minute(timeArray[index][0].split(":")[1]).zone(timeArray[index][2]).unix();
+                    tmpArray[1] = startDate.hour(timeArray[index][1].split(":")[0]).minute(timeArray[index][1].split(":")[1]).zone(timeArray[index][2]).unix();
+                    values["timeFilters"].push(tmpArray);
+                }
+               startDate = startDate.dayOfYear(startDate.dayOfYear()+1);
+            }
             
             $('#rfidList input').each(function(i, input) {
                 var value = $(input).val();
@@ -181,7 +200,8 @@
 
         function setupComplianceTable(reportData) {
             $('#compliance_settings').addClass('collapse');
-            var report = JSON.parse(reportData);
+            var report = JSON.parse(reportJSON);
+            reportData = report;
             console.log(report);
             var appendString = "<table class='table table-condensed'>" +
                                "<th>Asset Name</th>" +
@@ -215,14 +235,18 @@
             $('#flipButton').empty().append("Back to settings").unbind('click').on('click', function() {
                 $('#results').empty().addClass('collapse');
                 $('#compliance_settings').removeClass('collapse');
+                $('#download_csv_btn').hide().find('a').attr('href',"#");
                 $('#flipButton').empty().append("Generate Report").unbind('click').on('click', function() {
                     generateReport();
                 });
             });
+
+            $('#download_csv_btn').show().find('a').attr('href', "/save_as_csv?data=" + encodeURIComponent(reportJSON));
         }
 
         function generateReport() {
             var values = getFormValues();
+            console.log(values);
             if(!dangerFlag) {
                 $.ajax({
                     type: "GET",
@@ -241,10 +265,53 @@
             }
         }
 
+        function generateCSV() {
+            if(reportJSON === "") return;
+            $.ajax({
+                type: "GET",
+                url: "/save_as_csv",
+                data: reportJSON,
+                success: function(data) {
+                    console.log(data);
+                },
+                failed: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                }
+            });
+        }
+
         var dangerFlag;
         var filterNum = 0;
         var reportJSON = "";
+        var defaultEnd = moment().hour(0).minute(0).second(0).millisecond(0);
+        var defaultStart = moment().hour(0).minute(0).second(0).millisecond(0).subtract('days', 1);
+        var pickerStart = defaultStart;
+        var pickerEnd = defaultEnd;
         createForm();
+
+        $('#reportrange span').html(defaultStart.format('MMMM D, YYYY') + ' - ' + defaultEnd.format('MMMM D, YYYY'));
+        $('#reportrange').daterangepicker(
+                {
+                    ranges: {
+                        'Today': [moment(), moment().add('days', 1)],
+                        'Yesterday': [moment().subtract('days', 1), moment()],
+                        'Last 7 Days': [moment().subtract('days', 7), moment()],
+                        'Last 30 Days': [moment().subtract('days', 30), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                    },
+                    startDate: defaultStart,
+                    endDate: defaultEnd,
+                    opens: "left",
+                    maxDate: moment().add('days', 1)
+                },
+                function(start, end) {
+                    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                    pickerStart = start;
+                    pickerEnd = end;
+                }
+        );
 
         $(".form-horizontal").keypress(function(e) {
             if ( e.which == 13 ) {
@@ -319,7 +386,7 @@
                     <div class="input-group col-sm-8">
                         <select class="form-control" name="timezone_0">
                             <option value="-05:00">EST</option>
-                            <option value="-04:00">EDT</option>
+                            <option value="-04:00" selected>EDT</option>
                             <option value="-08:00">PST</option>
                             <option value="-07:00">PDT</option>
                             <option value="-07:00">MST</option>
