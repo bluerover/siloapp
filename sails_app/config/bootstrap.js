@@ -160,30 +160,42 @@ function setupEventListeners() {
         sails.log.error("No rfid found for rfid #" + data.rfidTagNum + ": " + err);
         return;
       }
-      else if(rfid.organization == 10 && rfid.display_name_2 === 'Air') {
-	sails.log.info("no air emails for bp hamilton");
-	return;
+
+      //hacks for different email patterns
+      if(rfid.organization != 7 && !(rfid.display_name_2)) {
+	      sails.log.info("no hot emails for non-marilus");
+        return;
       }
+      if(rfid.organization == 10 && rfid.display_name_2 === "Air") {
+        sails.log.info("no air emails for bp3");
+        return;
+      }
+      if(rfid.organization == 7 && rfid.display_name_2 !== 'Air' && data.status !== "alarm") {
+        sails.log.info("marilu only air temps at alarm state");
+        return;
+      }
+      // .end hacks
+
       User.find({organization: rfid.organization}).exec(function (err, users) {
         if(err) {
           sails.log.error("No users found for organization #" + rfid.organization + ": " + err);
           return;
         }
-        Organization.findOne(rfid.organization).exec(function (err, organization) {
-          if(err) {
-            sails.log.error("No organization found for organization #" + rfid.organization + ": " + err);
-            return;
-          }
-          Dashboard.findOne({organization: organization.id}).exec(function (err, dashboard) {
-            if(err) {
-              sails.log.error("No dashboard found for organization #" + rfid.organization + ": " + err);
-              return;
-            }
-            var nodemailer = require("nodemailer");
-            var smtpTransport = nodemailer.createTransport("sendmail");
-            var alertTime = data.status === "alarm" ? 2 : 1.5;
-            for (var index in users) {
-              if(users[index].is_alert_active) {
+        for(var index in users) {
+          if (users[index].is_alert_active) {
+            Organization.findOne(rfid.organization).exec(function (err, organization) {
+              if(err) {
+                sails.log.error("No organization found for organization #" + rfid.organization + ": " + err);
+                return;
+              }
+              Dashboard.findOne({organization: organization.id}).exec(function (err, dashboard) {
+                if(err) {
+                  sails.log.error("No dashboard found for organization #" + rfid.organization + ": " + err);
+                  return;
+                }
+                var nodemailer = require("nodemailer");
+                var smtpTransport = nodemailer.createTransport("sendmail");
+                var alertTime = data.status === "alarm" ? 2 : 1.5;
                 smtpTransport.sendMail({
                  from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
                  to: users[index].full_name() + "<" + users[index].email + ">", // comma separated list of receivers
@@ -200,10 +212,10 @@ function setupEventListeners() {
                      sails.log.info("Message sent to : " + users[index].full_name() + ": " + response.message);
                   }
                 });
-              }
-            }
-          });
-        });
+              });
+            });
+          }
+        }
       });
     });
   });
