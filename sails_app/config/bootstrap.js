@@ -34,6 +34,7 @@ module.exports.bootstrap = function (cb) {
   loadRecentAlerts();
   loadRecentRfidData();
 
+  sails.log.info(sails.notification_handlers);
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
 };
@@ -137,7 +138,7 @@ function setupEventListeners() {
 
     var tag_id = 'rfid-' + data.rfidTagNum;
     if (tag_id in sails.notification_handlers) {
-      sails.log.debug("Running alert handler for " + tag_id);
+      sails.log.info("Running alert handler for " + tag_id);
       for (var handler in sails.notification_handlers[tag_id]) {
         try {
           sails.notification_handlers[tag_id][handler].on('data', data);
@@ -158,6 +159,10 @@ function setupEventListeners() {
       if(err) {
         sails.log.error("No rfid found for rfid #" + data.rfidTagNum + ": " + err);
         return;
+      }
+      else if(rfid.organization == 10 && rfid.display_name_2 === 'Air') {
+	sails.log.info("no air emails for bp hamilton");
+	return;
       }
       User.find({organization: rfid.organization}).exec(function (err, users) {
         if(err) {
@@ -257,7 +262,9 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
         alerthandler.on('tick', timestamp);
       });
 
-      sails.notification_handlers[tag_id].push(alerthandler);
+      if(sails.notification_handlers[tag_id].length == 0) {
+        sails.notification_handlers[tag_id].push(alerthandler);
+      }  
     }
   });
 }
