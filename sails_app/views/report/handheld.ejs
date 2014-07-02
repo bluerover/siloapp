@@ -22,7 +22,8 @@
                     range_end: end.format("X"),
                     page: page,
                     limit: limit,
-                    sort: 'desc'
+                    sort: 'desc',
+                    timezone_shift: moment().zone()
                 },
                 success: function(response) {
                     $("#table-loading").hide();

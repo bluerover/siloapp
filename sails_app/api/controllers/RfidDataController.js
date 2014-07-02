@@ -41,7 +41,8 @@ module.exports = {
       page,
       limit,
       sort,
-      csv = req.query.csv || false;
+      csv = req.query.csv || false,
+      timezone_shift;
 
     if (req.query.page !== undefined) {
       page = parseInt(req.query.page);
@@ -93,7 +94,10 @@ module.exports = {
       res.json({error: "The specified date range was too large."}, 422);
       return;
     }
-
+    if (req.query.timezone_shift !== undefined) {
+      timezone_shift = parseInt(req.query.timezone_shift);
+    }
+    
     if (csv === '1') {
       sails.log.debug("Attempting to read rfid data for RfidData#get_data.csv");
       RfidData.query("select rd.*, r.organization, r.display_name, r.display_name_2 " + 
@@ -124,7 +128,7 @@ module.exports = {
             file += data[row]['display_name'] + ",";
             file += data[row]['display_name_2'] + ",";
             file += data[row]['rfidTemperature'] + ",";
-            file += moment.unix(data[row]['timestamp']).format("MM/DD/YYYY hh:mm:ss a");
+            file += moment.unix(data[row]['timestamp']).subtract(timezone_shift,'minute').format("MM/DD/YYYY hh:mm:ss a");
             file += "\n"
           }
           res.writeHead(200, {

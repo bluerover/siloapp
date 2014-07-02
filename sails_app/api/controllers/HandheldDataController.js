@@ -16,7 +16,8 @@ module.exports = {
       page,
       limit,
       sort,
-      csv = req.query.csv || false;
+      csv = req.query.csv || false,
+      timezone_shift;
 
     if (req.query.page !== undefined) {
       page = parseInt(req.query.page);
@@ -68,14 +69,17 @@ module.exports = {
       res.json({error: "The specified date range was too large."}, 422);
       return;
     }
+    if (req.query.timezone_shift !== undefined) {
+      timezone_shift = parseInt(req.query.timezone_shift);
+    }
 
     if (csv === '1') {
       sails.log.debug("Attempting to read handheld data for HandheldData#get_data");
       HandheldData.query("select hd.* " +
         "from handhelddata as hd join handheld as h on hd.device_id = h.device_id " + 
         "where timestamp >= ? and timestamp <= ? and organization = ? " + 
-        "order by timestamp " + sort + " limit ? offset ?",
-        [range_start, range_end, req.session.organization, limit, page * limit],
+        "order by timestamp " + sort,
+        [range_start, range_end, req.session.organization],
         function (err, data) {
           if (err) {
             sails.log.error("There was an error retrieving handheld data: " + err);
@@ -100,9 +104,10 @@ module.exports = {
               file += data[row]['user_id'] + ",";
               file += data[row]['temperature'] + ",";
               file += (parseInt(data[row]['alarm']) === 0 ? "No" : "Yes") + ",";
-              file += moment.unix(data[row]['timestamp']).format("MM/DD/YYYY hh:mm:ss a");
+              file += moment.unix(data[row]['timestamp']).subtract(timezone_shift,'minute').format("MM/DD/YYYY hh:mm:ss a");
               file += "\n"
             }
+            sails.log.info(file);
             res.writeHead(200, {
               'Content-Type': 'text/event-stream',
               'Content-Disposition': "attachment; filename=handheld_" + range_start + "_" + range_end + ".csv"
