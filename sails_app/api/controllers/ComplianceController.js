@@ -169,7 +169,19 @@ module.exports = {
       }
       if(reportData.status === 'in-progress') {
         //figure out how to poll kue for the status of the job
-        res.json(JSON.stringify(reportData));
+        
+        if(reportData.kue_id !== undefined) {
+          var kue = require('kue');
+          kue.Job.get(reportData.kue_id, function(err, kuejob) {
+            if(err) {
+              sails.log.error("Error retrieving job from kue: " + err);
+              res.json(JSON.stringify(err),500);       
+            }
+            res.json(JSON.stringify({"status": "in-progress", "job" : kuejob}));
+          });
+        } else {
+          res.json(JSON.stringify(reportData));
+        }
       } else {
         var zlib = require('zlib');
         zlib.unzip(new Buffer(reportData.report,'base64'), function(err,buffer) {

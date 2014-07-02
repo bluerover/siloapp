@@ -47,11 +47,11 @@ function updateKueId(kue_id, job_id) {
 }
 
 function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) {
-	var queryString = "SELECT r.display_name, r.display_name_2, ROUND(AVG(rfidTemperature),2) as avgTemp, ROUND(VARIANCE(rfidTemperature),2) as varTemp, " +
+	var queryString = "SELECT r.id, r.display_name, r.display_name_2, ROUND(AVG(rfidTemperature),2) as avgTemp, ROUND(VARIANCE(rfidTemperature),2) as varTemp, " +
         "count(*) as total, COUNT(IF(rfidTemperature " + (thresholdType == "min" ? ">" : "<") + " ? ,1, NULL)) " +
         "as passingTemp, " + threshold + " as threshold FROM rfiddata as rd JOIN rfid as r on rd.rfidTagNum = r.id  " +
         "WHERE rfidTagNum = ? AND timestamp >= ? AND timestamp <= ?";
-    var parameters = [threshold,rfid, startTime, endTime];
+    var parameters = [threshold, rfid, startTime, endTime];
     var query = connection.query(queryString,parameters, function(err, results) {
     	if(err) {
     		jobErr = new Error(err);
@@ -87,7 +87,7 @@ function errBack(done, err) {
 }
 
 jobs.process('dbjob', function (job, done) {
-	console.log("received the job");
+	console.log("Processing job " + job.data.id + ", kueID " + job.id); 
 
 	//First, update row in db with the kueID here
 	updateKueId(job.id, job.data.id);
@@ -95,7 +95,6 @@ jobs.process('dbjob', function (job, done) {
 	total = 0;
 	jobErr = null;
 	resultsArray = {};
-
 	//Then we need to split things up based on rfid, and apply each time filter to it
 	for(var filter in job.data.timeFilters) {
 		resultsArray[job.data.timeFilters[filter][0] + "_" + job.data.timeFilters[filter][1]] = [];

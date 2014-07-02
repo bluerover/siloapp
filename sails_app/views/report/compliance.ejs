@@ -10,46 +10,10 @@
             return size;
         };
 
-        $('#download_csv_btn').hide();
-
-        function updateTable(start, end, page, limit) {
-            $("#download_csv_btn a").attr("href", "/compliance_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
-            $("#table-loading").show();
-            $("#compliance_table tbody tr").remove();
-            $.ajax({
-                type: "GET",
-                url: "/compliance_data",
-                data: {
-                    range_start: start.format("X"),
-                    range_end: end.format("X"),
-                    page: page,
-                    // limit: limit,
-                    sort: 'asc'
-                },
-                success: function(response) {
-                    $("#table-loading").hide();
-                    var data = JSON.parse(response);
-                    for (var i in data) {
-                        $("#compliance_table").append("<tr>" +
-                                "<td>" + data[i]['rfidTagNum'] + "</td>" +
-                                "<td>" + data[i]['display_name'] + "</td>" +
-                                "<td>" + data[i]['display_name_2'] + "</td>" +
-                                "<td>" + data[i]['avgTemp'] + "</td>" +
-                                "<td>" + data[i]['varTemp'] + "</td>" +
-                                "<td>" + data[i]['total'] + "</td>" +
-                                "<td>" + data[i]['passingTotal'] + "</td>" +
-                                //"<td>" + moment.unix(data[i]['timestamp']).format("MM/DD/YYYY hh:mm:ss a") + "</td>" +
-                                "</tr>");
-                    }
-                },
-                error: function(response) {
-                    console.log("Error");
-                    console.log(response);
-                }
-            });
-        }
+        $('#download_csv_btn, #errorBlock, .errorMessage').hide();
 
         function createForm() {
+             $("#table-loading").show();
              $.ajax({
                 type: "GET",
                 url: "/compliance_settings",
@@ -86,7 +50,9 @@
                         $('input[name=timezone_' + filter + ']').val("EDT");
                     }
                     var newStart = moment.unix(timeFilters[0][0]).format('MMMM D, YYYY');
+                    pickerStart = moment.unix(timeFilters[0][0]);
                     var newEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1).format('MMMM D, YYYY');
+                    pickerEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1);
                     $('#reportrange span').html(newStart + ' - ' + newEnd);
                 },
                 error: function(response) {
@@ -99,7 +65,7 @@
         function getFormValues() {
             var values = {};
             dangerFlag = false;
-            $('.errorMessage, #errorBlock').empty().hide("slow");
+            $('.errorMessage, #errorBlock').empty().hide();
             $('#rfidList .alert-danger').removeClass("alert-danger");
 
             //check for null/und values in the time form
@@ -110,12 +76,12 @@
             $.each(array, function(i, field) {
                 if(field.value === undefined || !(field.value)) {
                     //put alert under that tag
-                    $('input[name*='+ field.name + ']').siblings(".errorMessage").append("please fix this value").collapse("show");
+                    $('input[name*='+ field.name + ']').siblings(".errorMessage").empty().append("please fix this value").show();
                     dangerFlag = true;
                 } else {
                     if(i % 3 == 0) {
                         if(Date.parse("01/01/2011 " + array[i].value) > Date.parse("01/01/2011 " + array[i+1].value)) {
-                            $('input[name*='+ field.name + ']').siblings(".errorMessage").append("start time greater than end time").collapse("show");
+                            $('input[name*='+ field.name + ']').siblings(".errorMessage").empty().append("start time greater than end time").show();
                             dangerFlag = true;
                         }
                     }
@@ -148,9 +114,9 @@
                     values[$(input).attr('id')] = value;
                 }
             });
-
+            console.log(dangerFlag);
             if(dangerFlag) {
-                $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").collapse("show");
+                $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
             }
 
             return values;
@@ -174,6 +140,7 @@
         function pollJob(job_id) {
             //poll the job status until it is complete
             var values = {};
+            $('#loaders').removeClass('collapse');
             values["job_id"] = job_id.toString();
             var pollId = setInterval(function() {
                 $.ajax({
@@ -185,9 +152,13 @@
                         var status = newJob["status"];
                         if(status === undefined || !(status)) {
                             console.log("all done");
+                            $('#loaders').addClass('collapse');
                             clearInterval(pollId);
                             reportJSON = newJob;
                             setupComplianceTable(newJob);
+                        } else {
+                            $('#jobProgress').attr("value", newJob.job["progress"]);
+                            $('#progressText').empty().append(newJob.job["progress"] + "% ");
                         }
                     },
                     error: function(response) {
@@ -195,51 +166,57 @@
                         console.log(response);
                     }
                 });
-            },700);
+            },1000);
         }
 
         function setupComplianceTable(reportData) {
-            $('#compliance_settings').addClass('collapse');
             var report = JSON.parse(reportJSON);
             reportData = report;
             console.log(report);
-            var appendString = "<table class='table table-condensed'>" +
-                               "<th>Asset Name</th>" +
-                               "<th>Sensor Type</th>" +
-                               "<th>Threshold</th>";
+            var appendString = "<table class='table table-condensed'><tr>" +
+                               "<td rowspan='2' style='vertical-align:middle;'>Device ID</td>" +
+                               "<td rowspan='2' style='vertical-align:middle;'>Asset Name</td>" +
+                               "<td rowspan='2' style='vertical-align:middle;'>Sensor Type</td>" +
+                               "<td rowspan='2' style='vertical-align:middle;'>Threshold</td>";
             for(var timeframe in report) {
                 var times = timeframe.split("_");
-                var headerString = "<th colspan='2'>";
-                headerString += moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
-                headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z") + "</th>";
+                var headerString = "<td colspan='3'>";
+                headerString += moment.unix(times[0]).format("MMM DD YYYY h:mm A") + " - ";
+                headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm A") + "</td>";
                 appendString += headerString;
             }
-
+            appendString += "</tr>";
+            for(var timeframe2 in report) {
+                appendString += "<td>Average</td><td>Variance</td><td>Percent</td>";
+            }
+            appendString += "</tr>";
             for (var dummyTimeFrame in report) {
                 for(var asset in report[dummyTimeFrame]) {
-                    appendString += "<tr><td>" + report[dummyTimeFrame][asset].display_name + "</td><td>" +
+                    appendString += "<tr><td>" + report[dummyTimeFrame][asset].id + "</td><td>" +
+                                    report[dummyTimeFrame][asset].display_name + "</td><td>" +
                                     report[dummyTimeFrame][asset].display_name_2 + "</td><td style='border-right: 1px solid #ddd;'>" +
                                     report[dummyTimeFrame][asset].threshold + "</td>";
                     for(var timeframe in report) {
-                        appendString += "<td> Avg: " + report[timeframe][asset].avgTemp +
-                                        "<br/> Var: " + report[timeframe][asset].varTemp + 
-                                        "</td><td style='border-right: 1px solid #ddd;'> Per: " + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>";
+                        appendString += "<td>" + report[timeframe][asset].avgTemp + "</td>" +
+                                        "<td>" + report[timeframe][asset].varTemp + "</td>" +
+                                        "<td>" + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>";
                     }
                     appendString += "</tr>";
                 }
                 appendString += "</table>";
-                $('#results').append(appendString);
+                $('#results').append(appendString).removeClass('collapse');
                 break;
             }
-            $('#results').removeClass('collapse');
-            $('#flipButton').empty().append("Back to settings").unbind('click').on('click', function() {
-                $('#results').empty().addClass('collapse');
-                $('#compliance_settings').removeClass('collapse');
-                $('#download_csv_btn').hide().find('a').attr('href',"#");
-                $('#flipButton').empty().append("Generate Report").unbind('click').on('click', function() {
-                    generateReport();
-                });
-            });
+            $('#compliance_settings').addClass('collapse');
+            $('#flipButton').empty().append("Back to settings").unbind('click').attr('href', '/reports/compliance');
+                // $('#results').empty().addClass('collapse');
+                // $('#compliance_settings').removeClass('collapse');
+                // $('#download_csv_btn').hide().find('a').attr('href',"#");
+                // $('#flipButton').empty().append("Generate Report").unbind('click').on('click', function() {
+                //     generateReport();
+                // });
+                // console.log(pickerStart);
+                // console.log(pickerEnd);
 
             $('#download_csv_btn').show().find('a').attr('href', "/save_as_csv?data=" + encodeURIComponent(reportJSON));
         }
@@ -259,26 +236,10 @@
                     },
                     error: function(response) {
                         console.log("Error");
-                        console.log(response);
+                        $('#errorBlock').empty().append(response).collapse("show");
                     }
                 });
             }
-        }
-
-        function generateCSV() {
-            if(reportJSON === "") return;
-            $.ajax({
-                type: "GET",
-                url: "/save_as_csv",
-                data: reportJSON,
-                success: function(data) {
-                    console.log(data);
-                },
-                failed: function(response) {
-                    console.log("Error");
-                    console.log(response);
-                }
-            });
         }
 
         var dangerFlag;
@@ -350,10 +311,14 @@
 </script>
 
 <%- include report_header.ejs %>
-<div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger collapse" style="text-align:center;">
+<div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger" style="text-align:center;">
 </div>
 <div class="col-sm-offset-3">&nbsp;</div>
 <div id="results" class="col-sm-12 collapse">
+</div>
+<div id="loaders" class="col-sm-12 collapse">
+    <progress id="jobProgress" class="col-sm-offset-3 col-sm-6" max="100"></progress>
+    <label class="col-sm-3" id="progressText"></label>
 </div>
 <div id="compliance_settings">
     <form class="form-horizontal" role="form">
@@ -413,7 +378,7 @@
                 <img src="/images/loading.gif" />
             </div>
             <table id="rfidList" class="table table-condensed">
-                <th>RFID Tag Number</th>
+                <th>Device ID</th>
                 <th>Asset Name</th>
                 <th>Sensor Type</th>
                 <th>Threshold</th>
