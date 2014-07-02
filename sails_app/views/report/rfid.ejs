@@ -11,7 +11,7 @@
         }
 
         function updateTable(start, end, page, limit) {
-            $("#download_csv_btn a").attr("href", "/rfid_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X"));
+            $("#download_csv_btn a").attr("href", "/rfid_data?csv=1&range_start=" + start.format("X") + "&range_end=" + end.format("X") + "&timezone_shift=" moment().zone());
             $("#table-loading").show();
             $("#handheld_table tbody tr").remove();
             $.ajax({
