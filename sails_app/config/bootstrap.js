@@ -202,29 +202,34 @@ function setupEventListeners() {
                 var alertTime = data.status === "alarm" ? 2 : 1.5;
 
                 sails.log.info("Sending email to " + emailData.username);
-                smtpTransport.sendMail({
-                 from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
-                 to: users[index].full_name() + "<" + users[index].email + ">", // comma separated list of receivers
-                 subject: organization.name + " Temperature Alert", // Subject line
-                 html: "<p>Hi " + users[index].first_name + ",<br/><br/>"
-                       + "Please check your dashboard for " + organization.name + " at "
-                       + "<a href='safefood.bluerover.us/dashboard/" + dashboard.id +"'>safefood.bluerover.us</a><br/><br/>"
-                       + "Reason: <b>" + rfid.display_name + " (" + rfid.display_name_2 + ")</b> at " + organization.name
-                       + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/></p>"
-                },function(error, response) {
-                  if(error) {
-                      emailData.email_status = error;
-                      sails.log.info("Email not sent to " + emailData.username + ": " + error);
-                  } else {
-                      emailData.email_status = "success";
-                      sails.log.info(response);
-                      sails.log.info("Message sent to : " + emailData.username);
+                var mail = function(emailData, rfid, dashboard, organization, user, alertTime) {
+                  var tmp = function() {
+                    smtpTransport.sendMail({
+                     from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
+                     to: user.full_name() + "<" + user.email + ">", // comma separated list of receivers
+                     subject: organization.name + " Temperature Alert", // Subject line
+                     html: "<p>Hi " + user.first_name + ",<br/><br/>"
+                           + "Please check your dashboard for " + organization.name + " at "
+                           + "<a href='safefood.bluerover.us/dashboard/" + dashboard.id +"'>safefood.bluerover.us</a><br/><br/>"
+                           + "Reason: <b>" + rfid.display_name + " (" + rfid.display_name_2 + ")</b> at " + organization.name
+                           + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/></p>"
+                    }, function(error, response) {
+                      if(error) {
+                          emailData.email_status = error;
+                          sails.log.info("Email not sent to " + emailData.username + ": " + error);
+                      } else {
+                          emailData.email_status = "success";
+                          sails.log.info("Message sent to : " + emailData.username);
+                      }
+                      Email.create(emailData).exec(function (err, d) {
+                        if (err) { sails.log.error("Email was not saved successfully: " + err); }
+                        else { sails.log.info("Wrote email to database"); }
+                      });
+                    });
                   }
-                  Email.create(emailData).exec(function (err, d) {
-                    if (err) { sails.log.error("Email was not saved successfully: " + err); }
-                    else { sails.log.info("Wrote email to database"); }
-                  });
-                });
+                  return tmp;
+                }
+                setTimeout(mail(emailData, rfid, dashboard, organization, users[index], alertTime),20);
               }
             }
           });
