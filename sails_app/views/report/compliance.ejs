@@ -49,11 +49,13 @@
                         $('input[name=endTime_' + filter + ']').val(endTime.format("HH:mm"));
                         $('input[name=timezone_' + filter + ']').val("EDT");
                     }
-                    var newStart = moment.unix(timeFilters[0][0]).format('MMMM D, YYYY');
-                    pickerStart = moment.unix(timeFilters[0][0]);
-                    var newEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1).format('MMMM D, YYYY');
-                    pickerEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1);
-                    $('#reportrange span').html(newStart + ' - ' + newEnd);
+                    if(timeFilters !== undefined) {
+                        var newStart = moment.unix(timeFilters[0][0]).format('MMMM D, YYYY');
+                        pickerStart = moment.unix(timeFilters[0][0]);
+                        var newEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1).format('MMMM D, YYYY');
+                        pickerEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1);
+                        $('#reportrange span').html(newStart + ' - ' + newEnd);    
+                    }
                 },
                 error: function(response) {
                     console.log("Error");
@@ -114,11 +116,10 @@
                     values[$(input).attr('id')] = value;
                 }
             });
-            console.log(dangerFlag);
+
             if(dangerFlag) {
                 $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
             }
-
             return values;
         }
 
@@ -230,13 +231,18 @@
                     url: "/compliance_data",
                     data: values,
                     success: function(job_data) {
-                        var job = JSON.parse(job_data);
-                        console.log(job);
-                        setTimeout(pollJob(job["id"]),100);
+                        if(job_data.status === 500) {
+                            $('#errorBlock').empty().append("A problem has occured with the server, please try again later.").show();
+                        } else {
+                            var job = JSON.parse(job_data);
+                            console.log(job);
+                            setTimeout(pollJob(job["id"]),100);
+                        }
                     },
                     error: function(response) {
                         console.log("Error");
-                        $('#errorBlock').empty().append(response).collapse("show");
+                        console.log(response);
+                        $('#errorBlock').empty().append(response).show();
                     }
                 });
             }

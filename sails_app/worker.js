@@ -62,13 +62,13 @@ function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) 
     });
 }
 
-function saveComplianceReport(resultsArray, job_id, callback) {
+function saveComplianceReport(resultsArray, job_id, status, callback) {
 	zlib.deflate(JSON.stringify(resultsArray), function(err, buffer) {
 	  if (err) {
 	    jobErr = new Error(err);
 	  }
 	  else {
-	  	var query = connection.query('UPDATE compliancereport set status="complete", report = ? where id = ?',
+	  	var query = connection.query('UPDATE compliancereport set status=' + status + ', report = ? where id = ?',
 		[buffer.toString('base64'), job_id], function(err, results) {
 		  	if(err) {
 		  		jobErr = err;
@@ -79,7 +79,6 @@ function saveComplianceReport(resultsArray, job_id, callback) {
 		});
 	  }
 	});
-	
 }
 
 function errBack(done, err) {
@@ -111,6 +110,7 @@ jobs.process('dbjob', function (job, done) {
 		if(jobErr) {
 			console.log("failed");
 			clearInterval(id);
+			saveComplianceReport({},job.data.id,"failed",function(){});
 			errBack(done,jobErr);
 		}
 		else if(count < total) {
@@ -120,7 +120,7 @@ jobs.process('dbjob', function (job, done) {
 		else {
 			console.log("done");
 			clearInterval(id);
-			saveComplianceReport(resultsArray, job.data.id,done);
+			saveComplianceReport(resultsArray,job.data.id,"complete",done);
 		}
 	},800);
 });

@@ -87,6 +87,7 @@ module.exports = {
     //initialize some queue stuff
     var kue = require('kue');
     var jobQueue = kue.createQueue();
+    
 
     //so now we have a list of time filters, and a list of each rfid and its threshold
     //first we create a row in the db so that we can query from it
@@ -108,7 +109,7 @@ module.exports = {
           sails.log.info('Job', job.id, 'with name', job.data.name, 'is done');
         });
         job.on('failed', function () {
-          sails.log.error('Job', job.id, 'with name', job.data.name, 'has  failed');
+          sails.log.error('Job', job.id, 'with name', job.data.name, 'has failed');
         });
         job.save();
 
