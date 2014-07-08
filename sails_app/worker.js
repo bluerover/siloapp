@@ -1,30 +1,62 @@
-/* simple-worker.js */
 var kue = require('kue');
 var jobs = kue.createQueue();
 
 var mysql = require('mysql');
 var connection = null;
+var connection2 = null;
 
 var zlib = require('zlib');
 
-function startNewConnection() {
-	if(connection === undefined || !(connection)) {
-		connection = mysql.createConnection({
-		  host     : 'localhost',
-		  port	   : 3306,
-		  user     : 'root',
-		  password : 'root',
-		  database : 'food_safety_app'
-		});
-	}
+var pool  = mysql.createPool({
+  connectionLimit : 2,
+  host     : 'localhost',
+  port	   : 3306,
+  user     : 'root',
+  password : 'root',
+  database : 'food_safety_app'
+});
 
-	connection.on('error', function(err) {
-	 	console.log(err);
-	 	setTimeout(function() {
-	 		connection = null;
-	 		console.log("starting new connection");
-	 		startNewConnection(); 
-	 	},2000);
+function startNewConnection() {
+	if(connection) {
+		console.log("destroying connection 1");
+		connection.destroy();
+	}
+	if(connection2) {
+		console.log("destroying connection 2");
+		connection2.destroy();
+	}
+	pool.getConnection(function (err1, new_connection) {
+		if(err1) {
+			console.log(err1);
+		 	setTimeout(function() {
+		 		console.log("starting new connection");
+		 		startNewConnection(); 
+		 	},2000);	
+		} else {
+			pool.getConnection(function (err2, new_connection_2) {
+				if(err2) {
+					console.log(err2);
+				 	setTimeout(function() {
+				 		if(new_connection) {
+				 			new_connection.release();
+				 		}
+				 		console.log("starting new connection");
+				 		startNewConnection(); 
+				 	},2000);	
+				} else {
+					connection = new_connection;
+					connection2 = new_connection_2;
+
+					connection.on('error', function() {
+						connection = startNewConnection();
+					});
+
+					connection2.on('error', function() {
+						connection2 = startNewConnection();
+					});
+				}
+			});
+		}
 	});
 }
 
@@ -36,7 +68,7 @@ var jobErr = null;
 var resultsArray = {};
 
 function updateKueId(kue_id, job_id) {
-	var query = connection.query('UPDATE compliancereport set kue_id = ? where id = ?',
+	var query = connection.query('UPDATE compliancereport SET kue_id = ? WHERE id = ?',
 	  [kue_id, job_id], function(err, results) {
 	  if(err) {
 	  	console.log("couldn't update kue_id: " + err);
@@ -68,7 +100,7 @@ function saveComplianceReport(resultsArray, job_id, status, callback) {
 	    jobErr = new Error(err);
 	  }
 	  else {
-	  	var query = connection.query('UPDATE compliancereport set status=' + status + ', report = ? where id = ?',
+	  	var query = connection.query('UPDATE compliancereport SET status="' + status + '", report = ? WHERE id = ?',
 		[buffer.toString('base64'), job_id], function(err, results) {
 		  	if(err) {
 		  		jobErr = err;
@@ -77,6 +109,17 @@ function saveComplianceReport(resultsArray, job_id, status, callback) {
 		  		callback();
 		  	}
 		});
+	  }
+	});
+}
+
+function getJobStatus(job_id, callback) {
+	var query = connection2.query('SELECT status FROM compliancereport WHERE id = ?',
+	  job_id, function(err, data) {
+	  if(err) {
+	  	console.log("couldn't find job with id #" + job_id + ": " + err);
+	  } else {
+	  	callback(data[0]["status"]);
 	  }
 	});
 }
@@ -94,6 +137,7 @@ jobs.process('dbjob', function (job, done) {
 	total = 0;
 	jobErr = null;
 	resultsArray = {};
+
 	//Then we need to split things up based on rfid, and apply each time filter to it
 	for(var filter in job.data.timeFilters) {
 		resultsArray[job.data.timeFilters[filter][0] + "_" + job.data.timeFilters[filter][1]] = [];
@@ -106,6 +150,7 @@ jobs.process('dbjob', function (job, done) {
 			total++;
 		}
 	}
+
 	var id = setInterval(function() {
 		if(jobErr) {
 			console.log("failed");
@@ -116,6 +161,15 @@ jobs.process('dbjob', function (job, done) {
 		else if(count < total) {
 			console.log(count + "/" + total);
 			job.progress(count,total);
+
+			getJobStatus(job.data.id, function (status) {
+				console.log(status);
+				if(status !== "in-progress") {
+					clearInterval(id);
+					startNewConnection();
+					done();
+				}		
+			});
 		}
 		else {
 			console.log("done");

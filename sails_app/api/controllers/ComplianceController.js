@@ -169,8 +169,6 @@ module.exports = {
         res.json(JSON.stringify(err),500);
       }
       if(reportData.status === 'in-progress') {
-        //figure out how to poll kue for the status of the job
-        
         if(reportData.kue_id !== undefined) {
           var kue = require('kue');
           kue.Job.get(reportData.kue_id, function(err, kuejob) {
@@ -183,6 +181,8 @@ module.exports = {
         } else {
           res.json(JSON.stringify(reportData));
         }
+      } else if(reportData.status === 'failed') {
+        res.json(JSON.stringify({"status": 'failed'}, 500));
       } else {
         var zlib = require('zlib');
         zlib.unzip(new Buffer(reportData.report,'base64'), function(err,buffer) {
@@ -193,6 +193,31 @@ module.exports = {
           res.json(JSON.stringify(buffer.toString()));
         });
       }
+    });
+  },
+
+  kill_job: function(req,res) {
+    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+      if (err) {
+        sails.log.error("Error retrieving job from database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      var kue = require('kue');
+      kue.Job.get(reportData.kue_id, function(err, kuejob) {
+        if(err) {
+          sails.log.error("Error retrieving job from kue: " + err);
+          res.json(JSON.stringify(err),500);       
+        }
+        kuejob.failed(function() {
+          ComplianceReport.update({id: req.query.job_id}, {status: "cancelled"}, function (err, reports) {
+            if(err) {
+              sails.log.error("Error setting status of compliance report: " + err);
+              res.json(JSON.stringify(err),500);
+            }
+            res.json({});
+          });
+        });
+      });
     });
   }
 };

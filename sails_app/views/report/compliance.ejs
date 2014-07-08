@@ -10,7 +10,7 @@
             return size;
         };
 
-        $('#download_csv_btn, #errorBlock, .errorMessage').hide();
+        $('#download_csv_btn, #errorBlock, .errorMessage, #successBlock').hide();
 
         function createForm() {
              $("#table-loading").show();
@@ -39,17 +39,20 @@
                     for (var thresholdID in thresholds) {
                         $('#' + thresholdID).val(thresholds[thresholdID]);
                     }
-                    for(var filter in timeFilters) {
-                        if($('input[name=startTime_' + filter + ']').length == 0) {
-                            addFilter();
-                        }
-                        var startTime = moment.unix(timeFilters[filter][0]);
-                        var endTime = moment.unix(timeFilters[filter][1]);
-                        $('input[name=startTime_' + filter + ']').val(startTime.format("HH:mm"));
-                        $('input[name=endTime_' + filter + ']').val(endTime.format("HH:mm"));
-                        $('input[name=timezone_' + filter + ']').val("EDT");
-                    }
                     if(timeFilters !== undefined) {
+                        var maxDay = moment.unix(timeFilters[0][0]).set('hour',0).set('minute',0).unix() + 60*60*24;
+                        for(var filter in timeFilters) {
+                            var startTime = moment.unix(timeFilters[filter][0]);
+                            if(startTime.unix() < maxDay) {
+                                var endTime = moment.unix(timeFilters[filter][1]);
+                                if($('input[name=startTime_' + filter + ']').length == 0) {
+                                    addFilter();
+                                }
+                                $('input[name=startTime_' + filter + ']').val(startTime.format("HH:mm"));
+                                $('input[name=endTime_' + filter + ']').val(endTime.format("HH:mm"));
+                                $('input[name=timezone_' + filter + ']').val("EDT");
+                            }
+                        }
                         var newStart = moment.unix(timeFilters[0][0]).format('MMMM D, YYYY');
                         pickerStart = moment.unix(timeFilters[0][0]);
                         var newEnd = moment.unix(timeFilters[timeFilters.length-1][1]).add('days',1).format('MMMM D, YYYY');
@@ -168,6 +171,25 @@
                     }
                 });
             },1000);
+            $('#flipButton').empty().append("Cancel Job").unbind('click').on('click', function() {
+                //TODO: confirm yes/no box before cancelling
+                clearInterval(pollId);
+                $.ajax({
+                    type: "GET",
+                    url: "/kill_job",
+                    data: values,
+                    success: function(data) {
+                        if(data.length === undefined) {
+                            console.log("job cancelled");
+                            location.href = "/reports/compliance";
+                        }
+                    },
+                    error: function(response) {
+                        console.log("Error");
+                        console.log(response);
+                    }
+                });
+            });
         }
 
         function setupComplianceTable(reportData) {
@@ -292,6 +314,7 @@
 
         $('#saveSettings').on('click', function() {
             var values = getFormValues();
+            console.log(values);
             if(!dangerFlag) {
                $.ajax({
                     type: "GET",
@@ -299,7 +322,7 @@
                     data: values,
                     success: function(response) {
                         if(Object.size(response) === 0) {
-                            alert("compliance settings saved");
+                            $('#successBlock').empty().append("Compliance settings saved").show().delay(3000).fadeOut();
                         }
                     },
                     error: function(response) {
@@ -318,6 +341,9 @@
 
 <%- include report_header.ejs %>
 <div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger" style="text-align:center;">
+</div>
+<div class="col-sm-offset-3">&nbsp;</div>
+<div id="successBlock" class="col-sm-offset-3 col-sm-6 alert alert-success" style="text-align:center;">
 </div>
 <div class="col-sm-offset-3">&nbsp;</div>
 <div id="results" class="col-sm-12 collapse">
