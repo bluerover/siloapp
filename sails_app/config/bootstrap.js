@@ -34,7 +34,6 @@ module.exports.bootstrap = function (cb) {
   loadRecentAlerts();
   loadRecentRfidData();
 
-  sails.log.info(sails.notification_handlers);
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
 };
@@ -256,11 +255,19 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       var alerthandler_filename = alerthandler_data[index].alerthandler_name;
 
       // This is to prevent alert handlers from hijacking the real event bus
+      var fs = require('fs');
       var mock_event_bus = {
         rfid: parsed_rfid,
         emit: function(channel, data) {
           var ms_timestamp = new Date().getTime();
           data.timestamp = Math.round(ms_timestamp / 1000);
+          fs.appendFile('/tmp/alerthandler.log', channel + " " + data.timestamp + "\n", function (err) {
+            if(err) {
+              sails.log.error("couldn't write to the alert log");
+            } else {
+              sails.log.info("write to log successfully");
+            }
+          });
           data.alerthandler_name = alerthandler_filename;
           data.rfidTagNum = this.rfid;
           sails.alert_emitter.emit(tag_id, data);
@@ -295,15 +302,6 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       if(sails.notification_handlers[tag_id].length === 0) {
         sails.notification_handlers[tag_id].push(alerthandler);
       }  
-
-      var fs = require('fs');
-      fs.appendFile('/tmp/alerthandler.log', JSON.stringify(alerthandler_data[index]), function (err) {
-        if(err) {
-          sails.log.error("couldn't write to the alert log");
-        } else {
-          sails.log.info("write to log successfully");
-        }
-      });
     }
   });
 }
