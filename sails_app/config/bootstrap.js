@@ -295,6 +295,15 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       if(sails.notification_handlers[tag_id].length == 0) {
         sails.notification_handlers[tag_id].push(alerthandler);
       }  
+
+      var fs = require('fs');
+      fs.appendFile('/tmp/alerthandler.log', JSON.stringify(alerthandler_data[index]), function (err) {
+        if(err) {
+          sails.log.error("couldn't write to the alert log");
+        } else {
+          sails.log.info("write to log successfully");
+        }
+      });
     }
   });
 }

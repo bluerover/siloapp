@@ -104,8 +104,13 @@ module.exports.routes = {
   'get /notifications': {
     controller: 'Notifications',
     action: 'index'
-  }
+  },
 
+  //Notification Handler
+  'get /alerthandlers': {
+    controller: 'RfidAlerthandler',
+    action: 'get_handlers'
+  }
   /*
   // But what if you want your home page to display
   // a signup form located at `views/user/signup.ejs`?
