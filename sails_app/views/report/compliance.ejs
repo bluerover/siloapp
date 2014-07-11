@@ -10,6 +10,15 @@
             return size;
         };
 
+        function updatePagerStyles() {
+            if (page !== 0) {
+                $(".previous").removeClass("disabled");
+            }
+            else {
+                $(".previous").addClass("disabled");
+            }
+        }
+
         $('#download_csv_btn, #errorBlock, .errorMessage, #successBlock').hide();
 
         function createForm() {
@@ -73,14 +82,12 @@
             $('.errorMessage, #errorBlock').empty().hide();
             $('#rfidList .alert-danger').removeClass("alert-danger");
 
-            //check for null/und values in the time form
             var timeData = [];
             var timeArray = [];
             var counter = 0;
             var array = $('#compliance_settings > form').serializeArray();
             $.each(array, function(i, field) {
                 if(field.value === undefined || !(field.value)) {
-                    //put alert under that tag
                     $('input[name*='+ field.name + ']').siblings(".errorMessage").empty().append("please fix this value").show();
                     dangerFlag = true;
                 } else {
@@ -143,26 +150,39 @@
 
         function pollJob(job_id) {
             //poll the job status until it is complete
-            var values = {};
-            $('#loaders').removeClass('collapse');
-            values["job_id"] = job_id.toString();
             var pollId = setInterval(function() {
                 $.ajax({
                     type: "GET",
                     url: "/poll_job",
-                    data: values,
+                    data: {
+                        "job_id" : job_id.toString()
+                    },
                     success: function(new_job_data) {
                         var newJob = JSON.parse(new_job_data);
                         var status = newJob["status"];
-                        if(status === undefined || !(status)) {
-                            console.log("all done");
-                            $('#loaders').addClass('collapse');
-                            clearInterval(pollId);
-                            reportJSON = newJob;
-                            setupComplianceTable(newJob);
+                        if(status === "in-progress") {
+                            $('#jobStatus' + newJob.id).empty().append(newJob.status);
+                            $('#jobProgress' + newJob.id).attr("value", newJob.job["progress"]);
+                            $('#progressText' + newJob.id).empty().append(newJob.job["progress"] + "% ");
+                        } else if (status === "cancelled") {
+                            $('#jobStatus' + newJob.id).empty().append(newJob.status);
+                            $('#jobProgress' + newJob.id).attr("value", 0);
+                            $('#progressText' + newJob.id).empty();
+                            clearInterval(pollMap[newJob.id]);
+                            delete pollMap[newJob.id];
                         } else {
-                            $('#jobProgress').attr("value", newJob.job["progress"]);
-                            $('#progressText').empty().append(newJob.job["progress"] + "% ");
+                            console.log("all done");
+                            clearInterval(pollMap[newJob.id]);
+                            $('#jobProgress' + newJob.id).attr("value", 100);
+                            $('#progressText' + newJob.id).empty().append("100%");
+                            $('#jobStatus' + newJob.id).empty().append(newJob.status);
+                            $('#job_' + newJob.id + ' a').parent().append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>');
+                            $('#job_' + newJob.id + ' .glyphicon-minus-sign').parent().remove();
+                            delete pollMap[newJob.id];
+                            $('#job_' + newJob.id).find("a:first").on('click', function() {
+                                setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
+                            });
+                            $('#job_' + newJob.id).find("a:last").attr('href', "/get_report?csv=1&job_id=" + newJob.id);
                         }
                     },
                     error: function(response) {
@@ -171,77 +191,61 @@
                     }
                 });
             },1000);
-            $('#flipButton').empty().append("Cancel Job").unbind('click').on('click', function() {
-                //TODO: confirm yes/no box before cancelling
-                clearInterval(pollId);
-                $.ajax({
-                    type: "GET",
-                    url: "/kill_job",
-                    data: values,
-                    success: function(data) {
-                        if(data.length === undefined) {
-                            console.log("job cancelled");
-                            location.href = "/reports/compliance";
-                        }
-                    },
-                    error: function(response) {
-                        console.log("Error");
-                        console.log(response);
-                    }
-                });
-            });
+            pollMap[job_id.toString()] = pollId;
         }
 
-        function setupComplianceTable(reportData) {
-            var report = JSON.parse(reportJSON);
-            reportData = report;
-            console.log(report);
-            var appendString = "<table class='table table-condensed'><tr>" +
-                               "<td rowspan='2' style='vertical-align:middle;'>Device ID</td>" +
-                               "<td rowspan='2' style='vertical-align:middle;'>Asset Name</td>" +
-                               "<td rowspan='2' style='vertical-align:middle;'>Sensor Type</td>" +
-                               "<td rowspan='2' style='vertical-align:middle;'>Threshold</td>";
-            for(var timeframe in report) {
-                var times = timeframe.split("_");
-                var headerString = "<td colspan='3'>";
-                headerString += moment.unix(times[0]).format("MMM DD YYYY h:mm A") + " - ";
-                headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm A") + "</td>";
-                appendString += headerString;
-            }
-            appendString += "</tr>";
-            for(var timeframe2 in report) {
-                appendString += "<td>Average</td><td>Variance</td><td>Percent</td>";
-            }
-            appendString += "</tr>";
-            for (var dummyTimeFrame in report) {
-                for(var asset in report[dummyTimeFrame]) {
-                    appendString += "<tr><td>" + report[dummyTimeFrame][asset].id + "</td><td>" +
-                                    report[dummyTimeFrame][asset].display_name + "</td><td>" +
-                                    report[dummyTimeFrame][asset].display_name_2 + "</td><td style='border-right: 1px solid #ddd;'>" +
-                                    report[dummyTimeFrame][asset].threshold + "</td>";
+        function setupComplianceTable(job_id) {
+            $.ajax({
+                type: "GET",
+                url: "/get_report",
+                data: {
+                    job_id: job_id.toString(),
+                    csv: false
+                },
+                success: function(data) {
+                    var report = JSON.parse(JSON.parse(data));
+                    var appendString = "<table class='table table-condensed'><tr>" +
+                                       "<td rowspan='2' style='vertical-align:middle;'>Device ID</td>" +
+                                       "<td rowspan='2' style='vertical-align:middle;'>Asset Name</td>" +
+                                       "<td rowspan='2' style='vertical-align:middle;'>Sensor Type</td>" +
+                                       "<td rowspan='2' style='vertical-align:middle;'>Threshold</td>";
                     for(var timeframe in report) {
-                        appendString += "<td>" + report[timeframe][asset].avgTemp + "</td>" +
-                                        "<td>" + report[timeframe][asset].varTemp + "</td>" +
-                                        "<td>" + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>";
+                        var times = timeframe.split("_");
+                        var headerString = "<td colspan='3'>";
+                        headerString += moment.unix(times[0]).format("MMM DD YYYY h:mm A") + " - ";
+                        headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm A") + "</td>";
+                        appendString += headerString;
                     }
                     appendString += "</tr>";
+                    for(var timeframe2 in report) {
+                        appendString += "<td>Average</td><td>Variance</td><td>Percent</td>";
+                    }
+                    appendString += "</tr>";
+                    for (var dummyTimeFrame in report) {
+                        for(var asset in report[dummyTimeFrame]) {
+                            appendString += "<tr><td>" + report[dummyTimeFrame][asset].id + "</td><td>" +
+                                            report[dummyTimeFrame][asset].display_name + "</td><td>" +
+                                            report[dummyTimeFrame][asset].display_name_2 + "</td><td style='border-right: 1px solid #ddd;'>" +
+                                            report[dummyTimeFrame][asset].threshold + "</td>";
+                            for(var timeframe in report) {
+                                appendString += "<td>" + report[timeframe][asset].avgTemp + "</td>" +
+                                                "<td>" + report[timeframe][asset].varTemp + "</td>" +
+                                                "<td>" + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>";
+                            }
+                            appendString += "</tr>";
+                        }
+                        appendString += "</table>";
+                        break;
+                    }
+                    $('#reportModal .modal-body').empty().append(appendString);
+                    $('#reportModal').modal('show');
+                },
+                error: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                    $('#errorBlock').empty().append(response).show();
                 }
-                appendString += "</table>";
-                $('#results').append(appendString).removeClass('collapse');
-                break;
-            }
-            $('#compliance_settings').addClass('collapse');
-            $('#flipButton').empty().append("Back to settings").unbind('click').attr('href', '/reports/compliance');
-                // $('#results').empty().addClass('collapse');
-                // $('#compliance_settings').removeClass('collapse');
-                // $('#download_csv_btn').hide().find('a').attr('href',"#");
-                // $('#flipButton').empty().append("Generate Report").unbind('click').on('click', function() {
-                //     generateReport();
-                // });
-                // console.log(pickerStart);
-                // console.log(pickerEnd);
-
-            $('#download_csv_btn').show().find('a').attr('href', "/save_as_csv?data=" + encodeURIComponent(reportJSON));
+            });
         }
 
         function generateReport() {
@@ -250,15 +254,23 @@
             if(!dangerFlag) {
                 $.ajax({
                     type: "GET",
-                    url: "/compliance_data",
+                    url: "/compliance_queue_job",
                     data: values,
                     success: function(job_data) {
                         if(job_data.status === 500) {
                             $('#errorBlock').empty().append("A problem has occured with the server, please try again later.").show();
                         } else {
                             var job = JSON.parse(job_data);
-                            console.log(job);
-                            setTimeout(pollJob(job["id"]),100);
+                            var appendString = "<tr id='job_" + job["id"] + "'><td>" + job["job_type"] + "</td>" +
+                                            "<td>" + '<progress id="jobProgress' + job["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + job["id"] + '"></label></td>' +
+                                            "<td id='jobStatus" + job["id"] +"'>" + job["status"] + "</td>" +
+                                            "<td>" + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a></td></tr>';
+                            pollJob(job["id"]);
+                            $('#jobListTable tbody').append(appendString);
+                            var a = $('#jobListTable a:last');
+                            a.on('click',function() {
+                                killJob(a.parent().parent().attr("id").split("_")[1]);
+                            });
                         }
                     },
                     error: function(response) {
@@ -270,14 +282,93 @@
             }
         }
 
+        function getQueuedJobs() {
+            $.ajax({
+                type: "GET",
+                url: "/queued_jobs",
+                data: {
+                    page: page
+                },
+                success: function(data) {
+                    var appendString = "<table id='jobListTable' class='table'>" +
+                                           "<th>Job Type</th>" +
+                                           "<th>Progress</th>" +
+                                           "<th>Status</th>" +
+                                           "<th></th>";
+                    if(data !== null) {
+                        var jobList = JSON.parse(data);
+                        for(var index in jobList) {
+                            appendString += "<tr id='job_" + jobList[index]["id"] + "'><td>" + jobList[index]["job_type"] + "</td>" +
+                                            "<td>" + '<progress id="jobProgress' + jobList[index]["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + jobList[index]["id"] + '"></label></td>' +
+                                            "<td id='jobStatus" + jobList[index]["id"] +"'>" + jobList[index]["status"] + "</td><td>";
+                            if(jobList[index]["status"] === "complete") {
+                                appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;';
+                                appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>';
+                            } else if(jobList[index]["status"] === "in-progress") {
+                                appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a>';
+                            }
+                            appendString += "</td></tr>";
+                        }
+                    }
+                    $('#jobList').empty().append(appendString + "</table>");
+                    $('#jobListTable tr').each(function (i, tr) {
+                        if(i !== 0) {
+                            var id = $(tr).attr('id').split("_")[1];
+                            var text = $('#jobStatus' + id).text();
+                            if(text === "in-progress" || text === "queued") {
+                                pollJob(id);
+                                $(tr).find("a").on('click', function() {
+                                    killJob($(this).parent().parent().attr("id").split("_")[1]);
+                                });
+                            } else if(text === "complete") {
+                                $(tr).find("a:first").on('click', function() {
+                                    setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
+                                });
+                                $(tr).find("a:last").attr('href', "/get_report?csv=1&job_id=" + $(tr).attr("id").split("_")[1]);
+                            }
+                            $('#jobProgress' + id).attr('value', 100);
+                            $('#progressText' + id).empty().append("100%");
+                        }
+                    });
+                },
+                error: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                    $('#errorBlock').empty().append(response).show();
+                }
+            });
+        }
+
+        function killJob(id) {
+            //TODO: confirm yes/no box before cancelling
+            clearInterval(pollMap[id]);
+            $.ajax({
+                type: "GET",
+                url: "/kill_job",
+                data: {
+                    "job_id" : id.toString()
+                },
+                success: function(data) {
+                    id = JSON.parse(data)["id"];
+                    $('#jobStatus' + id).empty().append("cancelled").next().empty(); 
+                },
+                error: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                }
+            });
+        }
         var dangerFlag;
         var filterNum = 0;
         var reportJSON = "";
+        var pollMap = {};
         var defaultEnd = moment().hour(0).minute(0).second(0).millisecond(0);
         var defaultStart = moment().hour(0).minute(0).second(0).millisecond(0).subtract('days', 1);
         var pickerStart = defaultStart;
         var pickerEnd = defaultEnd;
+        var page = 0;
         createForm();
+        getQueuedJobs();
 
         $('#reportrange span').html(defaultStart.format('MMMM D, YYYY') + ' - ' + defaultEnd.format('MMMM D, YYYY'));
         $('#reportrange').daterangepicker(
@@ -333,8 +424,37 @@
             }
         });
 
-        $('#flipButton').on('click', function() {
+        $('#generateReport').on('click', function() {
             generateReport();
+        });
+
+        $(".next").on('click', function () {
+            if ($(this).hasClass("disabled")) {
+                return false;
+            }
+            page++;
+            updatePagerStyles();
+            getQueuedJobs();
+        });
+        $(".previous").on('click', function () {
+            if ($(this).hasClass("disabled")) {
+                return false;
+            }
+            page--;
+            updatePagerStyles();
+            getQueuedJobs();
+        });
+
+        $('#previousJobs').on('click', function () {
+            $(this).next().animate({
+                'height': 'toggle'
+            }, 400);
+            var icon = $(this).find("span");
+            if(icon.hasClass('glyphicon-chevron-down')) {
+                icon.removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+            } else {
+                icon.removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+            }
         });
     });
 </script>
@@ -346,11 +466,17 @@
 <div id="successBlock" class="col-sm-offset-3 col-sm-6 alert alert-success" style="text-align:center;">
 </div>
 <div class="col-sm-offset-3">&nbsp;</div>
-<div id="results" class="col-sm-12 collapse">
-</div>
-<div id="loaders" class="col-sm-12 collapse">
-    <progress id="jobProgress" class="col-sm-offset-3 col-sm-6" max="100"></progress>
-    <label class="col-sm-3" id="progressText"></label>
+<div class="col-sm-12">
+    <legend id="previousJobs">Previous Jobs  <span class="glyphicon glyphicon-chevron-down" style="font-size:16px;"></span></legend>
+    <div class="col-sm-9" style="display:none;">
+        <ul class="pager">
+          <li class="previous disabled"><a href="javascript:;">&larr; Newer</a></li>
+          <li class="next"><a href="javascript:;">Older &rarr;</a></li>
+        </ul>
+        <div class="col-sm-12" id="jobList">
+        </div>
+    </div>
+    <div class="col-sm-offset-3">&nbsp;</div>
 </div>
 <div id="compliance_settings">
     <form class="form-horizontal" role="form">
@@ -365,18 +491,14 @@
                     <div class="input-group col-sm-8">
                         <input name="startTime_0" type="time" class="form-control">
                         <div class="errorMessage alert alert-danger"></div>
-                        <!--<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> -->
                     </div>
-                    
                 </div>
                 <div class="form-group">
                     <label class="col-sm-4 control-label">End Time</label>
                     <div class="input-group col-sm-8">
                         <input name="endTime_0" type="time" class="form-control">
                         <div class="errorMessage alert alert-danger"></div>
-                        <!--<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span> -->
                     </div>
-                     
                 </div>
                 <div class="form-group">
                     <label class="col-sm-4 control-label">Timezone</label>
@@ -418,4 +540,18 @@
         </div>
     </form>
 </div>
-
+<div class="modal modal-large fade" id="reportModal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Compliance Report</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+</div>

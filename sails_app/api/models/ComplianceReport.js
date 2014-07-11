@@ -15,6 +15,10 @@ module.exports = {
       required: true
     },
 
+    organization: {
+        model: 'organization'
+    },
+    
     kue_id: {
       type: 'integer'
     },
@@ -27,7 +31,7 @@ module.exports = {
 
     status: {
       type: 'string',
-      defaultsTo: "in-progress"
+      defaultsTo: "queued"
     }
   }
 

@@ -33,44 +33,62 @@ module.exports = {
     }
   }, 
 
-  save_as_csv: function(req, res) {
-    var data = JSON.parse(req.query.data);
-    var moment = require('moment');
-    var file = "Asset Name,Sensor Type,Threshold";
-    var dummyTimeFrame = "";
-    for(var timeframe in data) {
-        dummyTimeFrame = timeframe;
-        var times = timeframe.split("_");
-        var headerString = "," + moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
-        headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z");
-        file += headerString + " Avg";
-        file += headerString + " Var";
-        file += headerString + " Temps Pass";
-        file += headerString + " % Pass";
-    }
-    file += "\n";
-    for(var asset in data[dummyTimeFrame]) {
-        var tmpText = "";
-        tmpText += data[dummyTimeFrame][asset].display_name + ",";
-        tmpText += data[dummyTimeFrame][asset].display_name_2 + ",";
-        tmpText += data[dummyTimeFrame][asset].threshold + ",";
-        for(var timeframe in data) {
-            tmpText += data[timeframe][asset].avgTemp + ",";
-            tmpText += data[timeframe][asset].varTemp + ",";
-            tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
-            tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
+  get_report: function(req, res) {
+    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+      if (err) {
+        sails.log.error("Error retrieving job from database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      var zlib = require('zlib');
+      zlib.unzip(new Buffer(reportData.report,'base64'), function(err,buffer) {
+        if (err) {
+          sails.log.error("Error with gzip: " + err);
+          res.json(JSON.stringify(err),500);
         }
-        tmpText = tmpText.slice(0,-1) + "\n";
-        file += tmpText;
-    }
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Content-Disposition': "attachment; filename=compliance_report.csv"
+        
+        if(req.query.csv === "false") {
+          res.json(JSON.stringify(buffer.toString()));  
+        } else {
+          var data = JSON.parse(buffer.toString());
+          var moment = require('moment');
+          var file = "Asset Name,Sensor Type,Threshold";
+          var dummyTimeFrame = "";
+          for(var timeframe in data) {
+              dummyTimeFrame = timeframe;
+              var times = timeframe.split("_");
+              var headerString = "," + moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
+              headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z");
+              file += headerString + " Avg";
+              file += headerString + " Var";
+              file += headerString + " Temps Pass";
+              file += headerString + " % Pass";
+          }
+          file += "\n";
+          for(var asset in data[dummyTimeFrame]) {
+              var tmpText = "";
+              tmpText += data[dummyTimeFrame][asset].display_name + ",";
+              tmpText += data[dummyTimeFrame][asset].display_name_2 + ",";
+              tmpText += data[dummyTimeFrame][asset].threshold + ",";
+              for(var timeframe in data) {
+                  tmpText += data[timeframe][asset].avgTemp + ",";
+                  tmpText += data[timeframe][asset].varTemp + ",";
+                  tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
+                  tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
+              }
+              tmpText = tmpText.slice(0,-1) + "\n";
+              file += tmpText;
+          }
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Content-Disposition': "attachment; filename=compliance_report.csv"
+          });
+          res.end(file);      
+        }
+      });
     });
-    res.end(file);
   },
 
-  get_data: function(req, res) {
+  queue_job: function(req, res) {
     var timeFilters;
     var rfidThresholds = {};
     var moment = require('moment');
@@ -84,21 +102,15 @@ module.exports = {
       }
     }
 
-    //initialize some queue stuff
     var kue = require('kue');
     var jobQueue = kue.createQueue();
     
-
-    //so now we have a list of time filters, and a list of each rfid and its threshold
-    //first we create a row in the db so that we can query from it
-
-    ComplianceReport.create({"job_type": "dbjob"}).exec(function (err, job_data) {
+    ComplianceReport.create({"job_type": "dbjob", "organization": req.session.organization}).exec(function (err, job_data) {
       if (err) {
         sails.log.error("Error saving job to database: " + err);
         res.json(JSON.stringify(err),500);
       }
       else {
-        //now we need to put everything that we need into a a job, and send that into the queue
         var job = jobQueue.create('dbjob', {
           rfidThresholds: rfidThresholds,
           timeFilters: timeFilters,
@@ -168,30 +180,33 @@ module.exports = {
         sails.log.error("Error retrieving job from database: " + err);
         res.json(JSON.stringify(err),500);
       }
-      if(reportData.status === 'in-progress') {
+      if(reportData.status === 'queued') {
+        res.json(JSON.stringify(reportData));
+      }
+      else if(reportData.status === 'in-progress') {
         if(reportData.kue_id !== undefined) {
           var kue = require('kue');
           kue.Job.get(reportData.kue_id, function(err, kuejob) {
             if(err) {
               sails.log.error("Error retrieving job from kue: " + err);
-              res.json(JSON.stringify(err),500);       
+              ComplianceReport.update({id: reportData.id}, {status: "cancelled"}, function (err, reports) {
+                if(err) {
+                  sails.log.error("Error setting status of compliance report: " + err);
+                  res.json(JSON.stringify(err),500);
+                }
+                res.json(JSON.stringify(reports[0]),500);
+              });
+            } else {
+              res.json(JSON.stringify({"status": "in-progress", "job" : kuejob, "id" : reportData.id}));
             }
-            res.json(JSON.stringify({"status": "in-progress", "job" : kuejob}));
           });
         } else {
           res.json(JSON.stringify(reportData));
         }
-      } else if(reportData.status === 'failed') {
-        res.json(JSON.stringify({"status": 'failed'}, 500));
+      } else if(reportData.status === 'failed' || reportData.status === 'cancelled') {
+        res.json(JSON.stringify({"status": reportData.status, "id": reportData.id}, 500));
       } else {
-        var zlib = require('zlib');
-        zlib.unzip(new Buffer(reportData.report,'base64'), function(err,buffer) {
-          if (err) {
-            sails.log.error("Error with gzip: " + err);
-            res.json(JSON.stringify(err),500);
-          }
-          res.json(JSON.stringify(buffer.toString()));
-        });
+        res.json(JSON.stringify(reportData));
       }
     });
   },
@@ -214,10 +229,23 @@ module.exports = {
               sails.log.error("Error setting status of compliance report: " + err);
               res.json(JSON.stringify(err),500);
             }
-            res.json({});
+            res.json(JSON.stringify({id: req.query.job_id}));
           });
-        });
+        });  
       });
+    });
+  },
+
+  queued_jobs: function(req,res) {
+    ComplianceReport.find({ where: {organization: req.session.organization}, limit: 5, skip: 5*req.query.page}).exec(function (err, jobList) {
+      if (err) {
+        sails.log.error("Error retrieving jobs from database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      else if(jobList.length === 0) {
+        res.json(null);
+      }
+      res.json(JSON.stringify(jobList));
     });
   }
 };

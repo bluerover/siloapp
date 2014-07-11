@@ -68,7 +68,7 @@ var jobErr = null;
 var resultsArray = {};
 
 function updateKueId(kue_id, job_id) {
-	var query = connection.query('UPDATE compliancereport SET kue_id = ? WHERE id = ?',
+	var query = connection.query('UPDATE compliancereport SET kue_id = ?, status="in-progress" WHERE id = ?',
 	  [kue_id, job_id], function(err, results) {
 	  if(err) {
 	  	console.log("couldn't update kue_id: " + err);
