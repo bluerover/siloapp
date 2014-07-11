@@ -153,6 +153,16 @@ function setupEventListeners() {
     }
   });
 
+  sails.event_emitter.on('log', function(data) {
+    var fs = require("fs");
+    fs.appendFile('/tmp/alerthandler.log', data, function (err) {
+      if(err) {
+        sails.log.error("couldn't write to the alert log");
+      } else {
+        sails.log.info("write to log successfully");
+      }
+    });
+  });
   sails.event_emitter.on('email', function (data) {
     Rfid.findOne(data.rfidTagNum).exec(function (err, rfid) {
       if(err) {
@@ -250,6 +260,9 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       return;
     }
 
+    if(sails.notification_handlers[tag_id] !== undefined) {
+	return;
+    }
     sails.notification_handlers[tag_id] = [];
     for (var index in alerthandler_data) {
       var alerthandler_filename = alerthandler_data[index].alerthandler_name;
@@ -261,13 +274,7 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
         emit: function(channel, data) {
           var ms_timestamp = new Date().getTime();
           data.timestamp = Math.round(ms_timestamp / 1000);
-          fs.appendFile('/tmp/alerthandler.log', channel + " " + data.timestamp + "\n", function (err) {
-            if(err) {
-              sails.log.error("couldn't write to the alert log");
-            } else {
-              sails.log.info("write to log successfully");
-            }
-          });
+	  sails.event_emitter.emit('log', channel + " " + data.timestamp + " " +  data.autoIndex +  "\n");
           data.alerthandler_name = alerthandler_filename;
           data.rfidTagNum = this.rfid;
           sails.alert_emitter.emit(tag_id, data);
@@ -299,9 +306,7 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
         alerthandler.on('tick', timestamp);
       });
 
-      if(sails.notification_handlers[tag_id].length === 0) {
-        sails.notification_handlers[tag_id].push(alerthandler);
-      }  
+      sails.notification_handlers[tag_id].push(alerthandler);
     }
   });
 }
@@ -342,9 +347,13 @@ function loadRecentAlerts () {
 
     sails.log.debug("Found recent alert data");
 
+    var rfidArray = [];
     for (i in alert_data) {
-      initializeAlertHandler('rfid-' + alert_data[i].rfidTagNum, null, alert_data[i]);
-      sails.recent_alerts[alert_data[i].rfidTagNum] = alert_data[i];
+      if(rfidArray.indexOf(alert_data[i].rfidTagNum) === -1) {
+	 initializeAlertHandler('rfid-' + alert_data[i].rfidTagNum, null, alert_data[i]);
+     	 sails.recent_alerts[alert_data[i].rfidTagNum] = alert_data[i];
+	 rfidArray.push(alert_data[i].rfidTagNum);
+      }
     }
   });
 }
