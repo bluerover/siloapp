@@ -274,7 +274,7 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
         emit: function(channel, data) {
           var ms_timestamp = new Date().getTime();
           data.timestamp = Math.round(ms_timestamp / 1000);
-	  sails.event_emitter.emit('log', channel + " " + data.timestamp + " " +  data.autoIndex +  "\n");
+	  //sails.event_emitter.emit('log', channel + " " + data.timestamp + " " +  data.autoIndex +  "\n");
           data.alerthandler_name = alerthandler_filename;
           data.rfidTagNum = this.rfid;
           sails.alert_emitter.emit(tag_id, data);
