@@ -292,7 +292,7 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
         alerthandler.on('tick', timestamp);
       });
 
-      if(sails.notification_handlers[tag_id].length == 0) {
+      if(sails.notification_handlers[tag_id].length === 0) {
         sails.notification_handlers[tag_id].push(alerthandler);
       }  
 
