@@ -28,7 +28,6 @@ module.exports.bootstrap = function (cb) {
 
   createEventEmitters();
   setupTickEvent();
-  setupBlueRoverApi();
   setupEventListeners();
   setupHandheldDataParser();
   loadRecentAlerts();
@@ -65,6 +64,7 @@ function setupBlueRoverApi() {
 
     var streamBuffer = "";
     // Open the BlueRover API stream
+    sails.log.info("Opening blueRover stream");
     bluerover.stream(function(e) {
         // Emit raw API data
         sails.event_emitter.emit('raw_data', e);
@@ -260,9 +260,6 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       return;
     }
 
-    if(sails.notification_handlers[tag_id] !== undefined) {
-	return;
-    }
     sails.notification_handlers[tag_id] = [];
     for (var index in alerthandler_data) {
       var alerthandler_filename = alerthandler_data[index].alerthandler_name;
@@ -347,14 +344,20 @@ function loadRecentAlerts () {
 
     sails.log.debug("Found recent alert data");
 
-    var rfidArray = [];
+    rfidArray = [];
     for (i in alert_data) {
       if(rfidArray.indexOf(alert_data[i].rfidTagNum) === -1) {
-	 initializeAlertHandler('rfid-' + alert_data[i].rfidTagNum, null, alert_data[i]);
-     	 sails.recent_alerts[alert_data[i].rfidTagNum] = alert_data[i];
-	 rfidArray.push(alert_data[i].rfidTagNum);
+	       initializeAlertHandler('rfid-' + alert_data[i].rfidTagNum, null, alert_data[i]);
+     	   sails.recent_alerts[alert_data[i].rfidTagNum] = alert_data[i];
+	       rfidArray.push(alert_data[i].rfidTagNum);
       }
     }
+    var id = setInterval(function() {
+      if(Object.keys(sails.notification_handlers).length === rfidArray.length) {
+        clearInterval(id);
+        setupBlueRoverApi();
+      }
+    },10*1000);
   });
 }
 
