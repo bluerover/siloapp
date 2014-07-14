@@ -29,7 +29,6 @@
                 success: function(response) {
                     $("#table-loading").hide();
                     var data = JSON.parse(response);
-                    console.log(data);
                     var thresholds = {};
                     var timeFilters;
                     if(Object.size(data) > 1) {
@@ -237,8 +236,6 @@
                         appendString += "</table>";
                         break;
                     }
-                    $('#reportModal .modal-body').empty().append(appendString);
-                    $('#reportModal').modal('show');
                 },
                 error: function(response) {
                     console.log("Error");
@@ -358,6 +355,7 @@
                 }
             });
         }
+
         var dangerFlag;
         var filterNum = 0;
         var reportJSON = "";
@@ -376,10 +374,8 @@
                     ranges: {
                         'Today': [moment(), moment().add('days', 1)],
                         'Yesterday': [moment().subtract('days', 1), moment()],
-                        'Last 7 Days': [moment().subtract('days', 7), moment()],
-                        'Last 30 Days': [moment().subtract('days', 30), moment()],
-                        'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+                        'Last 3 Days': [moment().subtract('days', 3), moment()],
+                        'Last 7 Days': [moment().subtract('days', 7), moment()]
                     },
                     startDate: defaultStart,
                     endDate: defaultEnd,
@@ -539,19 +535,4 @@
             </table>
         </div>
     </form>
-</div>
-<div class="modal modal-large fade" id="reportModal">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title">Compliance Report</h4>
-        </div>
-        <div class="modal-body">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
 </div>

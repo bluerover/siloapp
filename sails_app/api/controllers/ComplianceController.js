@@ -34,49 +34,40 @@ module.exports = {
   }, 
 
   get_report: function(req, res) {
-    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+    var fs = require('fs');
+    fs.readFile('/reports/' + req.query.job_id + '_report.log', 'utf-8', function (err,reportData) {
       if (err) {
-        sails.log.error("Error retrieving job from database: " + err);
+        sails.log.error("Error with fs: " + err);
         res.json(JSON.stringify(err),500);
+        return;
       }
       var zlib = require('zlib');
-      zlib.unzip(new Buffer(reportData.report,'base64'), function(err,buffer) {
+      zlib.unzip(new Buffer(reportData,'base64'), function(err,buffer) {
         if (err) {
           sails.log.error("Error with gzip: " + err);
           res.json(JSON.stringify(err),500);
+          return;
         }
-        
         if(req.query.csv === "false") {
           res.json(JSON.stringify(buffer.toString()));  
         } else {
           var data = JSON.parse(buffer.toString());
           var moment = require('moment');
-          var file = "Asset Name,Sensor Type,Threshold";
-          var dummyTimeFrame = "";
-          for(var timeframe in data) {
-              dummyTimeFrame = timeframe;
-              var times = timeframe.split("_");
-              var headerString = "," + moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
-              headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z");
-              file += headerString + " Avg";
-              file += headerString + " Var";
-              file += headerString + " Temps Pass";
-              file += headerString + " % Pass";
-          }
-          file += "\n";
-          for(var asset in data[dummyTimeFrame]) {
-              var tmpText = "";
-              tmpText += data[dummyTimeFrame][asset].display_name + ",";
-              tmpText += data[dummyTimeFrame][asset].display_name_2 + ",";
-              tmpText += data[dummyTimeFrame][asset].threshold + ",";
-              for(var timeframe in data) {
-                  tmpText += data[timeframe][asset].avgTemp + ",";
-                  tmpText += data[timeframe][asset].varTemp + ",";
-                  tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
-                  tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
-              }
-              tmpText = tmpText.slice(0,-1) + "\n";
+          var file = "Timeframe,Asset Name,Sensor Type,Threshold,Average,Variance,Temps Pass,% Pass\n";
+          for (var timeframe in data) {
+            var times = timeframe.split("_");
+            var timeString = moment.unix(times[0]).format("MMM DD YYYY h:mmA Z") + " - " + moment.unix(times[1]).format("MMM DD YYYY h:mmA Z") + ",";
+            for(var asset in data[timeframe]) {
+              var tmpText = timeString;
+              tmpText += data[timeframe][asset].display_name + ",";
+              tmpText += data[timeframe][asset].display_name_2 + ",";
+              tmpText += data[timeframe][asset].threshold + ",";
+              tmpText += data[timeframe][asset].avgTemp + ",";
+              tmpText += data[timeframe][asset].varTemp + ",";
+              tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
+              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + "\n";
               file += tmpText;
+            }
           }
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -137,8 +128,7 @@ module.exports = {
   			return;
   		}
   		Rfid.query("select rfid.id, display_name, display_name_2 from rfid " +
-    		"left join rfidcompliancethreshold as rct on rfid.id = rct.rfid where organization = ? " +
-        "order by display_name asc, display_name_2 asc",
+    		"where organization = ? order by display_name asc, display_name_2 asc",
     		[req.session.organization], function (err, rfidData) {
   			if (err) {
   				sails.log.error("There was an error retrieving rfid data: " + err);
@@ -148,7 +138,7 @@ module.exports = {
   				//only send the rfid data
   				res.json("{\"rfids\" : " + JSON.stringify(rfidData) + "}");
   			} else {
-  				//we have both, combine to one json object and send it
+  				// we have both, combine to one json object and send it
   				res.json("{\"compliance\" : " + JSON.stringify(compliance) + "," +
                    " \"rfids\" : " + JSON.stringify(rfidData) + "}");
   			}

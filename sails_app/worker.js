@@ -78,9 +78,9 @@ function updateKueId(kue_id, job_id) {
 	});
 }
 
-function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) {
+function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) {;
 	var queryString = "SELECT r.id, r.display_name, r.display_name_2, ROUND(AVG(rfidTemperature),2) as avgTemp, ROUND(VARIANCE(rfidTemperature),2) as varTemp, " +
-        "count(*) as total, COUNT(IF(rfidTemperature " + (thresholdType == "min" ? ">" : "<") + " ? ,1, NULL)) " +
+        "count(*) as total, COUNT(IF(rfidTemperature " + (thresholdType === "min" ? "<" : ">") + " ? ,1, NULL)) " +
         "as passingTemp, " + threshold + " as threshold FROM rfiddata as rd JOIN rfid as r on rd.rfidTagNum = r.id  " +
         "WHERE rfidTagNum = ? AND timestamp >= ? AND timestamp <= ?";
     var parameters = [threshold, rfid, startTime, endTime];
@@ -100,13 +100,21 @@ function saveComplianceReport(resultsArray, job_id, status, callback) {
 	    jobErr = new Error(err);
 	  }
 	  else {
-	  	var query = connection.query('UPDATE compliancereport SET status="' + status + '", report = ? WHERE id = ?',
-		[buffer.toString('base64'), job_id], function(err, results) {
+	  	var query = connection.query('UPDATE compliancereport SET status="' + status + '" WHERE id = ?',
+		[job_id], function(err, results) {
 		  	if(err) {
 		  		jobErr = err;
 		  		errBack(callback,err);
 		  	} else {
-		  		callback();
+		  		var fs = require('fs');
+		  		fs.appendFile('/reports/' + job_id + '_report.log', buffer.toString('base64'), function (err) {
+			      if(err) {
+			        console.log("couldn't write report " + job_id + " to file: " + err);
+			      } else {
+			        console.log("write to /reports/" + job_id + "_report.log successful");
+			      }
+			      callback();
+			    });
 		  	}
 		});
 	  }
