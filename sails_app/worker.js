@@ -136,7 +136,7 @@ function errBack(done, err) {
 	done(err);
 }
 
-jobs.process('dbjob', function (job, done) {
+jobs.process('6_compjob', function (job, done) {
 	console.log("Processing job " + job.data.id + ", kueID " + job.id); 
 
 	//First, update row in db with the kueID here
@@ -187,5 +187,4 @@ jobs.process('dbjob', function (job, done) {
 	},800);
 });
 
-kue.app.listen(3000);
-console.log("worker started, UI @ 3000");
+console.log("UWO worker started, UI @ 3000");
