@@ -63,20 +63,26 @@ module.exports = {
                 res.view({layout: "barebones"}, '500');
                 return;
               }
-              
-              req.session.user = user.id;
-              req.session.username = user.username;
-              req.session.full_name = user.full_name();
-              req.session.is_admin = user.is_admin;
-              req.session.organization = user.organization;
-              req.session.organization_name = org.name;
-              req.session.authenticated = true;
-              if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
-                res.redirect(req.body.redirect_to);
-              }
-              else {
-                res.redirect(DEFAULT_ROUTE);
-              }
+              Dashboard.find({organization: user.organization}).exec(function (err, dashboard_rows) {
+                if (err || dashboard_rows.length === 0) {
+                  res.view({layout: "barebones"}, '500');
+                  return;
+                } 
+                else if (dashboard_rows.length === 1) req.session.organization_num = dashboard_rows[0].id;
+                req.session.user = user.id;
+                req.session.username = user.username;
+                req.session.full_name = user.full_name();
+                req.session.is_admin = user.is_admin;
+                req.session.organization = user.organization;
+                req.session.organization_name = org.name;
+                req.session.authenticated = true;
+                if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
+                  res.redirect(req.body.redirect_to);
+                }
+                else {
+                  res.redirect(DEFAULT_ROUTE);
+                }
+              });
             });
           }
           else {
