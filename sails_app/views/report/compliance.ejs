@@ -58,7 +58,7 @@
                                 }
                                 $('input[name=startTime_' + filter + ']').val(startTime.format("HH:mm"));
                                 $('input[name=endTime_' + filter + ']').val(endTime.format("HH:mm"));
-                                $('input[name=timezone_' + filter + ']').val("EDT");
+                                $('select[name=timezone_' + filter + ']').val(startTime.format("Z"));
                             }
                         }
                         var newStart = moment.unix(timeFilters[0][0]).format('MMMM D, YYYY');
@@ -364,6 +364,7 @@
         var defaultStart = moment().hour(0).minute(0).second(0).millisecond(0).subtract('days', 1);
         var pickerStart = defaultStart;
         var pickerEnd = defaultEnd;
+        $('select[name=timezone_0]').val(moment().format("Z"));
         var page = 0;
         createForm();
         getQueuedJobs();
@@ -501,7 +502,7 @@
                     <div class="input-group col-sm-8">
                         <select class="form-control" name="timezone_0">
                             <option value="-05:00">EST</option>
-                            <option value="-04:00" selected>EDT</option>
+                            <option value="-04:00">EDT</option>
                             <option value="-08:00">PST</option>
                             <option value="-07:00">PDT</option>
                             <option value="-07:00">MST</option>
