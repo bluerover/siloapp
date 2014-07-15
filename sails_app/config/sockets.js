@@ -66,66 +66,82 @@ module.exports.sockets = {
 
       var filters = widgetInfo['filter'].split(" ");
 
-      for (var f in filters) {
-        var set_listeners = function () {
-          sails.socket_listeners[socket.id].push({
-            filter: filters[f],
-            f: sendData
-          });
-          sails.socket_listeners[socket.id].push({
-            filter: filters[f],
-            f: sendAlert
-          });
-
-          sails.event_emitter.on(filters[f], sendData);
-          sails.alert_emitter.on(filters[f], sendAlert);
+      Organization.find({parent:session.organization}).exec(function (err, orgs) {
+        if(err) {
+          sails.log.error("error finding organizations during socket connect: " + err);
+          socket.disconnect();
+          return;
         }
-
-        if (filters[f].indexOf('rfid-') === 0) {
-          var rfid = parseInt(filters[f].substring(5));
-          Rfid.findOne(rfid).exec(function (err, rfid_row) {
-            if (err) {
-              sails.log.error("There was an error finding the rfid for socket.");
-              socket.disconnect();
-              return;
-            }
-
-            if (rfid_row === undefined || rfid_row === null) {
-              sails.log.info("Undefined/null rfid");
-              return;
-            }
-
-            if (rfid_row.organization !== session.organization) {
-              sails.log.error("Unauthorized RFID filter connection attempt by socket");
-              socket.disconnect();
-              return;
-            }
-
-            if (rfid_row.id in sails.recent_alerts) {
-              sendAlert(sails.recent_alerts[rfid_row.id]);
-            }
-
-            if (rfid_row.id in sails.recent_rfid_data) {
-              sendData(sails.recent_rfid_data[rfid_row.id]);
-            }
-
+        for (var f in filters) {
+          var set_listeners = function () {
             sails.socket_listeners[socket.id].push({
-              filter: 'rfid-' + rfid_row.id,
+              filter: filters[f],
               f: sendData
             });
             sails.socket_listeners[socket.id].push({
-              filter: 'rfid-' + rfid_row.id,
+              filter: filters[f],
               f: sendAlert
             });
 
-            sails.event_emitter.on('rfid-' + rfid_row.id, sendData);
-            sails.alert_emitter.on('rfid-' + rfid_row.id, sendAlert);
-          });
+            sails.event_emitter.on(filters[f], sendData);
+            sails.alert_emitter.on(filters[f], sendAlert);
+          }
+
+          if (filters[f].indexOf('rfid-') === 0) {
+            var rfid = parseInt(filters[f].substring(5));
+            Rfid.findOne(rfid).exec(function (err, rfid_row) {
+              if (err) {
+                sails.log.error("There was an error finding the rfid for socket.");
+                socket.disconnect();
+                return;
+              }
+
+              if (rfid_row === undefined || rfid_row === null) {
+                sails.log.info("Undefined/null rfid");
+                return;
+              }
+              if (rfid_row.organization !== session.organization) {
+                //check if it's any of the parent organizations
+                var isChild = false;
+                for(var index in orgs) {
+                  if(orgs[index].parent === session.organization) {
+                    isChild = true;
+                    break;
+                  }
+                }
+                if(!isChild) {
+                  sails.log.error("Unauthorized RFID filter connection attempt by socket");
+                  socket.disconnect();
+                  return;  
+                }
+              }
+
+              if (rfid_row.id in sails.recent_alerts) {
+                sendAlert(sails.recent_alerts[rfid_row.id]);
+              }
+
+              if (rfid_row.id in sails.recent_rfid_data) {
+                sendData(sails.recent_rfid_data[rfid_row.id]);
+              }
+
+              sails.socket_listeners[socket.id].push({
+                filter: 'rfid-' + rfid_row.id,
+                f: sendData
+              });
+              sails.socket_listeners[socket.id].push({
+                filter: 'rfid-' + rfid_row.id,
+                f: sendAlert
+              });
+
+              sails.event_emitter.on('rfid-' + rfid_row.id, sendData);
+              sails.alert_emitter.on('rfid-' + rfid_row.id, sendAlert);
+            });
+          }
+          else {
+            set_listeners();
+          }
         }
-        else {
-          set_listeners();
-        }
-      }
+      });
     });
   },
 

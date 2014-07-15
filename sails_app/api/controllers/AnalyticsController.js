@@ -9,7 +9,8 @@ module.exports = {
 	index: function (req, res) {
     res.view({
       title: "BlueRover Analytics",
-      organization_num: req.session.organization_num,
+      is_parent: req.session.is_parent,
+      dashboard_id: req.session.dashboard_id,
       organization_name: req.session.organization_name,
       page_category: "analytics",
       full_name: req.session.full_name

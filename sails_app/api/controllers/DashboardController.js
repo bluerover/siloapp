@@ -35,28 +35,32 @@ module.exports = {
   // },
   
   home: function (req, res) {
-    Dashboard.find({organization: req.session.organization}).exec(function(err, dashboard_rows) {
+    Dashboard.find({organization: req.session.organization}).exec(function (err, dashboard_rows) {
       if (err) {
         sails.log.error("There was an error retrieving list of dashboards: " + err);
         return;
       }
-
-      // There are no dashboards for the user, show 500 (for now)
-      if (dashboard_rows.length === 0) {
-        res.view({layout: "barebones"}, '500');
-      }
       else if(dashboard_rows.length === 1) {
-        req.session.organization_num = dashboard_rows[0].id;
         res.redirect('/dashboard/' + dashboard_rows[0].id);
       }
       else {
-        res.view({
-          title: "Dashboard Selection",
-          organization_num: dashboard_rows[0].id,
-          organization_name: req.session.organization_name,
-          page_category: "dashboard",
-          full_name: req.session.full_name,
-          dashboards: dashboard_rows
+        Dashboard.query("select d.id, o.name from dashboard as d " + 
+        "join organization as o on d.organization = o.id " +
+        "where o.parent = ?",
+        [req.session.organization], function (err, dashboards) {
+          if(err) {
+            sails.log.error("Error retrieving child dashboards" + err)
+            return;
+          }
+          req.session.parent = true;
+          res.view({
+            title: "Dashboard Selection", 
+            organization_name: req.session.organization_name,
+            is_parent: req.session.is_parent,
+            page_category: "dashboard",
+            full_name: req.session.full_name,
+            dashboards: dashboards
+          });
         });
       }
     });
@@ -89,12 +93,6 @@ module.exports = {
 
       var dashboard = d[0];
 
-      if (req.session.organization !== dashboard.organization) {
-        // Return 404 instead of 403 so that users cannot know if a dashboard exists or not
-        res.view({layout: "barebones"}, '404');
-        return;
-      }
-
       sails.log.debug("Attempting to find dashboard widget from database for dashboard request");
       Dashboard_Widget.find({dashboard: dashboard_id}).populate('widget').sort('widget_order ASC').exec(function (err, dashboard_widgets) {
         if (err) {
@@ -103,10 +101,11 @@ module.exports = {
         }
 
         sails.log.info("Got widgets");
-
+        req.session.dashboard_id = dashboard_id;
         res.view({
           title: dashboard.name,
-          organization_num: req.session.organization_num,
+          is_parent: req.session.is_parent,
+          dashboard_id: req.session.dashboard_id,
           organization_name: req.session.organization_name,
           page_category: "dashboard",
           full_name: req.session.full_name,

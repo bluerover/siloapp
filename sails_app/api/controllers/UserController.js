@@ -64,11 +64,19 @@ module.exports = {
                 return;
               }
               Dashboard.find({organization: user.organization}).exec(function (err, dashboard_rows) {
-                if (err || dashboard_rows.length === 0) {
+                if (err) {
+                  sails.log.error("error retrieving dashboards: " + err);
                   res.view({layout: "barebones"}, '500');
                   return;
                 } 
-                else if (dashboard_rows.length === 1) req.session.organization_num = dashboard_rows[0].id;
+                if (dashboard_rows.length === 1) {
+                  req.session.dashboard_id = dashboard_rows[0].id;
+                }
+                if (dashboard_rows.length === 0) {
+                  req.session.is_parent = true;
+                } else {
+                  req.session.is_parent = false;
+                }
                 req.session.user = user.id;
                 req.session.username = user.username;
                 req.session.full_name = user.full_name();
@@ -76,7 +84,9 @@ module.exports = {
                 req.session.organization = user.organization;
                 req.session.organization_name = org.name;
                 req.session.authenticated = true;
-                if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
+                if(req.session.is_parent) {
+                  res.redirect("/dashboards");
+                } else if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
                   res.redirect(req.body.redirect_to);
                 }
                 else {
