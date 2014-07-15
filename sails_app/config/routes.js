@@ -115,6 +115,12 @@ module.exports.routes = {
   'get /clear_handler': {
     controller: 'RfidAlerthandler',
     action: 'clear_handler'
+  },
+
+  //Organization
+  'get /get_children': {
+    controller: 'OrganizationController',
+    action: 'get_children'
   }
   /*
   // But what if you want your home page to display

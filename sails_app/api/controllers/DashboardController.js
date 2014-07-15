@@ -30,10 +30,6 @@ module.exports = {
     }
   },
 
-  // index: function (req, res) {
-  //   res.json({success: "This will eventually show a list of dashboards"});
-  // },
-  
   home: function (req, res) {
     Dashboard.find({organization: req.session.organization}).exec(function (err, dashboard_rows) {
       if (err) {

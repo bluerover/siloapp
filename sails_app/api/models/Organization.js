@@ -22,6 +22,7 @@ module.exports = {
     parent: {
       model: 'organization'
     },
+    location: 'string',
     dashboards: {
       collection: 'dashboard',
       via: 'organization'
