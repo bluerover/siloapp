@@ -95,8 +95,7 @@ module.exports = {
 
     var kue = require('kue');
     var jobQueue = kue.createQueue();
-    
-    ComplianceReport.create({"job_type": "dbjob", "organization": req.session.organization}).exec(function (err, job_data) {
+    ComplianceReport.create({"organization": req.session.organization}).exec(function (err, job_data) {
       if (err) {
         sails.log.error("Error saving job to database: " + err);
         res.json(JSON.stringify(err),500);

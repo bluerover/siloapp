@@ -147,6 +147,16 @@
             });
         }
 
+        function updateRow(job,progress,done) {
+            $('#jobStatus' + job.id).empty().append(job.status);
+            $('#jobProgress' + job.id).attr("value", progress);
+            $('#progressText' + job.id).empty().append(progress ? progress + "% " : "");
+            if(done) {
+                clearInterval(pollMap[job.id]);
+                delete pollMap[job.id];
+            }
+        }
+
         function pollJob(job_id) {
             //poll the job status until it is complete
             var pollId = setInterval(function() {
@@ -160,24 +170,14 @@
                         var newJob = JSON.parse(new_job_data);
                         var status = newJob["status"];
                         if(status === "in-progress") {
-                            $('#jobStatus' + newJob.id).empty().append(newJob.status);
-                            $('#jobProgress' + newJob.id).attr("value", newJob.job["progress"]);
-                            $('#progressText' + newJob.id).empty().append(newJob.job["progress"] + "% ");
+                            updateRow(newJob,newJob.job["progress"],false);
                         } else if (status === "cancelled") {
-                            $('#jobStatus' + newJob.id).empty().append(newJob.status);
-                            $('#jobProgress' + newJob.id).attr("value", 0);
-                            $('#progressText' + newJob.id).empty();
-                            clearInterval(pollMap[newJob.id]);
-                            delete pollMap[newJob.id];
+                            updateRow(newJob,0,true);
                         } else {
                             console.log("all done");
-                            clearInterval(pollMap[newJob.id]);
-                            $('#jobProgress' + newJob.id).attr("value", 100);
-                            $('#progressText' + newJob.id).empty().append("100%");
-                            $('#jobStatus' + newJob.id).empty().append(newJob.status);
+                            updateRow(newJob,100,true);
                             $('#job_' + newJob.id + ' a').parent().append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>');
                             $('#job_' + newJob.id + ' .glyphicon-minus-sign').parent().remove();
-                            delete pollMap[newJob.id];
                             $('#job_' + newJob.id).find("a:first").on('click', function() {
                                 setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                             });
@@ -191,6 +191,7 @@
                 });
             },1000);
             pollMap[job_id.toString()] = pollId;
+            console.log(pollMap);
         }
 
         function setupComplianceTable(job_id) {
@@ -258,7 +259,7 @@
                             $('#errorBlock').empty().append("A problem has occured with the server, please try again later.").show();
                         } else {
                             var job = JSON.parse(job_data);
-                            var appendString = "<tr id='job_" + job["id"] + "'><td>" + job["job_type"] + "</td>" +
+                            var appendString = "<tr id='job_" + job["id"] + "'><td>" + job["id"] + "</td>" +
                                             "<td>" + '<progress id="jobProgress' + job["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + job["id"] + '"></label></td>' +
                                             "<td id='jobStatus" + job["id"] +"'>" + job["status"] + "</td>" +
                                             "<td>" + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a></td></tr>';
@@ -266,7 +267,7 @@
                             $('#jobListTable tbody').append(appendString);
                             var a = $('#jobListTable a:last');
                             a.on('click',function() {
-                                killJob(a.parent().parent().attr("id").split("_")[1]);
+                                killJob($(this).parent().parent().attr("id").split("_")[1]);
                             });
                         }
                     },
@@ -288,19 +289,19 @@
                 },
                 success: function(data) {
                     var appendString = "<table id='jobListTable' class='table'>" +
-                                           "<th>Job Type</th>" +
+                                           "<th>Job ID</th>" +
                                            "<th>Progress</th>" +
                                            "<th>Status</th>" +
-                                           "<th></th>";
+                                           "<th>Options</th>";
                     if(data !== null) {
                         var jobList = JSON.parse(data);
                         for(var index in jobList) {
-                            appendString += "<tr id='job_" + jobList[index]["id"] + "'><td>" + jobList[index]["job_type"] + "</td>" +
+                            appendString += "<tr id='job_" + jobList[index]["id"] + "'><td>" + jobList[index]["id"] + "</td>" +
                                             "<td>" + '<progress id="jobProgress' + jobList[index]["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + jobList[index]["id"] + '"></label></td>' +
                                             "<td id='jobStatus" + jobList[index]["id"] +"'>" + jobList[index]["status"] + "</td><td>";
                             if(jobList[index]["status"] === "complete") {
-                                appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;';
-                                appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>';
+                                appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;'
+                                    + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>';
                             } else if(jobList[index]["status"] === "in-progress") {
                                 appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a>';
                             }

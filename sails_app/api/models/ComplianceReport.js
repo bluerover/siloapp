@@ -10,11 +10,6 @@ module.exports = {
 
   attributes: {
 
-    job_type: {
-      type: 'string',
-      required: true
-    },
-
     organization: {
         model: 'organization'
     },
