@@ -40,6 +40,7 @@ module.exports = {
         res.redirect('/dashboard/' + dashboard_rows[0].id);
       }
       else {
+        sails.log.info("Creating parent dashboard");
         Dashboard.query("select d.id, o.name from dashboard as d " + 
         "join organization as o on d.organization = o.id " +
         "where o.parent = ?",
@@ -48,7 +49,6 @@ module.exports = {
             sails.log.error("Error retrieving child dashboards" + err)
             return;
           }
-          req.session.parent = true;
           res.view({
             title: "Dashboard Selection", 
             organization_name: req.session.organization_name,
