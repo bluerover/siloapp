@@ -14,7 +14,7 @@ module.exports = {
   },
 
   get_children: function (req, res) {
-    Dashboard.query("select d.id, o.name, o.location from dashboard as d " + 
+    Dashboard.query("select d.id, o.name, o.location, o.address, o.phone_num from dashboard as d " + 
     "join organization as o on d.organization = o.id " +
     "where o.parent = ?",
     [req.session.organization], function (err, orgs) {
