@@ -36,28 +36,38 @@ module.exports = {
         sails.log.error("There was an error retrieving list of dashboards: " + err);
         return;
       }
-      else if(dashboard_rows.length === 1) {
-        res.redirect('/dashboard/' + dashboard_rows[0].id);
-      }
-      else {
-        sails.log.info("Creating parent dashboard");
-        Dashboard.query("select d.id, o.name from dashboard as d " + 
-        "join organization as o on d.organization = o.id " +
-        "where o.parent = ?",
-        [req.session.organization], function (err, dashboards) {
+      if(req.session.is_parent) {
+        Organization.findOne(req.session.organization).exec(
+        function (err,org) {
           if(err) {
-            sails.log.error("Error retrieving child dashboards" + err)
+            sails.log.error("Error retrieving organizations: " + err);
             return;
           }
-          res.view({
-            title: "Dashboard Selection", 
-            organization_name: req.session.organization_name,
-            is_parent: req.session.is_parent,
-            page_category: "dashboard",
-            full_name: req.session.full_name,
-            dashboards: dashboards
+        
+          //make the current org the parent
+          req.session.organization = org.parent ? org.parent : org.id;
+
+          Dashboard.query("select d.id, o.name from dashboard as d " + 
+          "join organization as o on d.organization = o.id " +
+          "where o.parent = ?",
+          [req.session.organization], function (err, dashboards) {
+            if(err) {
+              sails.log.error("Error retrieving child dashboards" + err)
+              return;
+            }
+            res.view({
+              title: "Dashboard Selection", 
+              organization_name: req.session.organization_name,
+              is_parent: req.session.is_parent,
+              page_category: "dashboard",
+              full_name: req.session.full_name,
+              dashboards: dashboards
+            });
           });
         });
+      }
+      else if(dashboard_rows.length === 1) {
+        res.redirect('/dashboard/' + dashboard_rows[0].id);
       }
     });
   },
@@ -74,7 +84,9 @@ module.exports = {
     }
 
     sails.log.debug("Attempting to find dashboard from database for dashboard request");
-    Dashboard.find({id: dashboard_id}).exec(function (err, d) {
+    Dashboard.query("SELECT d.name, d.id, d.organization, o.name as organization_name from dashboard as d " +
+                    "join organization as o on d.organization = o.id " +
+                    "where d.id = ?",[dashboard_id], function (err, d) {
       if (err) {
         res.view({layout: "barebones"}, '500');
         return;
@@ -89,6 +101,11 @@ module.exports = {
 
       var dashboard = d[0];
 
+      //Reset organization, organization name in case you're a parent
+      req.session.organization = dashboard.organization;
+      req.session.organization_name = dashboard.organization_name;
+
+
       sails.log.debug("Attempting to find dashboard widget from database for dashboard request");
       Dashboard_Widget.find({dashboard: dashboard_id}).populate('widget').sort('widget_order ASC').exec(function (err, dashboard_widgets) {
         if (err) {
@@ -98,6 +115,7 @@ module.exports = {
 
         sails.log.info("Got widgets");
         req.session.dashboard_id = dashboard_id;
+        
         res.view({
           title: dashboard.name,
           is_parent: req.session.is_parent,
