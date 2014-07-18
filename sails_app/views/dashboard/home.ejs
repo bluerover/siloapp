@@ -13,8 +13,9 @@
   </div>
 </div>
 <div class="col-md-4 col-sm-4 col-xs-4" style="padding-left:25px;">
+  <label style="padding-right:10px;">Search:  </label><input type="text" id="search-text">
   <h3>Select a location to view:</h3>
-  <ul>
+  <ul id="dashboard-list">
     <% for (var i in dashboards) { %>
       <li>
         <a href="/dashboard/<%= dashboards[i].id %>"><%= dashboards[i].name %></a>
@@ -85,4 +86,27 @@
 
   init_map();
 
+  $("#search-text").keyup(function () {
+    
+    var searchTerm = $("#search-text").val();
+    var listItem = $('#dashboard-list').children('li');
+    
+    $.extend($.expr[':'], {
+      'containsi': function(elem, i, match, array)
+      {
+        return (elem.textContent || elem.innerText || '').toLowerCase()
+        .indexOf((match[3] || "").toLowerCase()) >= 0;
+      }
+    });
+
+    var searchSplit = searchTerm.replace(/ /g, "'):containsi('");
+
+    $("#dashboard-list li").not(":containsi('" + searchSplit + "')").each(function(e)   {
+          $(this).css('display','none');
+    });
+    
+    $("#dashboard-list li:containsi('" + searchSplit + "')").each(function(e) {
+          $(this).css('display','list-item');
+    });
+  });
 </script>

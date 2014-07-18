@@ -50,16 +50,16 @@
     <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav navbar-left">
             <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>>
-                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/dashboard/' + dashboard_id : 'href=javascript:;' %>>Dashboard</a>
+                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/dashboard/' + dashboard_id : 'href=/dashboards' %>>Dashboard</a>
             </li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "reports") ? 'class=active' : '' %>>
-                <a href="/reports/handheld">Reports</a>
+                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/report/handheld' : 'href=javascript:;' %>>Reports</a>
             </li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "analytics") ? 'class=active' : '' %>>
-                <a href="/analytics">Analytics</a>
+                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/analytics' : 'href=javascript:;' %>>Analytics</a>
             </li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "notifications") ? 'class=active' : '' %>>
-                <a href="/notifications">Notifications <span class="badge ml-5">0</span></a>
+                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/notifications' : 'href=javascript:;' %>>Notifications<span class="badge ml-5">0</span></a>
             </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">

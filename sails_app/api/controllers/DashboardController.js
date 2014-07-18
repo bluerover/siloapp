@@ -43,27 +43,41 @@ module.exports = {
             sails.log.error("Error retrieving organizations: " + err);
             return;
           }
-        
-          //make the current org the parent
-          req.session.organization = org.parent ? org.parent : org.id;
 
-          Dashboard.query("select d.id, o.name from dashboard as d " + 
-          "join organization as o on d.organization = o.id " +
-          "where o.parent = ?",
-          [req.session.organization], function (err, dashboards) {
-            if(err) {
-              sails.log.error("Error retrieving child dashboards" + err)
-              return;
-            }
-            res.view({
-              title: "Dashboard Selection", 
-              organization_name: req.session.organization_name,
-              is_parent: req.session.is_parent,
-              page_category: "dashboard",
-              full_name: req.session.full_name,
-              dashboards: dashboards
+          function cb(orgID) {
+            Dashboard.query("select d.id, o.name from dashboard as d " + 
+            "join organization as o on d.organization = o.id " +
+            "where o.parent = ?",
+            [orgID], function (err, dashboards) {
+              if(err) {
+                sails.log.error("Error retrieving child dashboards" + err)
+                return;
+              }
+              res.view({
+                title: "Dashboard Selection", 
+                organization_name: req.session.organization_name,
+                is_parent: req.session.is_parent,
+                page_category: "dashboard",
+                full_name: req.session.full_name,
+                dashboards: dashboards
+              });
             });
-          });
+          }
+
+          if(org.parent) {
+            //get the parent's name
+            Organization.findOne(org.parent).exec(function (err,parentOrg) {
+              if(err) {
+                sails.log.error("Error retrieving organization by parent: " + err);
+                return;
+              }
+              req.session.organization_name = parentOrg.name;
+              req.session.organization = parentOrg.id;
+              cb(parentOrg.id);
+            });
+          } else {
+            cb(org.id);
+          }
         });
       }
       else if(dashboard_rows.length === 1) {
