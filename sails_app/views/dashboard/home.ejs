@@ -58,7 +58,7 @@
           marker.addressline2 = address[1];
           marker.phone_num = orgs[index]["phone_num"];
           google.maps.event.addListener(marker, 'click', function() {
-            map.setZoom(12);
+            map.setZoom(16);
             map.setCenter(this.getPosition());
             infoWindow.setContent("<strong>" + this.getTitle() + "</strong><br/>" + this.addressline1 + "<br/>" + this.addressline2 + "<br/>" + this.phone_num + "<div><a style='font-weight:800;' href='/dashboard/" + this.dashboard_id + "'>GO!</a></div>");
             infoWindow.open(map, this);
