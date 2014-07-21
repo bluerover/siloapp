@@ -322,6 +322,7 @@
         }
 
         function getQueuedJobs() {
+            pollMap = {};
             $.ajax({
                 type: "GET",
                 url: "/queued_jobs",
