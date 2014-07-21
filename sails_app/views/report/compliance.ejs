@@ -104,6 +104,12 @@
                     }
                 }
             });
+
+            if(dangerFlag) {
+                $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
+                return;
+            }
+
             values["timeFilters"] = [];
             var startDate = pickerStart;
             while(startDate.unix() < pickerEnd.unix()) {
@@ -128,6 +134,7 @@
 
             if(dangerFlag) {
                 $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
+                return;
             }
             return values;
         }
@@ -135,9 +142,10 @@
         function addFilter() {
             var filter = $('#filters > div').first().clone().insertAfter($('#filters > div').last());
             filter.attr('id', 'filter' + (filterNum+1));
-            filter.find('input[name*=startTime]').attr('name','startTime_' + (filterNum+1));
-            filter.find('input[name*=endTime]').attr('name','endTime_' + (filterNum+1));
-            filter.find('select[name*=timezone]').attr('name','timezone_' + (filterNum+1));
+            filter.find('input[name*=startTime]').attr('name','startTime_' + (filterNum+1)).val("00:00");
+            filter.find('input[name*=endTime]').attr('name','endTime_' + (filterNum+1)).val("00:00");
+            filter.find('select[name*=timezone]').attr('name','timezone_' + (filterNum+1)).val(moment().format("Z"));
+            filter.find('.errorMessage').empty().hide() ;
             filterNum += 1;
 
             $('.removeFilter').on('click', function() {
