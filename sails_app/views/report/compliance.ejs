@@ -36,17 +36,25 @@
                         timeFilters = JSON.parse(data["compliance"][0]["timefilters"]);
                     }
                     for (var i in data["rfids"]) {
-                        $("#rfidList").append("<tr>" +
+                        $("#rfidList").append("<tr id='" + data["rfids"][i].id + "'>" +
+                                "<td>" + '<input type="checkbox" name="checkbox" value="ON" checked>' + "</td>" +
                                 "<td>" + data["rfids"][i].id + "</td>" +
                                 "<td>" + data["rfids"][i].display_name + "</td>" +
                                 "<td>" + data["rfids"][i].display_name_2 + "</td>" +
-                                "<td><input class='input-small' type='text' id='" + data["rfids"][i].id +
-                                (data["rfids"][i].display_name_2 === null ? "_max" : "_min") + "_threshold' " + "value='0'></td>" +
+                                "<td><input class='input-small center-text' type='text' name='threshold' value='0'>" +
+                                    "<input type='hidden' name='thresholdType' type='text' value='" + (data["rfids"][i].display_name_2 === null ? "max" : "min") + "'></td>" +
+                                "<td><input class='input-small center-text' type='text' name='passPercent' value='50'></td>" +
                                 "</tr>");
                     }
+                    //set the thresholds, checkboxes, pass %
                     for (var thresholdID in thresholds) {
-                        $('#' + thresholdID).val(thresholds[thresholdID]).css("text-align","center");
+                        var tr = $('#' + thresholdID);
+                        tr.find('input[name=checkbox]').prop('checked',thresholds[thresholdID]["onStatus"] === "1" ? true : false);
+                        tr.find('input[name=threshold]').val(thresholds[thresholdID]["threshold"]);
+                        tr.find('input[name=thresholdType]').val(thresholds[thresholdID]["thresholdType"]);
+                        tr.find('input[name=passPercent]').val(thresholds[thresholdID]["passPercent"]);
                     }
+
                     if(timeFilters !== undefined) {
                         var maxDay = moment.unix(timeFilters[0][0]).set('hour',0).set('minute',0).unix() + 60*60*24;
                         for(var filter in timeFilters) {
@@ -75,7 +83,7 @@
             });
         }    
 
-        function getFormValues() {
+        function getFormValues(skip) {
             var values = {};
             dangerFlag = false;
             $('.errorMessage, #errorBlock').empty().hide();
@@ -84,15 +92,15 @@
             var timeData = [];
             var timeArray = [];
             var counter = 0;
-            var array = $('#compliance_settings > form').serializeArray();
+            var array = $('#filters').serializeArray();
             $.each(array, function(i, field) {
                 if(field.value === undefined || !(field.value)) {
-                    $('input[name*='+ field.name + ']').siblings(".errorMessage").empty().append("please fix this value").show();
+                    $('input[name*='+ field.name + ']').siblings(".errorMessage").empty().append("Incorrect value").show();
                     dangerFlag = true;
                 } else {
                     if(i % 3 == 0) {
                         if(Date.parse("01/01/2011 " + array[i].value) > Date.parse("01/01/2011 " + array[i+1].value)) {
-                            $('input[name*='+ field.name + ']').siblings(".errorMessage").empty().append("start time greater than end time").show();
+                            $('input[name*='+ field.name + ']').siblings(".errorMessage").empty().append("Start Time greater than End Time").show();
                             dangerFlag = true;
                         }
                     }
@@ -107,6 +115,7 @@
 
             if(dangerFlag) {
                 $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
+                $("html, body").animate({ scrollTop: 0 }, "slow");
                 return;
             }
 
@@ -122,18 +131,38 @@
                startDate = startDate.dayOfYear(startDate.dayOfYear()+1);
             }
             
-            $('#rfidList input').each(function(i, input) {
-                var value = $(input).val();
-                if(value === undefined || !(value) || !($.isNumeric(value))) {
-                    $(input).parent().parent().addClass('alert-danger');
-                    dangerFlag = true;
+            $('#rfidList tr').slice(1).each(function(i, elem) {
+                var tr = $(elem);
+                var deviceInfo = {};
+                deviceInfo["onStatus"] = tr.find("input[name*='checkbox']").is(":checked") ? "1" : "0";
+
+                if(skip && deviceInfo["onStatus"] === "0") {
+                    console.log(tr.attr("id") + " skipped");
                 } else {
-                    values[$(input).attr('id')] = value;
+                    deviceInfo["passPercent"] = tr.find("input[name*='passPercent']").val();
+                    deviceInfo["threshold"] = tr.find("input[name*='threshold']").val();
+                    var flag = false;
+
+                    for (var key in deviceInfo) {
+                      if (deviceInfo.hasOwnProperty(key) && !flag) {
+                        if(deviceInfo[key] === undefined || !(deviceInfo[key]) || !($.isNumeric(deviceInfo[key]))) {
+                           tr.addClass('alert-danger');
+                           flag = true;
+                        }    
+                      }
+                    }
+                    if(!flag) {
+                        deviceInfo["thresholdType"] = tr.find("input[name*='thresholdType']").val();
+                        values[tr.attr('id')] = deviceInfo;
+                    } else {
+                        dangerFlag = true;
+                    }
                 }
             });
 
             if(dangerFlag) {
                 $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
+                $("html, body").animate({ scrollTop: 0 }, "slow");
                 return;
             }
             return values;
@@ -145,7 +174,7 @@
             filter.find('input[name*=startTime]').attr('name','startTime_' + (filterNum+1)).val("00:00");
             filter.find('input[name*=endTime]').attr('name','endTime_' + (filterNum+1)).val("00:00");
             filter.find('select[name*=timezone]').attr('name','timezone_' + (filterNum+1)).val(moment().format("Z"));
-            filter.find('.errorMessage').empty().hide() ;
+            filter.find('.errorMessage').empty().hide();
             filterNum += 1;
 
             $('.removeFilter').on('click', function() {
@@ -160,6 +189,7 @@
             $('#jobProgress' + job.id).attr("value", progress);
             $('#progressText' + job.id).empty().append(progress ? progress + "% " : "");
             if(done) {
+                $('#result_' + job.id).empty().append(job["result"]);
                 clearInterval(pollMap[job.id]);
                 delete pollMap[job.id];
             }
@@ -255,9 +285,11 @@
         }
 
         function generateReport() {
-            var values = getFormValues();
-            console.log(values);
+            var values = getFormValues(true);
+            console.log(values);            
             if(!dangerFlag) {
+                values["jobName"] = prompt("Enter a name for this job");
+                if(!values["jobName"] || values["jobName"] === undefined) { return; }
                 $.ajax({
                     type: "GET",
                     url: "/compliance_queue_job",
@@ -268,9 +300,10 @@
                         } else {
                             var job = JSON.parse(job_data);
                             var appendString = "<tr id='job_" + job["id"] + "'><td>" + job["id"] + "</td>" +
-                                            "<td>" + '<progress id="jobProgress' + job["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + job["id"] + '"></label></td>' +
-                                            "<td id='jobStatus" + job["id"] +"'>" + job["status"] + "</td>" +
-                                            "<td>" + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a></td></tr>';
+                                               "<td>" + job["name"] + "</td>" +
+                                               '<td><progress id="jobProgress' + job["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + job["id"] + '"></label></td>' +
+                                                "<td id='jobStatus" + job["id"] +"'>" + job["status"] + "</td>" + "<td id='result_" + job["id"] +"'>0/0</td>" +
+                                                "<td>" + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a></td></tr>';
                             pollJob(job["id"]);
                             $('#jobListTable tbody').append(appendString);
                             var a = $('#jobListTable a:last');
@@ -298,15 +331,18 @@
                 success: function(data) {
                     var appendString = "<table id='jobListTable' class='table'>" +
                                            "<th>Job ID</th>" +
+                                           "<th>Job Name</th>" +
                                            "<th>Progress</th>" +
                                            "<th>Status</th>" +
+                                           "<th>Result</th>" +
                                            "<th>Options</th>";
                     if(data !== null) {
                         var jobList = JSON.parse(data);
                         for(var index in jobList) {
                             appendString += "<tr id='job_" + jobList[index]["id"] + "'><td>" + jobList[index]["id"] + "</td>" +
+                                            "<td>" + jobList[index]["name"] + "</td>" +
                                             "<td>" + '<progress id="jobProgress' + jobList[index]["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + jobList[index]["id"] + '"></label></td>' +
-                                            "<td id='jobStatus" + jobList[index]["id"] +"'>" + jobList[index]["status"] + "</td><td>";
+                                            "<td id='jobStatus" + jobList[index]["id"] +"'>" + jobList[index]["status"] + "</td><td id='result_" + jobList[index]["id"] + "'>" + jobList[index]["result"] + "</td><td>";
                             if(jobList[index]["status"] === "complete") {
                                 appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;'
                                     + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>';
@@ -410,7 +446,7 @@
         });
 
         $('#saveSettings').on('click', function() {
-            var values = getFormValues();
+            var values = getFormValues(false);
             console.log(values);
             if(!dangerFlag) {
                $.ajax({
@@ -421,6 +457,7 @@
                         if(Object.size(response) === 0) {
                             $('#successBlock').empty().append("Compliance settings saved").show().delay(3000).fadeOut();
                         }
+                        $("html, body").animate({ scrollTop: 0 }, "slow");
                     },
                     error: function(response) {
                         console.log("Error");
@@ -469,10 +506,10 @@
 </script>
 
 <%- include report_header.ejs %>
-<div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger" style="text-align:center;">
+<div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger center-text">
 </div>
 <div class="col-sm-offset-3">&nbsp;</div>
-<div id="successBlock" class="col-sm-offset-3 col-sm-6 alert alert-success" style="text-align:center;">
+<div id="successBlock" class="col-sm-offset-3 col-sm-6 alert alert-success center-text">
 </div>
 <div class="col-sm-offset-3">&nbsp;</div>
 <div class="col-sm-12">
@@ -488,8 +525,8 @@
     <div class="col-sm-offset-3">&nbsp;</div>
 </div>
 <div id="compliance_settings">
-    <form class="form-horizontal" role="form">
-        <div class="col-md-4" id="filters" style="vertical-align:top;">
+    <div class="col-md-4" style="vertical-align:top;">
+        <form id="filters" class="form-horizontal" role="form">
             <legend>Time Intervals</legend>
             <div id="filter0" class="filter">
                 <div>
@@ -531,23 +568,23 @@
             <button type="button" class="btn btn-default" id="addFilter">
                  <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add filter
             </button>
-             <button type="button" class="btn btn-default btn-lrg" id="saveSettings">
-                 Save Settings
-            </button>
+             <button type="button" class="btn btn-default btn-lrg" id="saveSettings">Save Settings</button>
+        </form>
+    </div>
+    <div class="col-md-offset-1 col-md-7">
+        <legend id="deviceThresholds">Device Thresholds  <span class="glyphicon glyphicon-chevron-up" style="font-size:16px;"></span></legend>
+        <div>
+            <table id="rfidList" class="table table-condensed">
+                <th>ON/OFF</th>
+                <th>Device ID</th>
+                <th>Asset Name</th>
+                <th>Sensor Type</th>
+                <th>Threshold</th>
+                <th>Pass Percent</th>
+            </table>
         </div>
-        <div class="col-md-offset-1 col-md-7">
-            <legend id="deviceThresholds">Device Thresholds  <span class="glyphicon glyphicon-chevron-up" style="font-size:16px;"></span></legend>
-            <div>
-                <table id="rfidList" class="table table-condensed">
-                    <th>Device ID</th>
-                    <th>Asset Name</th>
-                    <th>Sensor Type</th>
-                    <th>Threshold</th>
-                </table>
-            </div>
-            <div id="table-loading" class="collapse">
-                <img src="/images/loading.gif" />
-            </div>
+        <div id="table-loading" class="collapse">
+            <img src="/images/loading.gif" />
         </div>
-    </form>
+    </div>
 </div>

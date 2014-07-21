@@ -53,7 +53,7 @@ module.exports = {
         } else {
           var data = JSON.parse(buffer.toString());
           var moment = require('moment');
-          var file = "Timeframe,Asset Name,Sensor Type,Threshold,Average,Variance,Temps Pass,% Pass\n";
+          var file = "Timeframe,Asset Name,Sensor Type,Threshold,Average,Variance,Temps Pass,% Pass, Result\n";
           for (var timeframe in data) {
             var times = timeframe.split("_");
             var timeString = moment.unix(times[0]).format("MMM DD YYYY h:mmA Z") + " - " + moment.unix(times[1]).format("MMM DD YYYY h:mmA Z") + ",";
@@ -65,7 +65,8 @@ module.exports = {
               tmpText += data[timeframe][asset].avgTemp + ",";
               tmpText += data[timeframe][asset].varTemp + ",";
               tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
-              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + "\n";
+              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
+              tmpText += data[timeframe][asset].result + "\n";
               file += tmpText;
             }
           }
@@ -80,29 +81,22 @@ module.exports = {
   },
 
   queue_job: function(req, res) {
-    var timeFilters;
-    var rfidThresholds = {};
-    var moment = require('moment');
-    for(var attributeName in req.query) {
-      if(attributeName.indexOf("_threshold") == -1) {
-        //It is timefilter, so we have [[startTime, endTime], [startTime, endTime]...]
-        timeFilters = req.query[attributeName];
-      } else {
-        var response = attributeName.split("_");
-        rfidThresholds[response[0]] = {"type": response[1], "threshold": req.query[attributeName]};
-      }
-    }
+
+    var timeFilters = req.query["timeFilters"];
+    var jobName = req.query["jobName"];
+    delete req.query["timeFilters"];
+    delete req.query["jobName"];
 
     var kue = require('kue');
     var jobQueue = kue.createQueue();
-    ComplianceReport.create({"organization": req.session.organization}).exec(function (err, job_data) {
+    ComplianceReport.create({"organization": req.session.organization, "name": jobName}).exec(function (err, job_data) {
       if (err) {
         sails.log.error("Error saving job to database: " + err);
         res.json(JSON.stringify(err),500);
       }
       else {
         var job = jobQueue.create(req.session.organization + '_compjob', {
-          rfidThresholds: rfidThresholds,
+          rfidThresholds: req.query,
           timeFilters: timeFilters,
           id: job_data.id
         });

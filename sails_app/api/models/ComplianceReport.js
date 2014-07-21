@@ -18,12 +18,14 @@ module.exports = {
       type: 'integer'
     },
 
-    report: {
-      type: 'string',
-      maxLength: 5000,
-      size: 5000
+    name: {
+      type: 'string'
     },
 
+    result: {
+      type: 'string'
+    },
+    
     status: {
       type: 'string',
       defaultsTo: "queued"

@@ -6,6 +6,7 @@ var connection = null;
 var connection2 = null;
 
 var zlib = require('zlib');
+var util = require('util');
 
 var pool  = mysql.createPool({
   connectionLimit : 2,
@@ -64,8 +65,10 @@ startNewConnection();
 
 var total = 0;
 var count = 0;
+var passNum = 0;
 var jobErr = null;
 var resultsArray = {};
+var passPercentArray = {};
 
 function updateKueId(kue_id, job_id) {
 	var query = connection.query('UPDATE compliancereport SET kue_id = ?, status="in-progress" WHERE id = ?',
@@ -88,6 +91,12 @@ function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) 
     	if(err) {
     		jobErr = new Error(err);
     	} else {
+    		if((results[0]["passingTemp"]/results[0]["total"]).toPrecision(3) >= passPercentArray[results[0]["id"]]) {
+    			results[0]["result"] = "PASS";
+    			passNum++;
+    		} else {
+    			results[0]["result"] = "FAIL";
+    		}
     		resultsArray[startTime + "_" + endTime].push(results[0]);
     		count++;
     	}
@@ -100,8 +109,8 @@ function saveComplianceReport(resultsArray, job_id, status, callback) {
 	    jobErr = new Error(err);
 	  }
 	  else {
-	  	var query = connection.query('UPDATE compliancereport SET status="' + status + '" WHERE id = ?',
-		[job_id], function(err, results) {
+	  	var query = connection.query('UPDATE compliancereport SET status="' + status + '", result = ? WHERE id = ?',
+		[total === 0 ? "0/0" : util.format('%s/%s  %d %',passNum, total, (passNum/total).toPrecision(3)*100), job_id], function(err, results) {
 		  	if(err) {
 		  		jobErr = err;
 		  		errBack(callback,err);
@@ -143,13 +152,16 @@ jobs.process('6_compjob', function (job, done) {
 	updateKueId(job.id, job.data.id);
 	count = 0;
 	total = 0;
+	passNum = 0;
 	jobErr = null;
+	passPercentArray = {};
 	resultsArray = {};
 
 	//Then we need to split things up based on rfid, and apply each time filter to it
 	for(var filter in job.data.timeFilters) {
 		resultsArray[job.data.timeFilters[filter][0] + "_" + job.data.timeFilters[filter][1]] = [];
 		for(var rfid in job.data.rfidThresholds) {
+			passPercentArray[rfid] = (job.data.rfidThresholds[rfid]["passPercent"]/100).toPrecision(3);
 			getThresholdResult(job.data.timeFilters[filter][0],
 							   job.data.timeFilters[filter][1],
 							   rfid,
