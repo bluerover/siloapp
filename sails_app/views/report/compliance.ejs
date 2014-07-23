@@ -238,25 +238,25 @@
                 url: "/get_report",
                 data: {
                     job_id: job_id.toString(),
-                    csv: false
+                    task: "table"
                 },
                 success: function(data) {
-                    var report = JSON.parse(JSON.parse(data));
-                    var appendString = "<table class='table table-condensed'><tr>" +
+                    var report = JSON.parse(data);
+                    var appendString = "<table id='compliance_report' class='table table-condensed'><tr>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Device ID</td>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Asset Name</td>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Sensor Type</td>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Threshold</td>";
                     for(var timeframe in report) {
                         var times = timeframe.split("_");
-                        var headerString = "<td colspan='3'>";
+                        var headerString = "<td colspan='4'>";
                         headerString += moment.unix(times[0]).format("MMM DD YYYY h:mm A") + " - ";
                         headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm A") + "</td>";
                         appendString += headerString;
                     }
                     appendString += "</tr>";
                     for(var timeframe2 in report) {
-                        appendString += "<td>Average</td><td>Variance</td><td>Percent</td>";
+                        appendString += "<td>Average</td><td>Variance</td><td>Percent</td><td>Result</td>";
                     }
                     appendString += "</tr>";
                     for (var dummyTimeFrame in report) {
@@ -268,13 +268,17 @@
                             for(var timeframe in report) {
                                 appendString += "<td>" + report[timeframe][asset].avgTemp + "</td>" +
                                                 "<td>" + report[timeframe][asset].varTemp + "</td>" +
-                                                "<td>" + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>";
+                                                "<td>" + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>" +
+                                                "<td style='border-right: 1px solid #ddd;'>" + report[timeframe][asset].result + "</td>";
                             }
                             appendString += "</tr>";
                         }
                         appendString += "</table>";
                         break;
                     }
+                    var myWindow = window.open("", "Compliance Report", "width=600, height=300");
+                    myWindow.document.write("<link rel='stylesheet' href='http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' type='text/css' />");
+                    myWindow.document.write(appendString);
                 },
                 error: function(response) {
                     console.log("Error");
@@ -367,7 +371,7 @@
                                 $(tr).find("a:first").on('click', function() {
                                     setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                                 });
-                                $(tr).find("a:last").attr('href', "/get_report?csv=1&job_id=" + $(tr).attr("id").split("_")[1]);
+                                $(tr).find("a:last").attr('href', "/get_report?task=csv&job_id=" + $(tr).attr("id").split("_")[1]);
                             }
                             $('#jobProgress' + id).attr('value', 100);
                             $('#progressText' + id).empty().append("100%");

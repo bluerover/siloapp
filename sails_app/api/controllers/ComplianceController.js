@@ -48,11 +48,45 @@ module.exports = {
           res.json(JSON.stringify(err),500);
           return;
         }
-        if(req.query.csv === "false") {
-          res.json(JSON.stringify(buffer.toString()));  
-        } else {
-          var data = JSON.parse(buffer.toString());
-          var moment = require('moment');
+        var moment = require('moment');
+        var data = JSON.parse(buffer.toString());
+        if(req.query.task === "table") {
+          res.json(JSON.stringify(data));
+        } else if(req.query.task === "csv") {
+          var file = "Asset Name,Sensor Type,Threshold";
+          for(var timeframe in data) {
+            dummyTimeFrame = timeframe;
+            var times = timeframe.split("_");
+            var headerString = "," + moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
+            headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z");
+            file += headerString + " Avg";
+            file += headerString + " Var";
+            file += headerString + " Temps Pass";
+            file += headerString + " % Pass";
+            file += headerString + " Result";
+          }
+          file += "\n";
+          for(var asset in data[dummyTimeFrame]) {
+            var tmpText = "";
+            tmpText += data[dummyTimeFrame][asset].display_name + ",";
+            tmpText += data[dummyTimeFrame][asset].display_name_2 + ",";
+            tmpText += data[dummyTimeFrame][asset].threshold + ",";
+            for(var timeframe in data) {
+              tmpText += data[timeframe][asset].avgTemp + ",";
+              tmpText += data[timeframe][asset].varTemp + ",";
+              tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
+              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
+              tmpText += data[timeframe][asset].result + ",";
+            }
+            tmpText = tmpText.slice(0,-1) + "\n";
+            file += tmpText;
+          }
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Content-Disposition': "attachment; filename=compliance_report.csv"
+          });
+          res.end(file);
+        } else if(req.query.task === "graph") {
           var file = "Timeframe,Asset Name,Sensor Type,Threshold,Average,Variance,Temps Pass,% Pass, Result\n";
           for (var timeframe in data) {
             var times = timeframe.split("_");
