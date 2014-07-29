@@ -214,12 +214,15 @@
                         } else {
                             console.log("all done");
                             updateRow(newJob,100,true);
-                            $('#job_' + newJob.id + ' a').parent().append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>');
-                            $('#job_' + newJob.id + ' .glyphicon-minus-sign').parent().remove();
-                            $('#job_' + newJob.id).find("a:first").on('click', function() {
+                            $('#job_' + newJob.id + ' a').remove();
+                            $('#job_' + newJob.id + ' td:last').append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-stats"></span></a>');
+                            $('#job_' + newJob.id + ' a:first').on('click', function() {
                                 setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                             });
-                            $('#job_' + newJob.id).find("a:last").attr('href', "/get_report?csv=1&job_id=" + newJob.id);
+                            $('#job_' + newJob.id + ' a:nth-child(2)').attr('href', "/get_report?csv=1&job_id=" + newJob.id);
+                            $('#job_' + newJob.id + ' a:last').on('click', function() {
+                                setupGraph($(this).parent().parent().attr("id").split("_")[1]);
+                            });
                         }
                     },
                     error: function(response) {
@@ -229,7 +232,6 @@
                 });
             },1000);
             pollMap[job_id.toString()] = pollId;
-            console.log(pollMap);
         }
 
         function setupComplianceTable(job_id) {
@@ -325,7 +327,33 @@
             }
         }
 
+        function setupGraph(job_id) {
+            $.ajax({
+                type: "GET",
+                url: "/get_report",
+                data: {
+                    job_id: job_id.toString(),
+                    task: "graph"
+                },
+                success: function(data) {
+                    var report = JSON.parse(data);
+                    
+                    var myWindow = window.open("", "Compliance Report", "width=600, height=300");
+                    myWindow.document.write("<link rel='stylesheet' href='http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' type='text/css' />");
+                    myWindow.document.write(report);
+                },
+                error: function(response) {
+                    console.log("Error");
+                    console.log(response);
+                    $('#errorBlock').empty().append(response).show();
+                }
+            });
+        }
+
         function getQueuedJobs() {
+            $.each(pollMap, function(index, intervalID) {
+                clearInterval(intervalID);
+            }); 
             pollMap = {};
             $.ajax({
                 type: "GET",
@@ -350,7 +378,8 @@
                                             "<td id='jobStatus" + jobList[index]["id"] +"'>" + jobList[index]["status"] + "</td><td id='result_" + jobList[index]["id"] + "'>" + jobList[index]["result"] + "</td><td>";
                             if(jobList[index]["status"] === "complete") {
                                 appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;'
-                                    + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>';
+                                    + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>&nbsp;&nbsp;&nbsp;'
+                                    + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-stats"></span></a>';
                             } else if(jobList[index]["status"] === "in-progress") {
                                 appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a>';
                             }
@@ -371,7 +400,10 @@
                                 $(tr).find("a:first").on('click', function() {
                                     setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                                 });
-                                $(tr).find("a:last").attr('href', "/get_report?task=csv&job_id=" + $(tr).attr("id").split("_")[1]);
+                                $(tr).find("a:nth-child(2)").attr('href', "/get_report?task=csv&job_id=" + $(tr).attr("id").split("_")[1]);
+                                $(tr).find("a:last").on('click', function() {
+                                    setupGraph($(this).parent().parent().attr("id").split("_")[1]);
+                                });
                             }
                             $('#jobProgress' + id).attr('value', 100);
                             $('#progressText' + id).empty().append("100%");
