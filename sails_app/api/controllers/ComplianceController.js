@@ -129,7 +129,7 @@ module.exports = {
         res.json(JSON.stringify(err),500);
       }
       else {
-        var job = jobQueue.create(req.session.organization + '_compjob', {
+        var job = jobQueue.create('compjob', {
           rfidThresholds: req.query,
           timeFilters: timeFilters,
           id: job_data.id
