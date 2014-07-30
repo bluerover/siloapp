@@ -185,6 +185,7 @@
         }
 
         function updateRow(job,progress,done) {
+            console.log(job.status);
             $('#jobStatus' + job.id).empty().append(job.status);
             $('#jobProgress' + job.id).attr("value", progress);
             $('#progressText' + job.id).empty().append(progress ? progress + "% " : "");
@@ -220,9 +221,7 @@
                                 setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                             });
                             $('#job_' + newJob.id + ' a:nth-child(2)').attr('href', "/get_report?csv=1&job_id=" + newJob.id);
-                            $('#job_' + newJob.id + ' a:last').on('click', function() {
-                                setupGraph($(this).parent().parent().attr("id").split("_")[1]);
-                            });
+                            $('#job_' + newJob.id + ' a:last').attr('href', "/analytics?id=" + newJob.id);
                         }
                     },
                     error: function(response) {
@@ -401,9 +400,7 @@
                                     setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                                 });
                                 $(tr).find("a:nth-child(2)").attr('href', "/get_report?task=csv&job_id=" + $(tr).attr("id").split("_")[1]);
-                                $(tr).find("a:last").on('click', function() {
-                                    setupGraph($(this).parent().parent().attr("id").split("_")[1]);
-                                });
+                                $(tr).find("a:last").attr('href', "/analytics?id=" + $(tr).attr("id").split("_")[1]);
                             }
                             $('#jobProgress' + id).attr('value', 100);
                             $('#progressText' + id).empty().append("100%");

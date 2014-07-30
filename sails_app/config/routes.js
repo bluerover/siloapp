@@ -141,6 +141,11 @@ module.exports.routes = {
     action: 'index'
   },
 
+  'get /get_graphdata': {
+    controller: 'Analytics',
+    action: 'get_graphdata'
+  },  
+
   //Notifications
   'get /notifications': {
     controller: 'Notifications',
