@@ -17,7 +17,7 @@
     }
 </style>
 <div class="col-sm-12">
-	<label class="col-sm-offset-2 col-sm-2 control-label" style="font-size:20px;">Select a report:</label>
+	<label class="col-sm-offset-3 col-sm-2 control-label" style="font-size:20px;">Select a report:</label>
     <div class="input-group col-sm-4">
         <select class="form-control" id="reportList">
         	<% for (var i in reportList) {
@@ -29,7 +29,7 @@
 </div>
 <div id="errorBlock" style="display:none;" class="col-sm-offset-3 col-sm-6 alert alert-danger center-text">
 </div>
-<div id="graphs" class="col-sm-12" style="text-align:center">
+<div id="graphs" class="col-sm-12 collapse" style="text-align:center">
     <h1>Total Pass % for Temperature Readings</h1>
     <div class="col-sm-6" style="text-align:center">
         <h2>Food</h2>
@@ -66,7 +66,7 @@
             },
             success: function(response) {
             	var data = JSON.parse(response);
-            	$('#graphs').show();
+            	$('#graphs').collapse('show');
             	resetGraphs(data);
             },
             error: function(response) {
@@ -242,7 +242,7 @@
                                                 .call(yAxis)
                                                 .append("text")
                                                 .attr("transform", "rotate(-90)")
-                                                .attr("y", 6)
+                                                .attr("y", 2)
                                                 .attr("dy", ".71em")
                                                 .style("text-anchor", "end")
                                                 .text("Average % Pass");
@@ -276,23 +276,23 @@
 	function resetGraphs(data) {
 		$('body svg').remove();
 		var chart1 = new GroupedBarChart("#PercentPassxAsset");
-	    var chart2 = new GroupedBarChart("#PercentPassxTime");
-	    var gauge = new Gauge(document.getElementById('food-total-gauge')).setOptions(opts); // create sexy gauge!
-	    gauge.maxValue = 100; // set max gauge value
-	    gauge.animationSpeed = 5; // set animation speed (32 is default value)
-	    gauge.set(100); // set actual value
-	    
-	    var textAnimate = new AnimatedText("#food-total",0, 100, 300);
-	    textAnimate.addStaticContent("%");
-	    
-	               
-	    var gauge2 = new Gauge(document.getElementById('air-total-gauge')).setOptions(opts); // create sexy gauge!
-	    gauge2.maxValue = 100; // set max gauge value
-	    gauge2.animationSpeed = 5; // set animation speed (32 is default value)
-	    gauge2.set(100); // set actual value
-	    
-	    var textAnimate2 = new AnimatedText("#air-total",0, 100, 300);
-	    textAnimate2.addStaticContent("%");
+    var chart2 = new GroupedBarChart("#PercentPassxTime");
+    var gauge = new Gauge(document.getElementById('food-total-gauge')).setOptions(opts); // create sexy gauge!
+    gauge.maxValue = 100; // set max gauge value
+    gauge.animationSpeed = 5; // set animation speed (32 is default value)
+    gauge.set(100); // set actual value
+    
+    var textAnimate = new AnimatedText("#food-total",0, 100, 300);
+    textAnimate.addStaticContent("%");
+    
+               
+    var gauge2 = new Gauge(document.getElementById('air-total-gauge')).setOptions(opts); // create sexy gauge!
+    gauge2.maxValue = 100; // set max gauge value
+    gauge2.animationSpeed = 5; // set animation speed (32 is default value)
+    gauge2.set(100); // set actual value
+    
+    var textAnimate2 = new AnimatedText("#air-total",0, 100, 300);
+    textAnimate2.addStaticContent("%");
 
 		var pieData = d3.nest().key(function(d){ return d['Sensor Type'];})
 		.rollup(function(d){return d3.mean(d, function(g) {
@@ -335,13 +335,10 @@
 	var tmp = "<%= JSON.stringify(reportJSON) %>"
 	data = JSON.parse(tmp.replace(/&quot;/g,'"'));
 	if(data) {
-		console.log("here");
-		$('#graphs').show();
-		console.log("hi");
+		$('#graphs').collapse('show');
 		resetGraphs(data);	
 	} else {
-		console.log("why");
-		$('#graphs').hide();
+		$('#graphs').collapse('hide');
 	}
 
 </script>
