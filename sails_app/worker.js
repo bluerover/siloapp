@@ -81,7 +81,7 @@ function updateKueId(kue_id, job_id) {
 	});
 }
 
-function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) {;
+function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) {
 	var queryString = "SELECT r.id, r.display_name, r.display_name_2, ROUND(AVG(rfidTemperature),2) as avgTemp, ROUND(VARIANCE(rfidTemperature),2) as varTemp, " +
         "count(*) as total, COUNT(IF(rfidTemperature " + (thresholdType === "min" ? "<" : ">") + " ? ,1, NULL)) " +
         "as passingTemp, " + threshold + " as threshold FROM rfiddata as rd JOIN rfid as r on rd.rfidTagNum = r.id  " +
@@ -166,7 +166,7 @@ jobs.process('compjob', function (job, done) {
 							   job.data.timeFilters[filter][1],
 							   rfid,
 							   job.data.rfidThresholds[rfid]["threshold"],
-							   job.data.rfidThresholds[rfid]["type"]);
+							   job.data.rfidThresholds[rfid]["thresholdType"]);
 			total++;
 		}
 	}

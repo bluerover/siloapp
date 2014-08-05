@@ -114,15 +114,15 @@
             });
 
             if(dangerFlag) {
-                $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
+                $('#errorBlock').empty().append("There are errors with your time values. Please correct and try again.").show();
                 $("html, body").animate({ scrollTop: 0 }, "slow");
                 return;
             }
 
             values["timeFilters"] = [];
-            var startDate = pickerStart;
+            var startDate = moment(pickerStart);
             while(startDate.unix() < pickerEnd.unix()) {
-                for(var index in timeArray) {
+                for(var index = 0; index < timeArray.length; index++) {
                     var tmpArray = [];
                     tmpArray[0] = startDate.hour(timeArray[index][0].split(":")[0]).minute(timeArray[index][0].split(":")[1]).zone(timeArray[index][2]).unix();
                     tmpArray[1] = startDate.hour(timeArray[index][1].split(":")[0]).minute(timeArray[index][1].split(":")[1]).zone(timeArray[index][2]).unix();
@@ -161,7 +161,7 @@
             });
 
             if(dangerFlag) {
-                $('#errorBlock').empty().append("There are errors with your values. Please correct and try again.").show();
+                $('#errorBlock').empty().append("There are errors with your threshold values. Please correct and try again.").show();
                 $("html, body").animate({ scrollTop: 0 }, "slow");
                 return;
             }
