@@ -48,21 +48,22 @@
         
     </div>
     <div class="navbar-collapse collapse">
-        <ul class="nav navbar-nav navbar-left">
+        <ul class="nav navbar-nav navbar-right">
             <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>>
                 <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/dashboard/' + dashboard_id : 'href=/dashboards' %>>Dashboard</a>
             </li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "reports") ? 'class=active' : '' %>>
                 <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/report/handheld' : 'href=javascript:;' %>>Reports</a>
             </li>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "analytics") ? 'class=active' : '' %>>
-                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/analytics' : 'href=javascript:;' %>>Analytics</a>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "farm") ? 'class=active' : '' %>>
+                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/farm' : 'href=javascript:;' %>>Farm</a>
             </li>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "notifications") ? 'class=active' : '' %>>
-                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/notifications' : 'href=javascript:;' %>>Notifications<span class="badge ml-5">0</span></a>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "silo") ? 'class=active' : '' %>>
+                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/silo' : 'href=javascript:;' %>>Silo</a>
             </li>
         </ul>
-        <ul class="nav navbar-nav navbar-right">
+        <ul class="nav navbar-nav navbar-left">
+            
             <li class="dropdown <%= (typeof(page_category) !== "undefined" && page_category === "messages") ? 'active' : '' %>">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                     <%= full_name %> <b class="caret"></b>
@@ -77,6 +78,7 @@
                 </ul>
             </li>
         </ul>
+        
     </div><!-- /.nav-collapse -->
 </div>
 

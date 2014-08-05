@@ -62,6 +62,12 @@ module.exports.routes = {
     action: 'rfid'
   },
 
+  // Farm
+  'get /farm': {
+    controller: 'FarmController',
+    action: 'farm'
+},
+
   'get /reports/handheld': {
     controller: 'Report',
     action: 'handheld'
@@ -92,19 +98,7 @@ module.exports.routes = {
   'get /user/logout': {
     controller: 'User',
     action: 'logout'
-  },
-
-  // Analytics
-  'get /analytics': {
-    controller: 'Analytics',
-    action: 'index'
-  },
-
-  //Notifications
-  'get /notifications': {
-    controller: 'Notifications',
-    action: 'index'
-  },
+  },  
 
   //Notification Handler
   'get /alerthandlers': {
