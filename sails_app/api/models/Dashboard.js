@@ -24,11 +24,6 @@ module.exports = {
       model: 'organization',
       required: true
     },
-
-    organization: {
-      model: 'organization',
-      required: true
-    },
     name: {
       type: 'string',
       required: true

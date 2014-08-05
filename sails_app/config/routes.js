@@ -62,11 +62,17 @@ module.exports.routes = {
     action: 'rfid'
   },
 
-  // Farm
-  'get /farm': {
-    controller: 'FarmController',
-    action: 'farm'
-},
+  // Analytics
+  'get /analytics': {
+    controller: 'Analytics',
+    action: 'index'
+  },
+
+  //Notifications
+  'get /notifications': {
+    controller: 'Notifications',
+    action: 'index'
+  },
 
   'get /reports/handheld': {
     controller: 'Report',

@@ -23,9 +23,9 @@ module.exports.adapters = {
   mysql: {
     module   : 'sails-mysql',
     host     : 'localhost',
-    port     : '3306',
+    port     : 3306,
     user     : 'root',
-    password : 'root',
+    password : mysql_password,
     database : 'food_safety_app'
   }
 };
