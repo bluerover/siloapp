@@ -104,7 +104,12 @@ module.exports.routes = {
   'get /user/logout': {
     controller: 'User',
     action: 'logout'
-  },  
+  },
+
+  'get /user/get_active_emails': {
+    controller: 'User',
+    action: 'get_active_emails'
+  },
 
   //Notification Handler
   'get /alerthandlers': {

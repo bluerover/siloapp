@@ -13,14 +13,20 @@ html, body {
 	margin-top: 20px;
 }
 
-h1, p {
-	color: #ffffff;
-}
-
 #business-text h1, #business-text h3, #business-text p {
   color: #ffffff;
   border:0;
   line-height: 1.6;
+}
+
+#business-text h1 {
+  font-size:40px;
+}
+#business-text h3 {
+  font-size:26px;
+}
+#business-text p {
+  font-size:16px;
 }
 
 #login-box {
@@ -29,4 +35,8 @@ h1, p {
   border-radius: 10px;
   background:#ffffff;
   opacity:0.85;
+}
+
+#login-box h1 {
+  margin-bottom:25px;
 }

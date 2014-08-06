@@ -121,6 +121,22 @@ module.exports = {
     req.session.organization_name = null;
     req.session.authenticated = false;
     res.redirect('/');
+  },
+
+  get_active_emails: function (req,res) {
+    User.findOne(req.session.user).exec(function (err,user) {
+      if(err || !user.is_admin) {
+        res.view({layout: "barebones"}, '500');
+        return;
+      }
+      User.find({where: {is_alert_active: true}}).exec(function (err, users) {
+        if(err) {
+          res.json(err);
+        } else {
+          res.json(users);
+        }
+      });
+    });
   }
   
 };
