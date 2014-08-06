@@ -10,29 +10,32 @@
     <title>BlueRover Login</title>
   </head>
   <body>
-    <div class="row-fluid">
-      <div class="col-xs-3 col-xs-offset-1" style="padding-right: 800px;padding-bottom: 90px;overflow: hidden;">
-	       <div class="center">
-		        <img src="/images/logo.png" />
-	       </div>
-      </div>      
-    </div>
-
-    <div class="row-fluid">
-      <div class="col-md-5 col-lg-5 col-xs-offset-1">
+    <header class="navbar navbar-static-top" role="banner" style="background:#FFFFFF;">
+      <div class="container">
+        <div class="navbar-header">
+          <img src="/images/blueRover-logo-infiniteintelligence.jpg" height="60"/>
+        </div>
+        <ul class="navbar-nav navbar-right navbar-collapse collapse" style="margin-top:5px;">
+          <li><a href="http://www.bluerover.ca">
+            <button type="button" class="btn btn-primary navbar-btn">To blueRover.ca</button>
+          </a></li>
+        </ul>
+      </div>
+    </header>
+    <div class="container">
+      <div class="col-md-5 col-lg-5" id="business-text">
         <h1>Welcome to Safe Food</h1>
 
-        <p>Connect with your Things – and what they have to say.<br/><br/>
+        <h3>Connect with your Things – and what they have to say.</h3>
 
-        Receive real-time updates from your assets that matter the most. Watch conditions change, in real time, from anywhere.<br/><br/>
+        <p>Receive real-time updates from your assets that matter the most. Watch conditions change, in real time, from anywhere.</p>
 
-        Powered by blueRover<br/><br/>
+        <p style="margin-top:15px;font-size:10px;">Powered by blueRover<br/>
         Infinite Intelligence. Complete Control</p>
 
       </div>
 
-      <div class="col-md-4 col-lg-4 col-xs-offset-1">
-        <h1>Login</h1>
+      <div class="col-md-offset-1 col-md-4 col-lg-4" id="login-box">
           <% if (typeof(error) !== 'undefined') { %>
             <div class="alert alert-danger">
               <%= error %>
@@ -43,11 +46,9 @@
               <input type="hidden" name="redirect_to" value="<%= redirect_to %>" />
             <% } %>
             <div class="form-group">
-              <label for="username">Username</label>
               <input type="text" class="form-control" name="username" id="username" placeholder="Enter username" />
             </div>
             <div class="form-group">
-              <label for="password">Password</label>
               <input type="password" class="form-control" name="password" id="password" placeholder="Password" />
             </div>
             <button type="submit" class="btn btn-primary">Submit</button>
