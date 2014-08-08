@@ -46,7 +46,6 @@ module.exports = {
         res.view({layout: "barebones"}, '500');
       }
       else if(dashboard_rows.length === 1) {
-        req.session.organization_num = dashboard_rows[0].id;
         res.redirect('/dashboard/' + dashboard_rows[0].id);
       }
       else {

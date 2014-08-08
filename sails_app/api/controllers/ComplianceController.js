@@ -33,190 +33,129 @@ module.exports = {
     }
   }, 
 
-  // GET /compliance_data
-  get_data: function (req, res) {
-    var range_start,
-      range_end,
-      max_range = 6 * 30 * 24 * 60 * 60, // Approximately 6 months
-      page,
-      limit,
-      sort,
-      csv = req.query.csv || false;
-
-    if (req.query.page !== undefined) {
-      page = parseInt(req.query.page);
-    }
-    else {
-      page = 0;
-    }
-
-    /*if (req.query.limit !== undefined) {
-      limit = parseInt(req.query.limit);
-    }
-    else {
-      limit = 10;
-    }
-*/
-    if (typeof(req.query.sort) === 'string' && (req.query.sort.toLowerCase() === 'asc' || req.query.sort.toLowerCase() === 'desc')) {
-      sort = req.query.sort;
-    }
-    else {
-      sort = 'asc';
-    }
-
-    if (req.query.range_end !== undefined) {
-      range_end = parseInt(req.query.range_end);
-    }
-    else {
-      range_end = Math.round(new Date().getTime() / 1000);
-    }
-
-    if (req.query.range_start !== undefined) {
-      range_start = parseInt(req.query.range_start);
-    }
-    else {
-      // If no range specified, subtract 7 days from the start time
-      range_start = range_end - (7 * 24 * 60 * 60);
-    }
-
-    if (range_end < range_start) {
-      res.json({error: "The end date must be after the start date."}, 422);
-      return;
-    }
-
-    if (range_start < 0 || range_end < 0) {
-      res.json({error: "The start and end timestamps must be greater than zero."}, 422);
-      return;
-    }
-
-    if (range_end - range_start > max_range) {
-      res.json({error: "The specified date range was too large."}, 422);
-      return;
-    }
-
-    if (csv === '1') {
-      sails.log.debug("Attempting to read rfid data for RfidData#get_data.csv");
-      RfidData.query("select rd.*, r.organization, r.display_name, r.display_name_2 " + 
-        "from rfiddata as rd join rfid as r on rd.rfidTagNum = r.id " +
-        "where timestamp >= ? and timestamp <= ? and organization = ? " + 
-        "order by timestamp " + sort, 
-        [range_start, range_end, req.session.organization], 
-        function (err, data) {
-          if (err) {
-            sails.log.error("There was an error retrieving RFID data: " + err);
-            res.json({error: "Internal server error"}, 500);
-            return;
+  get_report: function(req, res) {
+    var fs = require('fs');
+    fs.readFile('/reports/' + req.query.job_id + '_report.log', 'utf-8', function (err,reportData) {
+      if (err) {
+        sails.log.error("Error with fs: " + err);
+        res.json(JSON.stringify(err),500);
+        return;
+      }
+      var zlib = require('zlib');
+      zlib.unzip(new Buffer(reportData,'base64'), function(err,buffer) {
+        if (err) {
+          sails.log.error("Error with gzip: " + err);
+          res.json(JSON.stringify(err),500);
+          return;
+        }
+        var moment = require('moment');
+        var data = JSON.parse(buffer.toString());
+        if(req.query.task === "table") {
+          res.json(JSON.stringify(data));
+        } else if(req.query.task === "csv") {
+          var file = "Asset Name,Sensor Type,Threshold";
+          for(var timeframe in data) {
+            dummyTimeFrame = timeframe;
+            var times = timeframe.split("_");
+            var headerString = "," + moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
+            headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z");
+            file += headerString + " Avg";
+            file += headerString + " Var";
+            file += headerString + " Temps Pass";
+            file += headerString + " % Pass";
+            file += headerString + " Result";
           }
-
-          // Filter out RFIDs that aren't for the current user
-          data = data.filter(function (i) {
-            return i.rfidTagNum !== undefined && i.organization === req.session.organization;
-          });
-
-          sails.log.info("Retrieved RFID data for RfidData#get_data");
-
-          var file = "Device ID,Status Code,RFID Tag Number,Asset Name,Sensor Type,RFID Temperature,Timestamp\n";
-          var moment = require('moment');
-          for (var row in data) {
-            file += data[row]['deviceID'] + ",";
-            file += data[row]['statusCode'] + ",";
-            file += data[row]['rfidTagNum'] + ",";
-            file += data[row]['display_name'] + ",";
-            file += data[row]['display_name_2'] + ",";
-            file += data[row]['rfidTemperature'] + ",";
-            file += moment.unix(data[row]['timestamp']).format("MM/DD/YYYY hh:mm:ss a");
-            file += "\n"
+          file += "\n";
+          for(var asset in data[dummyTimeFrame]) {
+            var tmpText = "";
+            tmpText += data[dummyTimeFrame][asset].display_name + ",";
+            tmpText += data[dummyTimeFrame][asset].display_name_2 + ",";
+            tmpText += data[dummyTimeFrame][asset].threshold + ",";
+            for(var timeframe in data) {
+              tmpText += data[timeframe][asset].avgTemp + ",";
+              tmpText += data[timeframe][asset].varTemp + ",";
+              tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
+              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
+              tmpText += data[timeframe][asset].result + ",";
+            }
+            tmpText = tmpText.slice(0,-1) + "\n";
+            file += tmpText;
           }
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
-            'Content-Disposition': "attachment; filename=rfid_" + range_start + "_" + range_end + ".csv"
+            'Content-Disposition': "attachment; filename=compliance_report.csv"
           });
           res.end(file);
-      });
-    }
-
-    else {
-      sails.log.debug("Attempting to get compliance data for ComplianceData#get_data");
-      //get the threshold first
-      // RfidAlerthandler.query("select rah.rfid, rah.config, r.organization, r.display_name, r.display_name_2 " +
-      // 	" from rfidalerthandler as rah join rfid as r on rah.rfid = r.id " +
-      // 	" where organization = ? order by r.id " + sort, req.session.organization, function (err, alerthandler_data) {
-      // 		if (err) {
-	     //      sails.log.error("There was an error retrieving alerthandlers: " + err);
-	     //      res.json({error: "Internal server error"}, 500);
-	     //      return;
-	     //    }
-      // 		//sails.log.info(JSON.stringify(alerthandlers));
-      // 		var array = []
-      // 		for(var index in alerthandler_data) {
-      // 			var config = JSON.parse(alerthandler_data[index].config);
-      // 			if(config.inverted_threshold) {
-      // 				RfidData.query("select rfidTagNum, timestamp, AVG(rfidTemperature) as avgTemp, VARIANCE(rfidTemperature) as varTemp, " +
-      // 				"count(*) as total, count(if(rfidTemperature > ?,rfidTemperature,NULL)) as passingTotal from rfiddata " +
-      // 				"where rfidTagNum = ? and timestamp >= ? and timestamp <= ? group by rfidTagNum",
-      // 				[config.threshold, alerthandler_data[index].rfid, range_start, range_end],
-      // 				function (err,data) {
-      // 					if (err) {
-				  //         sails.log.error("There was an error retrieving Compliance data for rfid " + alerthandler_data[index].rfid + ": " + err);
-				  //         res.json({error: "Internal server error"}, 500);
-				  //         return;
-				  //       }
-				  //       //array.push(data);
-				  //       res.json(JSON.stringify(data));
-      // 				});
-      // 			}
-      // 			else {
-      // 				RfidData.query("select rfidTagNum, timestamp, AVG(rfidTemperature) as avgTemp, VARIANCE(rfidTemperature) as varTemp, " +
-      // 				"count(*) as total, count(if(rfidTemperature < ?,rfidTemperature,NULL)) as passingTotal from rfiddata " +
-      // 				"where rfidTagNum = ? and timestamp >= ? and timestamp <= ? group by rfidTagNum",
-      // 				[config.threshold, alerthandler_data[index].rfid, range_start, range_end],
-      // 				function (err,data) {
-      // 					if (err) {
-				  //         sails.log.error("There was an error retrieving Compliance data for rfid " + alerthandler_data[index].rfid + ": " + err);
-				  //         res.json({error: "Internal server error"}, 500);
-				  //         return;
-				  //       }
-				  //       sails.log.info(data)
-				  //       res.json(JSON.stringify(data));
-      // 				});
-      // 			}
-      // 		}
-      // 		sails.log.info("Retrieved Compliance data for ComplianceData#get_data");
-      // 	});
-      RfidData.query("select rd.rfidTagNum, timestamp, AVG(rd.rfidTemperature) as avgTemp, VARIANCE(rd.rfidTemperature) as varTemp, " +
-        "count(*) as total, r.organization, r.display_name, r.display_name_2 " + 
-        "from rfiddata as rd join rfid as r on rd.rfidTagNum = r.id " +
-        "where timestamp >= ? and timestamp <= ? and organization = ? " + 
-        "group by r.id order by display_name " + sort, 
-        [range_start, range_end, req.session.organization], 
-        function (err, data) {
-        if (err) {
-          sails.log.error("There was an error retrieving Compliance data: " + err);
-          res.json({error: "Internal server error"}, 500);
-          return;
+        } else if(req.query.task === "graph") {
+          var file = "Timeframe,Asset Name,Sensor Type,Threshold,Average,Variance,Temps Pass,% Pass, Result\n";
+          for (var timeframe in data) {
+            var times = timeframe.split("_");
+            var timeString = moment.unix(times[0]).format("MMM DD YYYY h:mmA Z") + " - " + moment.unix(times[1]).format("MMM DD YYYY h:mmA Z") + ",";
+            for(var asset in data[timeframe]) {
+              var tmpText = timeString;
+              tmpText += data[timeframe][asset].display_name + ",";
+              tmpText += data[timeframe][asset].display_name_2 + ",";
+              tmpText += data[timeframe][asset].threshold + ",";
+              tmpText += data[timeframe][asset].avgTemp + ",";
+              tmpText += data[timeframe][asset].varTemp + ",";
+              tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
+              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
+              tmpText += data[timeframe][asset].result + "\n";
+              file += tmpText;
+            }
+          }
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Content-Disposition': "attachment; filename=compliance_report.csv"
+          });
+          res.end(file);      
         }
+      });
+    });
+  },
 
-        // Filter out RFIDs that aren't for the current user
-        data = data.filter(function (i) {
-          return i.rfidTagNum !== undefined && i.organization === req.session.organization;
+  queue_job: function(req, res) {
+
+    var timeFilters = req.query["timeFilters"];
+    var jobName = req.query["jobName"];
+    delete req.query["timeFilters"];
+    delete req.query["jobName"];
+
+    var kue = require('kue');
+    var jobQueue = kue.createQueue();
+    ComplianceReport.create({"organization": req.session.organization, "name": jobName}).exec(function (err, job_data) {
+      if (err) {
+        sails.log.error("Error saving job to database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      else {
+        var job = jobQueue.create('compjob', {
+          rfidThresholds: req.query,
+          timeFilters: timeFilters,
+          id: job_data.id
         });
 
-        sails.log.info("Retrieved Compliance data for ComplianceData#get_data");
-        //sails.log.info(JSON.stringify(data));
-        res.json(JSON.stringify(data));
-      });
-    }
+        job.on('complete', function () {
+          sails.log.info('Job', job.id, 'with name', job.data.name, 'is done');
+        });
+        job.on('failed', function () {
+          sails.log.error('Job', job.id, 'with name', job.data.name, 'has failed');
+        });
+        job.save();
+
+        res.json(JSON.stringify(job_data));
+      }
+    });
   },
 
   get_settings: function(req, res) {
-  	Compliance.find({organization: req.session.organization}).exec(function (err, compliance) {
+  	Compliance.find({organization: req.session.organization}).sort('createdAt desc').exec(function (err, compliance) {
   		if (err) {
   			sails.log.error("There was an error retrieving compliance data: " + err);
   			return;
   		}
   		Rfid.query("select rfid.id, display_name, display_name_2 from rfid " +
-    		"left join rfidreportdata as rrd on rfid.id = rrd.rfid where organization = ? " +
-        "order by display_name asc, display_name_2 asc",
+    		"where organization = ? order by display_name asc, display_name_2 asc",
     		[req.session.organization], function (err, rfidData) {
   			if (err) {
   				sails.log.error("There was an error retrieving rfid data: " + err);
@@ -224,12 +163,106 @@ module.exports = {
   			}
   			if (compliance.length === 0) {
   				//only send the rfid data
-  				res.json(JSON.stringify(rfidData));
+  				res.json("{\"rfids\" : " + JSON.stringify(rfidData) + "}");
   			} else {
-  				//we have both, combine to one json object and send it
-  				res.json(JSON.stringify(compliance).concat(JSON.stringify(rfidData)));
+  				// we have both, combine to one json object and send it
+  				res.json("{\"compliance\" : " + JSON.stringify(compliance) + "," +
+                   " \"rfids\" : " + JSON.stringify(rfidData) + "}");
   			}
 		  });
   	});
+  },
+
+  save_settings: function(req,res) {
+    //get the data, add the organization to json object, put it in compliance
+    timeFilters = req.query["timeFilters"];
+    delete req.query["timeFilters"];
+
+    Compliance.create({organization: req.session.organization, timefilters: JSON.stringify(timeFilters),
+                       thresholds: JSON.stringify(req.query)}).exec(function (err, complianceData) {
+      if (err) {
+        sails.log.error("Error saving compliance data to database: " + err);
+        res.json({"error": err}, 500);
+      }
+      else {
+       sails.log.info("Compliance data saved in database");
+       res.json({},200);
+      }
+    });
+  },
+
+  poll_job: function(req,res) {
+    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+      if (err) {
+        sails.log.error("Error retrieving job from database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      if(reportData.status === 'queued') {
+        res.json(JSON.stringify(reportData));
+      }
+      else if(reportData.status === 'in-progress') {
+        if(reportData.kue_id !== undefined) {
+          var kue = require('kue');
+          kue.Job.get(reportData.kue_id, function(err, kuejob) {
+            if(err) {
+              sails.log.error("Error retrieving job from kue: " + err);
+              ComplianceReport.update({id: reportData.id}, {status: "cancelled"}, function (err, reports) {
+                if(err) {
+                  sails.log.error("Error setting status of compliance report: " + err);
+                  res.json(JSON.stringify(err),500);
+                }
+                res.json(JSON.stringify(reports[0]),500);
+              });
+            } else {
+              res.json(JSON.stringify({"status": "in-progress", "job" : kuejob, "id" : reportData.id}));
+            }
+          });
+        } else {
+          res.json(JSON.stringify(reportData));
+        }
+      } else if(reportData.status === 'failed' || reportData.status === 'cancelled') {
+        res.json(JSON.stringify({"status": reportData.status, "id": reportData.id}, 500));
+      } else {
+        res.json(JSON.stringify(reportData));
+      }
+    });
+  },
+
+  kill_job: function(req,res) {
+    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+      if (err) {
+        sails.log.error("Error retrieving job from database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      var kue = require('kue');
+      kue.Job.get(reportData.kue_id, function(err, kuejob) {
+        if(err) {
+          sails.log.error("Error retrieving job from kue: " + err);
+          res.json(JSON.stringify(err),500);       
+        }
+        kuejob.failed(function() {
+          ComplianceReport.update({id: req.query.job_id}, {status: "cancelled"}, function (err, reports) {
+            if(err) {
+              sails.log.error("Error setting status of compliance report: " + err);
+              res.json(JSON.stringify(err),500);
+            }
+            res.json(JSON.stringify({id: req.query.job_id}));
+          });
+        });  
+      });
+    });
+  },
+
+  queued_jobs: function(req,res) {
+    ComplianceReport.find({ where: {organization: req.session.organization}, limit: 5, skip: 5*req.query.page}).exec(function (err, jobList) {
+      if (err) {
+        sails.log.error("Error retrieving jobs from database: " + err);
+        res.json(JSON.stringify(err),500);
+      }
+      else if(jobList.length === 0) {
+        res.json(null);
+      }
+      res.json(JSON.stringify(jobList));
+    });
   }
 };

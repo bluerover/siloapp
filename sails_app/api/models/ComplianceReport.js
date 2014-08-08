@@ -1,5 +1,5 @@
 /**
- * Compliance
+ * ComplianceReport
  *
  * @module      :: Model
  * @description :: A short summary of how this model works and what it represents.
@@ -10,19 +10,26 @@ module.exports = {
 
   attributes: {
 
-    
     organization: {
         model: 'organization'
     },
-    timefilters: {
-      type: 'string',
-      maxLength: 3000
+    
+    kue_id: {
+      type: 'integer'
     },
-    thresholds: {
-      type: 'string',
-      maxLength: 5000
-    }
 
+    name: {
+      type: 'string'
+    },
+
+    result: {
+      type: 'string'
+    },
+    
+    status: {
+      type: 'string',
+      defaultsTo: "queued"
+    }
   }
 
 };

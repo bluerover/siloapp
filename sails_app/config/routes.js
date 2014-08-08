@@ -57,14 +57,39 @@ module.exports.routes = {
   },
 
   // Compliance Data
-  'get /compliance_data': {
+  'get /compliance_queue_job': {
     controller: 'Compliance',
-    action: 'get_data'
+    action: 'queue_job'
   },
 
   'get /compliance_settings': {
     controller: 'Compliance',
     action: 'get_settings'
+  },
+
+  'get /save_compsettings': {
+    controller: 'Compliance',
+    action: 'save_settings'
+  },
+
+  'get /poll_job': {
+    controller: 'Compliance',
+    action: 'poll_job'
+  },
+
+  'get /kill_job': {
+    controller: 'Compliance',
+    action: 'kill_job'
+  },
+
+  'get /get_report': {
+    controller: 'Compliance',
+    action: 'get_report'
+  },
+
+  'get /queued_jobs': {
+    controller: 'Compliance',
+    action: 'queued_jobs'
   },
 
   // Reports
@@ -116,12 +141,22 @@ module.exports.routes = {
     action: 'index'
   },
 
+  'get /get_graphdata': {
+    controller: 'Analytics',
+    action: 'get_graphdata'
+  },  
+
   //Notifications
   'get /notifications': {
     controller: 'Notifications',
     action: 'index'
-  }
+  },
 
+  //Notification Handler
+  'get /alerthandlers': {
+    controller: 'RfidAlerthandler',
+    action: 'get_handlers'
+  }
   /*
   // But what if you want your home page to display
   // a signup form located at `views/user/signup.ejs`?

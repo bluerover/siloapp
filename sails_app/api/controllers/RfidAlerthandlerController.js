@@ -10,5 +10,9 @@ module.exports = {
     blueprints: {
       rest: true
     }
+  },
+
+  get_handlers: function (req, res) {
+  	res.json(sails.notification_handlers);
   }
 };
