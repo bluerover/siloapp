@@ -22,7 +22,7 @@
         <select class="form-control" id="reportList">
         	<% for (var i in reportList) {
         	  var report = reportList[i]; %>
-        	  <option value=<%- report.id %> > <%- report.name %></option>
+        	  <option value=<%- report.id %>> <%- report.name %> </option>
 			<% } %>
         </select>
     </div>
@@ -55,6 +55,7 @@
 <script type="text/javascript">
 	$(document).ready(function() {
 		$('#reportList').prop('selectedIndex',-1);
+    $('#reportList').val(<%- report_id%>);
 	});
 	$('#reportList').on('change', function() {
 		var id = $(this).val();

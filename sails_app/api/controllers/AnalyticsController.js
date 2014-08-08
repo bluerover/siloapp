@@ -18,7 +18,8 @@ module.exports = {
 		      page_category: "analytics",
 		      full_name: req.session.full_name,
 		      reportList: reportList,
-		      reportJSON: reportJSON
+		      reportJSON: reportJSON,
+		      report_id: req.query.id
 		    });	
   		}
   		if(req.query.id) {
