@@ -53,16 +53,17 @@ module.exports = {
         if(req.query.task === "table") {
           res.json(JSON.stringify(data));
         } else if(req.query.task === "csv") {
-          var file = "Asset Name,Sensor Type,Threshold";
+          var file = "Asset Name,Sensor Type,Threshold (ºC),Pass Criteria (%)";
           for(var timeframe in data) {
             dummyTimeFrame = timeframe;
             var times = timeframe.split("_");
-            var headerString = "," + moment.unix(times[0]).format("MMM DD YYYY h:mm Z") + " - ";
-            headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm Z");
-            file += headerString + " Avg";
-            file += headerString + " Var";
-            file += headerString + " Temps Pass";
-            file += headerString + " % Pass";
+            var headerString = "," + moment.unix(times[0]).format("MMM DD YYYY h:mm") + " - ";
+            headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm");
+            file += headerString + " Average (ºC)";
+            file += headerString + " Variance (ºC)";
+            file += headerString + " Temps Passed";
+            file += headerString + " Temps Failed";
+            file += headerString + " Percentage Passed (%)";
             file += headerString + " Result";
           }
           file += "\n";
@@ -71,11 +72,13 @@ module.exports = {
             tmpText += data[dummyTimeFrame][asset].display_name + ",";
             tmpText += data[dummyTimeFrame][asset].display_name_2 + ",";
             tmpText += data[dummyTimeFrame][asset].threshold + ",";
+            tmpText += data[dummyTimeFrame][asset].passCriteria*100 + ",";
             for(var timeframe in data) {
               tmpText += data[timeframe][asset].avgTemp + ",";
               tmpText += data[timeframe][asset].varTemp + ",";
-              tmpText += data[timeframe][asset].passingTemp + "/" + data[timeframe][asset].total + ",";
-              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(2) + ",";
+              tmpText += data[timeframe][asset].passingTemp + ",";
+              tmpText += (data[timeframe][asset].total - data[timeframe][asset].passingTemp) + ",";
+              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(3)*100 + "%,";
               tmpText += data[timeframe][asset].result + ",";
             }
             tmpText = tmpText.slice(0,-1) + "\n";
@@ -254,7 +257,7 @@ module.exports = {
   },
 
   queued_jobs: function(req,res) {
-    ComplianceReport.find({ where: {organization: req.session.organization}, limit: 5, skip: 5*req.query.page}).exec(function (err, jobList) {
+    ComplianceReport.find({ where: {organization: req.session.organization}, sort: 'createdAt desc', limit: 5, skip: 5*req.query.page}).exec(function (err, jobList) {
       if (err) {
         sails.log.error("Error retrieving jobs from database: " + err);
         res.json(JSON.stringify(err),500);

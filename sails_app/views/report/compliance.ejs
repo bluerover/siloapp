@@ -185,7 +185,6 @@
         }
 
         function updateRow(job,progress,done) {
-            console.log(job.status);
             $('#jobStatus' + job.id).empty().append(job.status);
             $('#jobProgress' + job.id).attr("value", progress);
             $('#progressText' + job.id).empty().append(progress ? progress + "% " : "");
@@ -220,7 +219,7 @@
                             $('#job_' + newJob.id + ' a:first').on('click', function() {
                                 setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                             });
-                            $('#job_' + newJob.id + ' a:nth-child(2)').attr('href', "/get_report?csv=1&job_id=" + newJob.id);
+                            $('#job_' + newJob.id + ' a:nth-child(2)').attr('href', "/get_report?task=csv&job_id=" + newJob.id);
                             $('#job_' + newJob.id + ' a:last').attr('href', "/analytics?id=" + newJob.id);
                         }
                     },
@@ -247,29 +246,37 @@
                                        "<td rowspan='2' style='vertical-align:middle;'>Device ID</td>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Asset Name</td>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Sensor Type</td>" +
-                                       "<td rowspan='2' style='vertical-align:middle;'>Threshold</td>";
+                                       "<td rowspan='2' style='vertical-align:middle;'>Threshold (ºC)</td>" +
+                                       "<td rowspan='2' style='vertical-align:middle;'>Pass Criteria (%)</td>";
                     for(var timeframe in report) {
                         var times = timeframe.split("_");
-                        var headerString = "<td colspan='4'>";
+                        var headerString = "<td colspan='6'>";
                         headerString += moment.unix(times[0]).format("MMM DD YYYY h:mm A") + " - ";
                         headerString += moment.unix(times[1]).format("MMM DD YYYY h:mm A") + "</td>";
                         appendString += headerString;
                     }
                     appendString += "</tr>";
                     for(var timeframe2 in report) {
-                        appendString += "<td>Average</td><td>Variance</td><td>Percent</td><td>Result</td>";
+                        appendString += "<td>Average (ºC)</td>" +
+                                        "<td>Variance (ºC)</td>" +
+                                        "<td>Temps Passed</td>" +
+                                        "<td>Temps Failed</td>" +
+                                        "<td>Percentage (%)</td>" +
+                                        "<td>Result</td>";
                     }
                     appendString += "</tr>";
                     for (var dummyTimeFrame in report) {
                         for(var asset in report[dummyTimeFrame]) {
                             appendString += "<tr><td>" + report[dummyTimeFrame][asset].id + "</td><td>" +
                                             report[dummyTimeFrame][asset].display_name + "</td><td>" +
-                                            report[dummyTimeFrame][asset].display_name_2 + "</td><td style='border-right: 1px solid #ddd;'>" +
-                                            report[dummyTimeFrame][asset].threshold + "</td>";
+                                            report[dummyTimeFrame][asset].display_name_2 + "</td><td>" + report[dummyTimeFrame][asset].threshold + "</td><td style='border-right: 1px solid #ddd;'>" +
+                                            report[dummyTimeFrame][asset].passCriteria*100 + "%</td>";
                             for(var timeframe in report) {
                                 appendString += "<td>" + report[timeframe][asset].avgTemp + "</td>" +
                                                 "<td>" + report[timeframe][asset].varTemp + "</td>" +
-                                                "<td>" + report[timeframe][asset].passingTemp + "/" + report[timeframe][asset].total + "</td>" +
+                                                "<td>" + report[timeframe][asset].passingTemp + "</td>" + 
+                                                "<td>" + (report[timeframe][asset].total - report[timeframe][asset].passingTemp) + "</td>" +
+                                                "<td>" + (report[timeframe][asset].passingTemp / report[timeframe][asset].total).toPrecision(3)*100 + "%</td>" +
                                                 "<td style='border-right: 1px solid #ddd;'>" + report[timeframe][asset].result + "</td>";
                             }
                             appendString += "</tr>";
@@ -547,7 +554,7 @@
 </div>
 <div class="col-sm-offset-3">&nbsp;</div>
 <div class="col-sm-12">
-    <legend id="previousJobs">Previous Jobs  <span class="glyphicon glyphicon-chevron-down" style="font-size:16px;"></span></legend>
+    <legend id="previousJobs">Previous Reports <span class="glyphicon glyphicon-chevron-down" style="font-size:16px;"></span></legend>
     <div class="col-sm-9" style="display:none;">
         <ul class="pager">
           <li class="previous disabled"><a href="javascript:;">&larr; Newer</a></li>
@@ -561,7 +568,7 @@
 <div id="compliance_settings">
     <div class="col-md-4" style="vertical-align:top;">
         <form id="filters" class="form-horizontal" role="form">
-            <legend>Time Intervals</legend>
+            <legend>Report Time Intervals</legend>
             <div id="filter0" class="filter">
                 <div>
                     <a href="javascript:;" class="removeFilter"><span class="glyphicon glyphicon-remove"></span></a>
@@ -600,21 +607,21 @@
                 </div>
             </div>
             <button type="button" class="btn btn-default" id="addFilter">
-                 <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add filter
+                 <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Add Time Interval
             </button>
              <button type="button" class="btn btn-default btn-lrg" id="saveSettings">Save Settings</button>
         </form>
     </div>
     <div class="col-md-offset-1 col-md-7">
-        <legend id="deviceThresholds">Device Thresholds  <span class="glyphicon glyphicon-chevron-up" style="font-size:16px;"></span></legend>
+        <legend id="deviceThresholds">Report Settings <span class="glyphicon glyphicon-chevron-up" style="font-size:16px;"></span></legend>
         <div>
             <table id="rfidList" class="table table-condensed">
                 <th>ON/OFF</th>
                 <th>Device ID</th>
                 <th>Asset Name</th>
                 <th>Sensor Type</th>
-                <th>Threshold</th>
-                <th>Pass Percent</th>
+                <th>Threshold (ºC)</th>
+                <th>Pass Criteria (%)</th>
             </table>
         </div>
         <div id="table-loading" class="collapse">

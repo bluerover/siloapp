@@ -83,7 +83,7 @@ function updateKueId(kue_id, job_id) {
 
 function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) {
 	var queryString = "SELECT r.id, r.display_name, r.display_name_2, ROUND(AVG(rfidTemperature),2) as avgTemp, ROUND(VARIANCE(rfidTemperature),2) as varTemp, " +
-        "count(*) as total, COUNT(IF(rfidTemperature " + (thresholdType === "min" ? "<" : ">") + " ? ,1, NULL)) " +
+        "count(*) as total, COUNT(IF(rfidTemperature " + (thresholdType === "min" ? "<=" : ">=") + " ? ,1, NULL)) " +
         "as passingTemp, " + threshold + " as threshold FROM rfiddata as rd JOIN rfid as r on rd.rfidTagNum = r.id  " +
         "WHERE rfidTagNum = ? AND timestamp >= ? AND timestamp <= ?";
     var parameters = [threshold, rfid, startTime, endTime];
@@ -91,7 +91,8 @@ function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) 
     	if(err) {
     		jobErr = new Error(err);
     	} else {
-    		if((results[0]["passingTemp"]/results[0]["total"]).toPrecision(3) >= passPercentArray[results[0]["id"]]) {
+    		results[0]["passCriteria"] = passPercentArray[results[0]["id"]];
+    		if((results[0]["passingTemp"]/results[0]["total"]).toPrecision(3) >= results[0]["passCriteria"]) {
     			results[0]["result"] = "PASS";
     			passNum++;
     		} else {
