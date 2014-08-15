@@ -170,8 +170,8 @@ function setupEventListeners() {
         return;
       }
       //hacks for different email patterns
-      if(rfid.organization != 7 && !(rfid.display_name_2)) {
-	      sails.log.info("no hot emails for non-marilus");
+      if(!(rfid.display_name_2)) {
+	sails.log.info("no hot emails for non-marilus");
         return;
       }
       if(rfid.organization == 10 && rfid.display_name_2 === "Air") {
