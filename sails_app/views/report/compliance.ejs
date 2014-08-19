@@ -216,7 +216,6 @@
                         } else {
                             console.log("all done");
                             updateRow(newJob,100,true);
-                            // $('#job_' + newJob.id + ' a').remove();
                             $('#job_' + newJob.id + ' td:nth-last-child(2)').append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-stats"></span></a>');
                             $('#job_' + newJob.id + ' a:first').on('click', function() {
                                 setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
@@ -274,19 +273,26 @@
                                             report[dummyTimeFrame][asset].display_name_2 + "</td><td>" + report[dummyTimeFrame][asset].threshold + "</td><td style='border-right: 1px solid #ddd;'>" +
                                             report[dummyTimeFrame][asset].passCriteria*100 + "%</td>";
                             for(var timeframe in report) {
-                                appendString += "<td>" + report[timeframe][asset].avgTemp + "</td>" +
-                                                "<td>" + report[timeframe][asset].varTemp + "</td>" +
-                                                "<td>" + report[timeframe][asset].passingTemp + "</td>" + 
-                                                "<td>" + (report[timeframe][asset].total - report[timeframe][asset].passingTemp) + "</td>" +
-                                                "<td>" + (report[timeframe][asset].passingTemp / report[timeframe][asset].total).toPrecision(3)*100 + "%</td>" +
-                                                "<td style='border-right: 1px solid #ddd;'>" + report[timeframe][asset].result + "</td>";
+                                var colorString = "";
+                                var passPercentage = report[timeframe][asset].passingTemp/report[timeframe][asset].total;
+                                if (passPercentage >= report[dummyTimeFrame][asset].passCriteria) {
+                                    colorString = " style='color:green";
+                                } else {
+                                    colorString = " style='color:red";
+                                }
+                                appendString += "<td" + colorString + "'>" + report[timeframe][asset].avgTemp + "</td>" +
+                                                "<td" + colorString + "'>" + report[timeframe][asset].varTemp + "</td>" +
+                                                "<td" + colorString + "'>" + report[timeframe][asset].passingTemp + "</td>" + 
+                                                "<td" + colorString + "'>" + (report[timeframe][asset].total - report[timeframe][asset].passingTemp) + "</td>" +
+                                                "<td" + colorString + "'>" + Math.round(passPercentage*100*100)/100 + "%</td>" +
+                                                "<td" + colorString + ";border-right:1px solid #ddd' >" + report[timeframe][asset].result + "</td>";
                             }
                             appendString += "</tr>";
                         }
                         appendString += "</table>";
                         break;
                     }
-                    var myWindow = window.open("", "Compliance Report", "width=600, height=300");
+                    var myWindow = window.open("", "Compliance Report", "width=800, height=400");
                     myWindow.document.write("<link rel='stylesheet' href='http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' type='text/css' />");
                     myWindow.document.write(appendString);
                 },

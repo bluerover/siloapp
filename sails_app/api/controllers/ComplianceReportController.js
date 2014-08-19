@@ -68,7 +68,7 @@ module.exports = {
               tmpText += data[timeframe][asset].varTemp + ",";
               tmpText += data[timeframe][asset].passingTemp + ",";
               tmpText += (data[timeframe][asset].total - data[timeframe][asset].passingTemp) + ",";
-              tmpText += (data[timeframe][asset].passingTemp/data[timeframe][asset].total).toFixed(3)*100 + "%,";
+              tmpText += Math.round(data[timeframe][asset].passingTemp/data[timeframe][asset].total*100*100)/100 + "%,";
               tmpText += data[timeframe][asset].result + ",";
             }
             tmpText = tmpText.slice(0,-1) + "\n";
