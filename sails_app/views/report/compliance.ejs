@@ -543,6 +543,15 @@
         $('#previousJobs, #deviceThresholds').on('click', function () {
             collapseNextDiv(this);
         });
+        $('#allAssets').on('click', function() {
+            if($('#rfidList').find(":checked").length !== $('#rfidList').find(":checkbox").length) {
+                $('#rfidList').find(":checkbox").prop("checked",true);
+                $('#allAssets').html("Deselect ALL Assets");
+            } else {
+                $('#rfidList').find(":checkbox").prop("checked",false);
+                $('#allAssets').html("Select ALL Assets");
+            }
+        });
     });
 </script>
 
@@ -619,6 +628,7 @@
     <div class="col-md-offset-1 col-md-7">
         <legend id="deviceThresholds">Report Settings <span class="glyphicon glyphicon-chevron-up" style="font-size:16px;"></span></legend>
         <div>
+            <button id="allAssets" class="btn btn-default" style="margin-bottom:10px;" type="button">Select ALL Assets</button>
             <table id="rfidList" class="table table-condensed">
                 <th>ON/OFF</th>
                 <th>Device ID</th>
