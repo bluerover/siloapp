@@ -137,7 +137,12 @@ function getJobStatus(job_id, callback) {
 	  if(err) {
 	  	console.log("couldn't find job with id #" + job_id + ": " + err);
 	  } else {
-	  	callback(data[0]["status"]);
+	  	if(!data[0] || data[0] === undefined) {
+	  		//must've been killed by the app
+	  		callback("cancelled");
+	  	} else {
+	  		callback(data[0]["status"]);
+	  	}
 	  }
 	});
 }

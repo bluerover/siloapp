@@ -211,16 +211,18 @@
                             updateRow(newJob,newJob.job["progress"],false);
                         } else if (status === "cancelled") {
                             updateRow(newJob,0,true);
+                        } else if (status === "queued") {
+                            updateRow(newJob,0,false);
                         } else {
                             console.log("all done");
                             updateRow(newJob,100,true);
-                            $('#job_' + newJob.id + ' a').remove();
-                            $('#job_' + newJob.id + ' td:last').append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-stats"></span></a>');
+                            // $('#job_' + newJob.id + ' a').remove();
+                            $('#job_' + newJob.id + ' td:nth-last-child(2)').append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-stats"></span></a>');
                             $('#job_' + newJob.id + ' a:first').on('click', function() {
                                 setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                             });
                             $('#job_' + newJob.id + ' a:nth-child(2)').attr('href', "/get_report?task=csv&job_id=" + newJob.id);
-                            $('#job_' + newJob.id + ' a:last').attr('href', "/analytics?id=" + newJob.id);
+                            $('#job_' + newJob.id + ' a:nth-child(3)').attr('href', "/analytics?id=" + newJob.id);
                         }
                     },
                     error: function(response) {
@@ -313,13 +315,13 @@
                             var job = JSON.parse(job_data);
                             var appendString = "<tr id='job_" + job["id"] + "'><td>" + job["id"] + "</td>" +
                                                "<td>" + job["name"] + "</td>" +
-                                               '<td><progress id="jobProgress' + job["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + job["id"] + '"></label></td>' +
+                                               '<td><progress id="jobProgress' + job["id"] + '" class="col-sm-6 progress progress-striped" max="100"></progress><label class="col-sm-3" id="progressText' + job["id"] + '"></label></td>' +
                                                 "<td id='jobStatus" + job["id"] +"'>" + job["status"] + "</td>" + "<td id='result_" + job["id"] +"'>0/0</td>" +
-                                                "<td>" + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a></td></tr>';
+                                                "<td></td><td>" + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-remove-circle"></span></a></td></tr>';
                             pollJob(job["id"]);
                             $('#jobListTable tbody').append(appendString);
-                            var a = $('#jobListTable a:last');
-                            a.on('click',function() {
+                            var tr = $('#job_' + job["id"]);
+                            tr.find("a:last").on('click',function() {
                                 killJob($(this).parent().parent().attr("id").split("_")[1]);
                             });
                         }
@@ -331,29 +333,6 @@
                     }
                 });
             }
-        }
-
-        function setupGraph(job_id) {
-            $.ajax({
-                type: "GET",
-                url: "/get_report",
-                data: {
-                    job_id: job_id.toString(),
-                    task: "graph"
-                },
-                success: function(data) {
-                    var report = JSON.parse(data);
-                    
-                    var myWindow = window.open("", "Compliance Report", "width=600, height=300");
-                    myWindow.document.write("<link rel='stylesheet' href='http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' type='text/css' />");
-                    myWindow.document.write(report);
-                },
-                error: function(response) {
-                    console.log("Error");
-                    console.log(response);
-                    $('#errorBlock').empty().append(response).show();
-                }
-            });
         }
 
         function getQueuedJobs() {
@@ -374,22 +353,21 @@
                                            "<th>Progress</th>" +
                                            "<th>Status</th>" +
                                            "<th>Result</th>" +
-                                           "<th>Options</th>";
+                                           "<th>Options</th>" + 
+                                           "<th>Remove</th>";
                     if(data !== null) {
                         var jobList = JSON.parse(data);
                         for(var index in jobList) {
                             appendString += "<tr id='job_" + jobList[index]["id"] + "'><td>" + jobList[index]["id"] + "</td>" +
                                             "<td>" + jobList[index]["name"] + "</td>" +
-                                            "<td>" + '<progress id="jobProgress' + jobList[index]["id"] + '" class="col-sm-6" max="100"></progress><label class="col-sm-3" id="progressText' + jobList[index]["id"] + '"></label></td>' +
+                                            "<td>" + '<progress id="jobProgress' + jobList[index]["id"] + '" class="col-sm-6 progress progress-striped" max="100"></progress><label class="col-sm-3" id="progressText' + jobList[index]["id"] + '"></label></td>' +
                                             "<td id='jobStatus" + jobList[index]["id"] +"'>" + jobList[index]["status"] + "</td><td id='result_" + jobList[index]["id"] + "'>" + jobList[index]["result"] + "</td><td>";
                             if(jobList[index]["status"] === "complete") {
                                 appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;'
                                     + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>&nbsp;&nbsp;&nbsp;'
                                     + '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-stats"></span></a>';
-                            } else if(jobList[index]["status"] === "in-progress") {
-                                appendString += '<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-minus-sign"></span></a>';
                             }
-                            appendString += "</td></tr>";
+                            appendString += '</td><td><a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-remove-circle"></span></a>' + "</td></tr>";
                         }
                     }
                     $('#jobList').empty().append(appendString + "</table>");
@@ -399,16 +377,16 @@
                             var text = $('#jobStatus' + id).text();
                             if(text === "in-progress" || text === "queued") {
                                 pollJob(id);
-                                $(tr).find("a").on('click', function() {
-                                    killJob($(this).parent().parent().attr("id").split("_")[1]);
-                                });
                             } else if(text === "complete") {
                                 $(tr).find("a:first").on('click', function() {
                                     setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
                                 });
                                 $(tr).find("a:nth-child(2)").attr('href', "/get_report?task=csv&job_id=" + $(tr).attr("id").split("_")[1]);
-                                $(tr).find("a:last").attr('href', "/analytics?id=" + $(tr).attr("id").split("_")[1]);
+                                $(tr).find("a:nth-child(3)").attr('href', "/analytics?id=" + $(tr).attr("id").split("_")[1]);
                             }
+                            $(tr).find("a:last").on('click', function() {
+                                killJob($(this).parent().parent().attr("id").split("_")[1]);
+                            });
                             $('#jobProgress' + id).attr('value', 100);
                             $('#progressText' + id).empty().append("100%");
                         }
@@ -424,22 +402,24 @@
 
         function killJob(id) {
             //TODO: confirm yes/no box before cancelling
-            clearInterval(pollMap[id]);
-            $.ajax({
-                type: "GET",
-                url: "/kill_job",
-                data: {
-                    "job_id" : id.toString()
-                },
-                success: function(data) {
-                    id = JSON.parse(data)["id"];
-                    $('#jobStatus' + id).empty().append("cancelled").next().empty(); 
-                },
-                error: function(response) {
-                    console.log("Error");
-                    console.log(response);
-                }
-            });
+            if(confirm("Remove this job?")) {
+                clearInterval(pollMap[id]);
+                $.ajax({
+                    type: "GET",
+                    url: "/kill_job",
+                    data: {
+                        "job_id" : id.toString()
+                    },
+                    success: function(data) {
+                        id = JSON.parse(data)["id"];
+                        $('#job_' + id).remove();
+                    },
+                    error: function(response) {
+                        console.log("Error");
+                        console.log(response);
+                    }
+                });
+            }
         }
 
         var dangerFlag;

@@ -57,11 +57,6 @@ module.exports.routes = {
   },
 
   // Compliance Data
-  'get /compliance_queue_job': {
-    controller: 'Compliance',
-    action: 'queue_job'
-  },
-
   'get /compliance_settings': {
     controller: 'Compliance',
     action: 'get_settings'
@@ -72,23 +67,29 @@ module.exports.routes = {
     action: 'save_settings'
   },
 
+  // Compliance Report Data
+  'get /compliance_queue_job': {
+    controller: 'ComplianceReport',
+    action: 'queue_job'
+  },
+
   'get /poll_job': {
-    controller: 'Compliance',
+    controller: 'ComplianceReport',
     action: 'poll_job'
   },
 
   'get /kill_job': {
-    controller: 'Compliance',
+    controller: 'ComplianceReport',
     action: 'kill_job'
   },
 
   'get /get_report': {
-    controller: 'Compliance',
+    controller: 'ComplianceReport',
     action: 'get_report'
   },
 
   'get /queued_jobs': {
-    controller: 'Compliance',
+    controller: 'ComplianceReport',
     action: 'queued_jobs'
   },
 
