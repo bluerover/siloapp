@@ -1,4 +1,4 @@
-Food Safety Application
+Silo App
 =============
 ## Key Technologies ##
 - node.js
@@ -17,3 +17,8 @@ Food Safety Application
 - To detach or terminate current screen:
   - Detach: `CTRL+A  CTRL+D`
   - Terminate: `CTRL+C`
+
+## How to Push and Pull ##
+- Normal pull: `git pull`
+- From food safety: `git pull upstream master`  //ensure upstream exists
+- Push: `git push origin master`
