@@ -8,6 +8,17 @@ module.exports = {
     }
   }, 
 
+  compliance: function (req, res) {
+    res.view({
+      title: "Compliance Report",
+      organization_num: req.session.organization_num,
+      organization_name: req.session.organization_name,
+      page_category: "reports",
+      full_name: req.session.full_name,
+      report_type: 'compliance'
+    });
+  },
+
   rfid: function (req, res) {
     res.view({
       title: "RFID Sensor Report",

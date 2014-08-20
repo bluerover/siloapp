@@ -1,1 +1,345 @@
-<img style="width: 100%;" src="/images/analytics.png">
+<style>
+    .total text {
+        font: 50px sans-serif;
+    }
+    path.color0 {
+        fill:red;
+    }
+    path.color1 {
+        fill: #35526b;
+    }
+    .gtooltip{
+        opacity:0.7;
+        font-size:20px;
+    }
+    .gtooltip.hide{
+        display:none;
+    }
+</style>
+<div class="col-sm-12">
+	<label class="col-sm-offset-3 col-sm-2 control-label" style="font-size:20px;">Select a report:</label>
+    <div class="input-group col-sm-4">
+        <select class="form-control" id="reportList">
+        	<% for (var i in reportList) {
+        	  var report = reportList[i]; %>
+        	  <option value=<%- report.id %>> <%- report.name %> </option>
+			<% } %>
+        </select>
+    </div>
+</div>
+<div id="errorBlock" style="display:none;" class="col-sm-offset-3 col-sm-6 alert alert-danger center-text">
+</div>
+<div id="graphs" class="col-sm-12 collapse" style="text-align:center">
+    <h1>Total Pass % for Temperature Readings</h1>
+    <div class="col-sm-6" style="text-align:center">
+        <h2>Food</h2>
+        <div class="total" id="food-total">
+        </div>
+        <canvas id="food-total-gauge"></canvas>
+    </div>
+    <div class="col-sm-6" style="text-align:center">
+        <h2>Air</h2>
+        <div class="total" id="air-total">
+        </div>
+        <canvas id="air-total-gauge"></canvas>
+    </div>
+    <div id="PercentPassxAsset">
+    	<h1>Average Percent Pass by Asset</h1>
+    </div>
+    <div id="PercentPassxTime">
+    	<h1>Average Percent Pass by Time</h1>
+    </div>
+</div>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="/js/graphgauge.min.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#reportList').prop('selectedIndex',-1);
+    $('#reportList').val(<%- report_id%>);
+	});
+	$('#reportList').on('change', function() {
+		var id = $(this).val();
+		 $.ajax({
+            type: "GET",
+            url: "/get_graphdata",
+            data: {
+            	id: id
+            },
+            success: function(response) {
+            	var data = JSON.parse(response);
+            	$('#graphs').collapse('show');
+            	resetGraphs(data);
+            },
+            error: function(response) {
+            	console.log("Error");
+            	console.log(response);
+            	$('#errorBlock').empty().append(repsonse).show().delay(3000).fadeOut();
+            }
+        });
+	});
+
+	function AnimatedText(selector, start,end,duration){
+                
+        var qSVG = d3.select(selector).append("svg").attr("width", 140).attr("height", 60);
+        
+        qSVG
+        .selectAll(".txt")
+        .data([end])
+        .enter()
+        .append("text")
+        .text([start])
+        .attr("class", "txt")
+        .attr("dy", 50)
+        //.attr("dx", "50%")
+        //.style("text-anchor", "middle")
+        .transition()
+        .duration(duration)
+        .ease("bounce")
+        .tween("text", function(d) {
+               var i = d3.interpolate(this.textContent, d),
+               prec = (d + "").split("."),
+               round = (prec.length > 1) ? Math.pow(10, prec[1].length) : 1;
+               
+               return function(t) {
+               this.textContent = Math.round(i(t) * round) / round;
+               };
+               });
+               this.update = function(newValue){
+                   qSVG.select(".txt").data([newValue])
+                   .transition()
+                   .duration(500)
+                   .tween("text", function(d) {
+                          
+                          var i = d3.interpolate(this.textContent, d),
+                          prec = (d + "").split("."),
+                          round = (prec.length > 1) ? Math.pow(10, prec[1].length) : 1;
+                          
+                          return function(t) {
+                          this.textContent = Math.round(i(t) * round) / round;
+                          };
+                          });
+                          
+               }
+               
+               this.addStaticContent = function (text){
+                   qSVG
+                   .append("text")
+                   .text(text)
+                   .attr("dy", 50)
+                   .attr("dx", 90)
+                   .attr("class", "txt")
+                   
+               }
+               
+    };
+
+    function GroupedBarChart(selector){
+        var margin = {top: 20, right: 20, bottom: 160, left: 60},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+        
+        var x0 = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .1);
+        
+        var x1 = d3.scale.ordinal();
+        
+        var y = d3.scale.linear()
+        .range([height, 0]);
+        
+        var color = d3.scale.ordinal()
+        .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+        
+        var xAxis = d3.svg.axis()
+        .scale(x0)
+        .orient("bottom");
+        
+        var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .tickFormat(d3.format(".2s"));
+        
+        var svg = d3.select(selector).append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+        this.updateRolledUpData = function(rollup, rotationAngle){
+            x0.domain(rollup.map(function(e){return e.key;})); //we want the domain to be the asset name
+            x1.domain(['Air', 'Food']).rangeRoundBands([0, x0.rangeBand()]);//we want x1 to be the two types of temperatures
+            y.domain([0, 100]);
+            
+            var state = svg.selectAll(".asset")
+                  .data(rollup.map(function(e){return e.key}))
+                  .enter().append("g")
+                  .attr("class", "g")
+                  .attr("transform", function(d) {
+                        
+                        return "translate(" + x0(d) + ",0)"; });
+                        
+                        state.selectAll("rect")
+                        .data(function(d){
+                              return rollup.filter(function(r){ return r.key == d; })[0].values;
+                              })
+                              .enter().append("rect")
+                              .attr("width", x1.rangeBand())
+                              .attr("x", function(d) {
+                                    console.log(d);
+                                    return x1(d.key);
+                                    })
+                                    .attr("y", y(0))
+                                    .attr("height",0)
+                                    .style("fill", function(d) { return color(d.key); })
+                                    /*.on('mouseover', function(d){
+                                        var me = d3.select(this);
+                                        console.log(d.values);
+                                        var html = '<div>'+d.values+'</div>';
+                                        
+                                    })
+                                    .on('mouseout', function(d){
+                                        })*/
+                                    .transition().delay(100)
+                                    .duration(500)
+                                    .ease("bounce")
+                                    .attr("y", function(d) {
+                                          console.log(d.values);
+                                          return y(d.values); })
+                                          .attr("height", function(d) { return height - y(d.values); })
+                                          
+                                          
+                                          var legend = svg.selectAll(".legend")
+                                          .data(['Air','Food'])
+                                          .enter().append("g")
+                                          .attr("class", "legend")
+                                          .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+                                          
+                                          legend.append("rect")
+                                          .attr("x", width - 18)
+                                          .attr("width", 18)
+                                          .attr("height", 18)
+                                          .style("fill", color);
+                                          
+                                          legend.append("text")
+                                          .attr("x", width - 24)
+                                          .attr("y", 9)
+                                          .attr("dy", ".35em")
+                                          .style("text-anchor", "end")
+                                          .text(function(d) { return d; });
+                                          
+                                          svg.append("g")
+                                          .attr("class", "x axis")
+                                          .attr("transform", "translate(0," + height + ")")
+                                          .call(xAxis)
+                                          .selectAll("text")
+                                          .style("text-anchor", "end")
+                                          .attr("dx", "-.8em")
+                                          .attr("dy", ".15em")
+                                          .attr("transform", function(d) {
+                                                return "rotate(" + rotationAngle + ")"
+                                                });;
+                                                
+                                        svg.append("g")
+                                                .attr("class", "y axis")
+                                                .call(yAxis)
+                                                .append("text")
+                                                .attr("transform", "rotate(-90)")
+                                                .attr("y", 2)
+                                                .attr("dy", ".71em")
+                                                .style("text-anchor", "end")
+                                                .text("Average % Pass");
+                                       
+                                        
+                                        
+        };
+
+    };
+
+            
+            
+    //common options for guage generation
+    var opts = {
+        lines: 12, // The number of lines to draw
+        angle: 0, // The length of each line
+        lineWidth: 0.37, // The line thickness
+        pointer: {
+            length: 0.8, // The radius of the inner circle
+            strokeWidth: 0.033, // The rotation offset
+            color: '#A6A6A6' // Fill color
+        },
+        percentColors: [[0.0, "#ff0000" ], [0.50, "#f9c802"], [0.8, "#a9d70b"]], // !!!!
+        limitMax: 'true',   // If true, the pointer will not go past the end of the gauge
+        colorStart: '#CFA913',   // Colors
+        colorStop: '#11DA11',    // just experiment with them
+        strokeColor: '#D4D4D4',   // to see which ones work best for you
+        generateGradient: true
+    };
+
+	function resetGraphs(data) {
+		$('body svg').remove();
+		var chart1 = new GroupedBarChart("#PercentPassxAsset");
+    var chart2 = new GroupedBarChart("#PercentPassxTime");
+    var gauge = new Gauge(document.getElementById('food-total-gauge')).setOptions(opts); // create sexy gauge!
+    gauge.maxValue = 100; // set max gauge value
+    gauge.animationSpeed = 5; // set animation speed (32 is default value)
+    gauge.set(100); // set actual value
+    
+    var textAnimate = new AnimatedText("#food-total",0, 100, 300);
+    textAnimate.addStaticContent("%");
+    
+               
+    var gauge2 = new Gauge(document.getElementById('air-total-gauge')).setOptions(opts); // create sexy gauge!
+    gauge2.maxValue = 100; // set max gauge value
+    gauge2.animationSpeed = 5; // set animation speed (32 is default value)
+    gauge2.set(100); // set actual value
+    
+    var textAnimate2 = new AnimatedText("#air-total",0, 100, 300);
+    textAnimate2.addStaticContent("%");
+
+		var pieData = d3.nest().key(function(d){ return d['Sensor Type'];})
+		.rollup(function(d){return d3.mean(d, function(g) {
+		                                  return 100.0 * parseFloat(g['% Pass']);
+		                                  })
+		       }).entries(data);
+
+		var rollup = d3.nest().key(function(d) {
+		                          return d['Asset Name'];
+		                          }).key(function(d){
+		                                 return d['Sensor Type'];
+		                                 }).rollup(function(d) {
+		                                           return d3.mean(d, function(g) {
+		                                                          return 100.0 * parseFloat(g['% Pass']);
+		                                                          });
+		                                           }).entries(data);
+
+
+		var rollup2 = d3.nest().key(function(d) {
+		                           return d['Timeframe'];
+		                           }).key(function(d){
+		                                  return d['Sensor Type'];
+		                                  }).rollup(function(d) {
+		                                            return d3.mean(d, function(g) {
+		                                                           return 100.0 * parseFloat(g['% Pass']);
+		                                                           });
+		                                            }).entries(data);
+
+		setTimeout(function(){
+		   gauge.set(pieData[0].values);
+		   textAnimate.update(parseInt(pieData[0].values));
+		   gauge2.set(pieData[1].values);
+		   textAnimate2.update(parseInt(pieData[1].values));
+		   chart1.updateRolledUpData(rollup,-65);
+		   chart2.updateRolledUpData(rollup2,-25);
+		          
+		}, 1000);	
+	}
+
+	var tmp = "<%= JSON.stringify(reportJSON) %>"
+	data = JSON.parse(tmp.replace(/&quot;/g,'"'));
+	if(data) {
+		$('#graphs').collapse('show');
+		resetGraphs(data);	
+	} else {
+		$('#graphs').collapse('hide');
+	}
+
+</script>
