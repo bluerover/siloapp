@@ -419,6 +419,7 @@
                     success: function(data) {
                         id = JSON.parse(data)["id"];
                         $('#job_' + id).remove();
+                        $('#successBlock').empty().append("Performance report removed").show().delay(3000).fadeOut();
                     },
                     error: function(response) {
                         console.log("Error");
