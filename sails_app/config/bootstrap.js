@@ -365,6 +365,8 @@ function loadRecentAlerts () {
       if(Object.keys(sails.notification_handlers).length === rfidArray.length) {
         clearInterval(id);
         setupBlueRoverApi();
+      } else {
+        sails.log.info(Object.keys(sails.notification_handlers).length + "/" + rfidArray.length);
       }
     },10*1000);
   });
