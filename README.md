@@ -19,6 +19,6 @@ Silo App
   - Terminate: `CTRL+C`
 
 ## How to Push and Pull ##
-- Normal pull: `git pull`
+- Normal pull: `git pull origin master`
 - From food safety: `git pull upstream master`  //ensure upstream exists
 - Push: `git push origin master`
