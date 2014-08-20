@@ -8,15 +8,15 @@ module.exports = {
     }
   }, 
 
-  compliance: function (req, res) {
+  performance: function (req, res) {
     res.view({
-      title: "Compliance Report",
+      title: "Performance Report",
       dashboard_id: req.session.dashboard_id,
       organization_num: req.session.organization_num,
       organization_name: req.session.organization_name,
       page_category: "reports",
       full_name: req.session.full_name,
-      report_type: 'compliance'
+      report_type: 'performance'
     });
   },
 

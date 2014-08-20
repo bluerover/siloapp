@@ -1,5 +1,5 @@
 /**
- * ComplianceReportController
+ * PerformanceReportController
  *
  * @module      :: Controller
  * @description	:: A set of functions called `actions`.
@@ -76,7 +76,7 @@ module.exports = {
           }
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
-            'Content-Disposition': "attachment; filename=compliance_report.csv"
+            'Content-Disposition': "attachment; filename=performance_report.csv"
           });
           res.end(file);
         }
@@ -93,12 +93,13 @@ module.exports = {
 
     var kue = require('kue');
     var jobQueue = kue.createQueue();
-    ComplianceReport.create({"organization": req.session.organization, "name": jobName}).exec(function (err, job_data) {
+    PerformanceReport.create({"organization": req.session.organization, "name": jobName}).exec(function (err, job_data) {
       if (err) {
         sails.log.error("Error saving job to database: " + err);
         res.json(JSON.stringify(err),500);
       }
       else {
+        sails.log.info("Queuing job " + jobName);
         var job = jobQueue.create('compjob', {
           rfidThresholds: req.query,
           timeFilters: timeFilters,
@@ -119,7 +120,7 @@ module.exports = {
   },
 
   poll_job: function(req,res) {
-    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+    PerformanceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
       if (err) {
         sails.log.error("Error retrieving job from database: " + err);
         res.json(JSON.stringify(err),500);
@@ -133,9 +134,9 @@ module.exports = {
           kue.Job.get(reportData.kue_id, function(err, kuejob) {
             if(err) {
               sails.log.error("Error retrieving job from kue: " + err);
-              ComplianceReport.update({id: reportData.id}, {status: "cancelled"}, function (err, reports) {
+              PerformanceReport.update({id: reportData.id}, {status: "cancelled"}, function (err, reports) {
                 if(err) {
-                  sails.log.error("Error setting status of compliance report: " + err);
+                  sails.log.error("Error setting status of performance report: " + err);
                   res.json(JSON.stringify(err),500);
                 }
                 res.json(JSON.stringify(reports[0]),500);
@@ -156,7 +157,7 @@ module.exports = {
   },
 
   kill_job: function(req,res) {
-    ComplianceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
+    PerformanceReport.findOne({id: req.query.job_id}).exec(function (err, reportData) {
       if (err) {
         sails.log.error("Error retrieving job from database: " + err);
         res.json(JSON.stringify(err),500);
@@ -176,9 +177,9 @@ module.exports = {
       } catch(e) {
         //ignore, it passed anyways
       } finally {
-        ComplianceReport.destroy({id: req.query.job_id}, function (err, reports) {
+        PerformanceReport.destroy({id: req.query.job_id}, function (err, reports) {
           if(err) {
-            sails.log.error("Error setting status of compliance report: " + err);
+            sails.log.error("Error setting status of performance report: " + err);
             res.json(JSON.stringify(err),500);
           } else {
             var fs = require('fs');
@@ -194,7 +195,7 @@ module.exports = {
   },
 
   queued_jobs: function(req,res) {
-    ComplianceReport.find({ where: {organization: req.session.organization}, sort: 'createdAt desc', limit: 5, skip: 5*req.query.page}).exec(function (err, jobList) {
+    PerformanceReport.find({ where: {organization: req.session.organization}, sort: 'createdAt desc', limit: 5, skip: 5*req.query.page}).exec(function (err, jobList) {
       if (err) {
         sails.log.error("Error retrieving jobs from database: " + err);
         res.json(JSON.stringify(err),500);

@@ -56,47 +56,47 @@ module.exports.routes = {
     action: 'get_data'
   },
 
-  // Compliance Data
-  'get /compliance_settings': {
-    controller: 'Compliance',
+  // Performance Data
+  'get /performance_settings': {
+    controller: 'Performance',
     action: 'get_settings'
   },
 
-  'get /save_compsettings': {
-    controller: 'Compliance',
+  'get /save_perfsettings': {
+    controller: 'Performance',
     action: 'save_settings'
   },
 
-  // Compliance Report Data
-  'get /compliance_queue_job': {
-    controller: 'ComplianceReport',
+  // Performance Report Data
+  'get /performance_queue_job': {
+    controller: 'PerformanceReport',
     action: 'queue_job'
   },
 
   'get /poll_job': {
-    controller: 'ComplianceReport',
+    controller: 'PerformanceReport',
     action: 'poll_job'
   },
 
   'get /kill_job': {
-    controller: 'ComplianceReport',
+    controller: 'PerformanceReport',
     action: 'kill_job'
   },
 
   'get /get_report': {
-    controller: 'ComplianceReport',
+    controller: 'PerformanceReport',
     action: 'get_report'
   },
 
   'get /queued_jobs': {
-    controller: 'ComplianceReport',
+    controller: 'PerformanceReport',
     action: 'queued_jobs'
   },
 
   // Reports
-  'get /reports/compliance': {
+  'get /reports/performance': {
     controller: 'Report',
-    action: 'compliance'
+    action: 'performance'
   },
 
   'get /reports/rfid': {

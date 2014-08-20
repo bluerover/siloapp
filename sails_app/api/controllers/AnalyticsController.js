@@ -7,12 +7,13 @@
 
 module.exports = {
   index: function (req, res) {
-  	//get all the compliance reports for that specific org
-  	ComplianceReport.find().where({organization: req.session.organization}).where({status: "complete"}).exec(function (err, reportList) {
+  	//get all the performance reports for that specific org
+  	PerformanceReport.find().where({organization: req.session.organization}).where({status: "complete"}).exec(function (err, reportList) {
   		reportJSON = ""
   		function done() {
   			res.view({
 		      title: "BlueRover Analytics",
+		      dashboard_id: req.session.dashboard_id,
 		      organization_num: req.session.organization_num,
 		      organization_name: req.session.organization_name,
 		      page_category: "analytics",
@@ -79,7 +80,7 @@ module.exports = {
 
   get_graphdata: function(req,res) {
   	var id = parseInt(req.query.id,10);
-  	ComplianceReport.findOne(id).exec(function (err, report) {
+  	PerformanceReport.findOne(id).exec(function (err, report) {
   		if(err) {
   			sails.log.info("Error retrieving report: " + err);
   			res.json(err,500);

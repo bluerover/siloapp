@@ -29,9 +29,9 @@ module.exports.bootstrap = function (cb) {
   createEventEmitters();
   setupTickEvent();
   setupEventListeners();
-  setupHandheldDataParser();
-  loadRecentAlerts();
-  loadRecentRfidData();
+  // setupHandheldDataParser();
+  // loadRecentAlerts();
+  // loadRecentRfidData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();

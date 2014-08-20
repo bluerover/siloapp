@@ -1,5 +1,5 @@
 /**
- * ComplianceController
+ * PerformanceController
  *
  * @module      :: Controller
  * @description	:: A set of functions called `actions`.
@@ -22,7 +22,7 @@ module.exports = {
 
   /**
    * Overrides for the settings in `config/controllers.js`
-   * (specific to ComplianceController)
+   * (specific to PerformanceController)
    */
   _config: {
     expectIntegerId: true,
@@ -34,9 +34,10 @@ module.exports = {
   }, 
 
   get_settings: function(req, res) {
-  	Compliance.find({organization: req.session.organization}).sort('createdAt desc').exec(function (err, compliance) {
+    sails.log.info("Getting performance settings");
+  	Performance.find({organization: req.session.organization}).sort('createdAt desc').exec(function (err, performance) {
   		if (err) {
-  			sails.log.error("There was an error retrieving compliance data: " + err);
+  			sails.log.error("There was an error retrieving performance data: " + err);
   			return;
   		}
   		Rfid.query("select rfid.id, display_name, display_name_2 from rfid " +
@@ -46,12 +47,12 @@ module.exports = {
   				sails.log.error("There was an error retrieving rfid data: " + err);
   				return;
   			}
-  			if (compliance.length === 0) {
+  			if (performance.length === 0) {
   				//only send the rfid data
   				res.json("{\"rfids\" : " + JSON.stringify(rfidData) + "}");
   			} else {
   				// we have both, combine to one json object and send it
-  				res.json("{\"compliance\" : " + JSON.stringify(compliance) + "," +
+  				res.json("{\"performance\" : " + JSON.stringify(performance) + "," +
                    " \"rfids\" : " + JSON.stringify(rfidData) + "}");
   			}
 		  });
@@ -59,18 +60,18 @@ module.exports = {
   },
 
   save_settings: function(req,res) {
-    //get the data, add the organization to json object, put it in compliance
+    //get the data, add the organization to json object, put it in performance
     timeFilters = req.query["timeFilters"];
     delete req.query["timeFilters"];
 
-    Compliance.create({organization: req.session.organization, timefilters: JSON.stringify(timeFilters),
-                       thresholds: JSON.stringify(req.query)}).exec(function (err, complianceData) {
+    Performance.create({organization: req.session.organization, timefilters: JSON.stringify(timeFilters),
+                       thresholds: JSON.stringify(req.query)}).exec(function (err, performanceData) {
       if (err) {
-        sails.log.error("Error saving compliance data to database: " + err);
+        sails.log.error("Error saving performance data to database: " + err);
         res.json({"error": err}, 500);
       }
       else {
-       sails.log.info("Compliance data saved in database");
+       sails.log.info("Performance data saved in database");
        res.json({},200);
       }
     });

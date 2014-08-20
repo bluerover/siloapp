@@ -25,15 +25,15 @@
              $("#table-loading").show();
              $.ajax({
                 type: "GET",
-                url: "/compliance_settings",
+                url: "/performance_settings",
                 success: function(response) {
                     $("#table-loading").hide();
                     var data = JSON.parse(response);
                     var thresholds = {};
                     var timeFilters;
                     if(Object.size(data) > 1) {
-                        thresholds = JSON.parse(data["compliance"][0]["thresholds"]);
-                        timeFilters = JSON.parse(data["compliance"][0]["timefilters"]);
+                        thresholds = JSON.parse(data["performance"][0]["thresholds"]);
+                        timeFilters = JSON.parse(data["performance"][0]["timefilters"]);
                     }
                     for (var i in data["rfids"]) {
                         $("#rfidList").append("<tr id='" + data["rfids"][i].id + "'>" +
@@ -218,7 +218,7 @@
                             updateRow(newJob,100,true);
                             $('#job_' + newJob.id + ' td:nth-last-child(2)').append('<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-share"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-circle-arrow-down"></span></a>&nbsp;&nbsp;&nbsp;<a href="javascript:;" style="font-size:20px"><span class="glyphicon glyphicon-stats"></span></a>');
                             $('#job_' + newJob.id + ' a:first').on('click', function() {
-                                setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
+                                setupPerformanceTable($(this).parent().parent().attr("id").split("_")[1]);
                             });
                             $('#job_' + newJob.id + ' a:nth-child(2)').attr('href', "/get_report?task=csv&job_id=" + newJob.id);
                             $('#job_' + newJob.id + ' a:nth-child(3)').attr('href', "/analytics?id=" + newJob.id);
@@ -233,7 +233,7 @@
             pollMap[job_id.toString()] = pollId;
         }
 
-        function setupComplianceTable(job_id) {
+        function setupPerformanceTable(job_id) {
             $.ajax({
                 type: "GET",
                 url: "/get_report",
@@ -243,7 +243,7 @@
                 },
                 success: function(data) {
                     var report = JSON.parse(data);
-                    var appendString = "<table id='compliance_report' class='table table-condensed'><tr>" +
+                    var appendString = "<table id='performance_report' class='table table-condensed'><tr>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Device ID</td>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Asset Name</td>" +
                                        "<td rowspan='2' style='vertical-align:middle;'>Sensor Type</td>" +
@@ -292,7 +292,7 @@
                         appendString += "</table>";
                         break;
                     }
-                    var myWindow = window.open("", "Compliance Report", "width=800, height=400");
+                    var myWindow = window.open("", "Performance Report", "width=800, height=400");
                     myWindow.document.write("<link rel='stylesheet' href='http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css' type='text/css' />");
                     myWindow.document.write(appendString);
                 },
@@ -312,7 +312,7 @@
                 if(!values["jobName"] || values["jobName"] === undefined) { return; }
                 $.ajax({
                     type: "GET",
-                    url: "/compliance_queue_job",
+                    url: "/performance_queue_job",
                     data: values,
                     success: function(job_data) {
                         if(job_data.status === 500) {
@@ -385,7 +385,7 @@
                                 pollJob(id);
                             } else if(text === "complete") {
                                 $(tr).find("a:first").on('click', function() {
-                                    setupComplianceTable($(this).parent().parent().attr("id").split("_")[1]);
+                                    setupPerformanceTable($(this).parent().parent().attr("id").split("_")[1]);
                                 });
                                 $(tr).find("a:nth-child(2)").attr('href', "/get_report?task=csv&job_id=" + $(tr).attr("id").split("_")[1]);
                                 $(tr).find("a:nth-child(3)").attr('href', "/analytics?id=" + $(tr).attr("id").split("_")[1]);
@@ -478,11 +478,11 @@
             if(!dangerFlag) {
                $.ajax({
                     type: "GET",
-                    url: "/save_compsettings",
+                    url: "/save_perfsettings",
                     data: values,
                     success: function(response) {
                         if(Object.size(response) === 0) {
-                            $('#successBlock').empty().append("Compliance settings saved").show().delay(3000).fadeOut();
+                            $('#successBlock').empty().append("Performance settings saved").show().delay(3000).fadeOut();
                         }
                         $("html, body").animate({ scrollTop: 0 }, "slow");
                     },
@@ -564,7 +564,7 @@
         <a href="javascript:;" class="btn btn-primary btn-xlarge" id="generateReport">Generate Report</a>
     </div>
 </div>
-<div id="compliance_settings">
+<div id="performance_settings">
     <div class="col-md-4" style="vertical-align:top;">
         <form id="filters" class="form-horizontal" role="form">
             <legend>Report Time Intervals</legend>

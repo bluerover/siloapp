@@ -71,7 +71,7 @@ var resultsArray = {};
 var passPercentArray = {};
 
 function updateKueId(kue_id, job_id) {
-	var query = connection.query('UPDATE compliancereport SET kue_id = ?, status="in-progress" WHERE id = ?',
+	var query = connection.query('UPDATE performancereport SET kue_id = ?, status="in-progress" WHERE id = ?',
 	  [kue_id, job_id], function(err, results) {
 	  if(err) {
 	  	console.log("couldn't update kue_id: " + err);
@@ -104,13 +104,13 @@ function getThresholdResult(startTime, endTime, rfid, threshold, thresholdType) 
     });
 }
 
-function saveComplianceReport(resultsArray, job_id, status, callback) {
+function savePerformanceReport(resultsArray, job_id, status, callback) {
 	zlib.deflate(JSON.stringify(resultsArray), function(err, buffer) {
 	  if (err) {
 	    jobErr = new Error(err);
 	  }
 	  else {
-	  	var query = connection.query('UPDATE compliancereport SET status="' + status + '", result = ? WHERE id = ?',
+	  	var query = connection.query('UPDATE performancereport SET status="' + status + '", result = ? WHERE id = ?',
 		[total === 0 ? "0/0" : util.format('%s/%s  %d %',passNum, total, (passNum/total).toPrecision(3)*100), job_id], function(err, results) {
 		  	if(err) {
 		  		jobErr = err;
@@ -132,7 +132,7 @@ function saveComplianceReport(resultsArray, job_id, status, callback) {
 }
 
 function getJobStatus(job_id, callback) {
-	var query = connection2.query('SELECT status FROM compliancereport WHERE id = ?',
+	var query = connection2.query('SELECT status FROM performancereport WHERE id = ?',
 	  job_id, function(err, data) {
 	  if(err) {
 	  	console.log("couldn't find job with id #" + job_id + ": " + err);
@@ -181,7 +181,7 @@ jobs.process('compjob', function (job, done) {
 		if(jobErr) {
 			console.log("failed");
 			clearInterval(id);
-			saveComplianceReport({},job.data.id,"failed",function(){});
+			savePerformanceReport({},job.data.id,"failed",function(){});
 			errBack(done,jobErr);
 		}
 		else if(count < total) {
@@ -200,9 +200,10 @@ jobs.process('compjob', function (job, done) {
 		else {
 			console.log("done");
 			clearInterval(id);
-			saveComplianceReport(resultsArray,job.data.id,"complete",done);
+			savePerformanceReport(resultsArray,job.data.id,"complete",done);
 		}
 	},800);
 });
 
-console.log("Compliance worker started");
+console.log("Performance worker started");
+kue.app.listen(3000);
