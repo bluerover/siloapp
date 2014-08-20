@@ -11,6 +11,7 @@ module.exports = {
   compliance: function (req, res) {
     res.view({
       title: "Compliance Report",
+      dashboard_id: req.session.dashboard_id,
       organization_num: req.session.organization_num,
       organization_name: req.session.organization_name,
       page_category: "reports",
