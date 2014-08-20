@@ -10,7 +10,7 @@ Food Safety Application
 ## Deploy Script##
 `sudo NODE_ENV=production PORT=80 HANDHELD_DATA_PATH=/home/ftpclient screen sails lift`
 - To deploy with multiple screens:
-  - `sudo screen -dm ${COMMAND}`
+  - `sudo screen -dm ${COMMAND}`   ex. `sudo screen -dm node worker.js`
 - To list current screens active (and switch to a respective one):
   - `sudo screen -ls`
   - `sudo screen -r ${PID}`
