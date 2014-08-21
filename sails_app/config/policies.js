@@ -24,7 +24,7 @@ module.exports.policies = {
     // REST admin actions
     'findAll': ['isAdmin'],
     'find': ['isAdmin'],
-    'create': ['isAdmin'],
+    'create': true,
     'update': ['isAdmin'],
     'destroy': ['isAdmin']
   },

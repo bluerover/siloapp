@@ -50,79 +50,8 @@ module.exports.routes = {
     action: 'get_recent_data_for_rfid'
   },
 
-  // Handheld Data
-  'get /handheld_data': {
-    controller: 'HandheldData',
-    action: 'get_data'
-  },
-
-  // Performance Data
-  'get /performance_settings': {
-    controller: 'Performance',
-    action: 'get_settings'
-  },
-
-  'get /save_perfsettings': {
-    controller: 'Performance',
-    action: 'save_settings'
-  },
-
-  // Performance Report Data
-  'get /performance_queue_job': {
-    controller: 'PerformanceReport',
-    action: 'queue_job'
-  },
-
-  'get /poll_job': {
-    controller: 'PerformanceReport',
-    action: 'poll_job'
-  },
-
-  'get /kill_job': {
-    controller: 'PerformanceReport',
-    action: 'kill_job'
-  },
-
-  'get /get_report': {
-    controller: 'PerformanceReport',
-    action: 'get_report'
-  },
-
-  'get /queued_jobs': {
-    controller: 'PerformanceReport',
-    action: 'queued_jobs'
-  },
-
-  // Reports
-  'get /reports/performance': {
-    controller: 'Report',
-    action: 'performance'
-  },
-
-  'get /reports/rfid': {
-    controller: 'Report',
-    action: 'rfid'
-  },
-
-  // Analytics
-  'get /analytics': {
-    controller: 'Analytics',
-    action: 'index'
-  },
-
-  //Notifications
-  'get /notifications': {
-    controller: 'Notifications',
-    action: 'index'
-  },
-
-  'get /reports/handheld': {
-    controller: 'Report',
-    action: 'handheld'
-  },
-
   // Dashboards
-  'get /dashboards': {
+  'get /dashboard': {
     controller: 'Dashboard',
     action: 'home'
   },
@@ -168,17 +97,6 @@ module.exports.routes = {
   'get /get_children': {
     controller: 'OrganizationController',
     action: 'get_children'
-  },
-
-  'get /get_graphdata': {
-    controller: 'Analytics',
-    action: 'get_graphdata'
-  },  
-
-  //Notifications
-  'get /notifications': {
-    controller: 'Notifications',
-    action: 'index'
   },
 
   /*

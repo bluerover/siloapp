@@ -1,5 +1,5 @@
 /**
- * Performance
+ * Role
  *
  * @module      :: Model
  * @description :: A short summary of how this model works and what it represents.
@@ -10,19 +10,19 @@ module.exports = {
 
   attributes: {
 
-    
-    organization: {
-        model: 'organization'
-    },
-    timefilters: {
+    name: {
       type: 'string',
-      maxLength: 3000
+      required: true
     },
-    thresholds: {
-      type: 'string',
-      maxLength: 5000
-    }
-
-  }
+    activities: {
+      collection: 'activity',
+      via: 'role'
+    },
+    user: {
+      model: 'user',
+      required: true
+    },
+    desc: 'string',
+  },
 
 };

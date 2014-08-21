@@ -8,40 +8,40 @@
 
 module.exports = {
 
-  attributes: {
+  // attributes: {
 
-    name: {
-      type: 'string',
-      required: true
-    },
-    auth_token: 'string',
-    children: {
-      collection: 'organization',
-      via: 'parent'
-    },
-    parent: {
-      model: 'organization'
-    },
-    location: 'string',
-    dashboards: {
-      collection: 'dashboard',
-      via: 'organization'
-    },
-    rfids: {
-      collection: 'rfid',
-      via: 'organization'
-    },
-    users: {
-      collection: 'user',
-      via: 'organization'
-    }
+  //   name: {
+  //     type: 'string',
+  //     required: true
+  //   },
+  //   auth_token: 'string',
+  //   children: {
+  //     collection: 'organization',
+  //     via: 'parent'
+  //   },
+  //   parent: {
+  //     model: 'organization'
+  //   },
+  //   location: 'string',
+  //   dashboards: {
+  //     collection: 'dashboard',
+  //     via: 'organization'
+  //   },
+  //   rfids: {
+  //     collection: 'rfid',
+  //     via: 'organization'
+  //   },
+  //   users: {
+  //     collection: 'user',
+  //     via: 'organization'
+  //   }
     
-  },
+  // },
 
-  beforeCreate: function(attrs, next) {
-    var uuid = require('node-uuid');
-    attrs.auth_token = uuid.v4();
-    return next();
-  }
+  // beforeCreate: function(attrs, next) {
+  //   var uuid = require('node-uuid');
+  //   attrs.auth_token = uuid.v4();
+  //   return next();
+  // }
 
 };

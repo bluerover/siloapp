@@ -15,7 +15,7 @@
  * @docs        :: http://sailsjs.org/#!documentation/controllers
  */
 
-var DEFAULT_ROUTE = "dashboards";
+var DEFAULT_ROUTE = "dashboard";
 
 module.exports = {
     
@@ -58,42 +58,17 @@ module.exports = {
         bcrypt.compare(req.body.password, user.password, function (err, match) {
           if (err) res.view({layout: "barebones"}, '500');
           if (match) {
-            Organization.findOne(user.organization).exec(function (err, org) {
-              if (err || org === undefined || org === null) {
-                res.view({layout: "barebones"}, '500');
-                return;
-              }
-              Dashboard.find({organization: user.organization}).exec(function (err, dashboard_rows) {
-                if (err) {
-                  sails.log.error("error retrieving dashboards: " + err);
-                  res.view({layout: "barebones"}, '500');
-                  return;
-                } 
-                if (dashboard_rows.length === 1) {
-                  req.session.dashboard_id = dashboard_rows[0].id;
-                }
-                if (dashboard_rows.length === 0) {
-                  req.session.is_parent = true;
-                } else {
-                  req.session.is_parent = false;
-                }
-                req.session.user = user.id;
-                req.session.username = user.username;
-                req.session.full_name = user.full_name();
-                req.session.is_admin = user.is_admin;
-                req.session.organization = user.organization;
-                req.session.organization_name = org.name;
-                req.session.authenticated = true;
-                if(req.session.is_parent) {
-                  res.redirect("/dashboards");
-                } else if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
-                  res.redirect(req.body.redirect_to);
-                }
-                else {
-                  res.redirect(DEFAULT_ROUTE);
-                }
-              });
-            });
+            
+            req.session.user = user.id;
+            req.session.username = user.username;
+            req.session.full_name = user.full_name();
+            req.session.authenticated = true;
+            if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
+              res.redirect(req.body.redirect_to);
+            }
+            else {
+              res.redirect(DEFAULT_ROUTE);
+            }
           }
           else {
             if (req.session.user) req.session.user = null;

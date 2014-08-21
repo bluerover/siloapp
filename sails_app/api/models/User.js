@@ -7,11 +7,11 @@
  */
 
 var verifyAssociations = function (attrs, next) {
-  Organization.findOne(attrs.organization).exec(function (err, org) {
+  Farm.findOne(attrs.farm).exec(function (err, farm) {
     if (err) return next(err);
     
-    if (org === undefined) return next({
-      error: "Organization ID " + attrs.organization + " does not exist."
+    if (farm === undefined) return next({
+      error: "Farm ID " + attrs.farm + " does not exist."
     });
 
     return next();
@@ -53,8 +53,8 @@ module.exports = {
       required: true,
       minLength: 6
     },
-    organization: {
-      model: 'organization',
+    farm: {
+      model: 'farm',
       required: true
     },
     first_name: {
@@ -65,14 +65,15 @@ module.exports = {
       type: 'string',
       required: true
     },
-    is_admin: {
-      type: 'boolean',
-      defaultsTo: false
-    },
     is_alert_active: {
       type: 'boolean',
       defaultsTo: false
     },
+    roles: {
+      collection: 'role',
+      via: 'user'
+    },
+    
     full_name: function() {
       return this.first_name + " " + this.last_name;
     }

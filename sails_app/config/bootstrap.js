@@ -28,10 +28,9 @@ module.exports.bootstrap = function (cb) {
 
   createEventEmitters();
   setupTickEvent();
-  setupEventListeners();
-  setupHandheldDataParser();
-  loadRecentAlerts();
-  loadRecentRfidData();
+  // setupEventListeners();
+  // loadRecentAlerts();
+  // loadRecentRfidData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
@@ -315,27 +314,6 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       });
     }
   });
-}
-
-function setupHandheldDataParser () {
-  var handheldParser = require('../helpers/HandheldParser');
-  setInterval(function () {
-    handheldParser(sails.handheld_data_path, true, function (handheld_data) {
-      for (var row in handheld_data) {
-        // Rename the ID column to external ID and delete it
-        handheld_data[row].external_id = handheld_data[row].id;
-        delete handheld_data[row].id;
-        HandheldData.create(handheld_data[row]).exec(function (err, new_data) {
-          if (err) {
-            sails.log.error("HandheldData was not saved successfully");
-            return;
-          }
-
-          sails.log.info("HandheldData was saved successfully");
-        });
-      }
-    });
-  }, 60000);
 }
 
 function loadRecentAlerts () {

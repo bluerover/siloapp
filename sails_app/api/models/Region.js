@@ -1,5 +1,5 @@
 /**
- * Farm
+ * Region
  *
  * @module      :: Model
  * @description :: A short summary of how this model works and what it represents.
@@ -14,16 +14,11 @@ module.exports = {
       type: 'string',
       required: true
     },
-    silos: {
-      collection: 'silo',
-      via: 'farm'
+    geofence: 'string',
+    farms: {
+      collection: 'farm',
+      via: 'region'
     },
-    region: {
-      model: 'region'
-    },
-    location: 'string',
-    address: 'string'
-	    
   },
 
 };

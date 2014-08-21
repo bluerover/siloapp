@@ -12,7 +12,7 @@
  * http://sailsjs.org/#documentation
  */
 
-var mysql_password = process.env.NODE_ENV === 'production' ? 'root' : '';
+var mysql_password = process.env.NODE_ENV === 'production' ? 'root' : 'root';
 
 module.exports.adapters = {
 
@@ -26,6 +26,6 @@ module.exports.adapters = {
     port     : 3306,
     user     : 'root',
     password : mysql_password,
-    database : 'food_safety_app'
+    database : 'siloapp'
   }
 };
