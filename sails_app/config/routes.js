@@ -56,6 +56,11 @@ module.exports.routes = {
     action: 'home'
   },
 
+  'get /silosearch': {
+    controller: 'Silo',
+    action: 'silosearch'
+  },
+  
   'get /dashboard/:id': {
     controller: 'Dashboard',
     action: 'show'

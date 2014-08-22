@@ -17,7 +17,10 @@
 <script src="/js/markerclusterer_compiled.js" type="text/javascript"></script>
 <script src="/js/markerwithlabel_packed.js" type="text/javascript"></script>
 <div class="col-md-12 col-sm-12 col-xs-12">
-  <form id="siloPick" class="form-horizontal" role="form">
+  <div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger center-text">
+  </div>
+  <div class="col-sm-offset-3">&nbsp;</div>
+  <form id="siloSearchForm" class="form-horizontal" role="form">
     <div class="form-group col-sm-3">
         <label class="col-sm-4 control-label">Region</label>
         <div class="input-group col-sm-8">
@@ -47,9 +50,12 @@
         </div>
     </div>
     <div class="form-group col-sm-3">
-        <a href="javascript:;" class="btn btn-primary btn-lg" id="generateSilos">GO</a>
+        <a href="javascript:;" class="btn btn-primary btn-lg" id="siloSearch">GO</a>
     </div>
   </form>
+  <div id="siloSearchTable" class="col-sm-offset-3 col-sm-6 center-text">
+
+  </div>
 </div>
 <div class="col-md-12 col-sm-12 col-xs-12">
   <div id="map-container">
@@ -140,10 +146,8 @@
   var mc = new MarkerClusterer(map, markerIndex, mcOptions);
 
   $("#search-text").keyup(function () {
-    
     var searchTerm = $("#search-text").val();
     var listItem = $('#farm-list').children('li');
-    
     $.extend($.expr[':'], {
       'containsi': function(elem, i, match, array)
       {
@@ -151,15 +155,33 @@
         .indexOf((match[3] || "").toLowerCase()) >= 0;
       }
     });
-
     var searchSplit = searchTerm.replace(/ /g, "'):containsi('");
-
     $("#farm-list tr").not(":containsi('" + searchSplit + "')").each(function(e)   {
           $(this).css('display','none');
     });
-    
     $("#farm-list tr:containsi('" + searchSplit + "')").each(function(e) {
           $(this).css('display','table-row');
     });
+  });
+
+  $('#siloSearch').on('click', function() {
+    var values = $('#siloSearchForm').serializeArray();
+    $.ajax({
+      type: "GET",
+      url: "/silosearch",
+      data: values,
+      success: function(data) {
+          console.log(data);
+          $('#siloSearchTable').html(data);
+          // id = JSON.parse(data)["id"];
+          // $('#job_' + id).remove();
+          // $('#errorBlock').empty().append("Performance report removed").show().delay(3000).fadeOut();
+      },
+      error: function(response) {
+          console.log("Error");
+          console.log(response);
+          $('#errorBlock').empty().append("Error: " + response.message).show().delay(3000).fadeOut();
+      }
+  });
   });
 </script>
