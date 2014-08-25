@@ -20,9 +20,12 @@
     <%  } 
     }%>
     <link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="/styles/font-awesome.min.css" />
-    <link rel="stylesheet" type="text/css" href="/styles/colours.css" />
-    <link rel="stylesheet" type="text/css" href="/styles/overrides.css" />
+    <!-- Google Fonts -->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'>
+
+    <!-- Base styles -->
+    <link href="/styles/base.css" rel="stylesheet">
+    <link href="/styles/custom.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script type="text/javascript" src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="/js/moment.min.js"></script>
@@ -34,51 +37,28 @@
     <% } %>
 </head>
 <body>
-<div class="navbar navbar-default navbar-fixed-top">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-        </button>
-        
-        <a class="navbar-brand">
-            <%= full_name %>
-        </a>
-        
+          </button>
+          <a class="navbar-brand" href="#"><div class="logo"></div></a>
+        </div>
+        <div class="collapse navbar-collapse pull-right">
+          <ul class="nav navbar-nav">
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>><a href="/dashboard">Dashboard</a></li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "farm") ? 'class=active' : '' %>><a <%= (typeof(current_farm) !== "undefined") ? 'href=/farm/' + current_farm : 'href=javascript:;' %>>Farm</a></li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "silo") ? 'class=active' : '' %>><a <%= (typeof(current_silo) !== "undefined") ? 'href=/silo/' + current_silo : 'href=javascript:;' %>>Silo</a></li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "productmgmt") ? 'class=active' : '' %>><a href="#">Product Management</a></li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "usersettings") ? 'class=active' : '' %>><a href="#">User Settings</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
     </div>
-    <div class="navbar-collapse collapse">
-        <ul class="nav navbar-nav navbar-left">
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>>
-                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/dashboard/' + dashboard_id : 'href=/dashboards' %>>Dashboard</a>
-            </li>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "reports") ? 'class=active' : '' %>>
-                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/report/handheld' : 'href=javascript:;' %>>Reports</a>
-            </li>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "analytics") ? 'class=active' : '' %>>
-                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/analytics' : 'href=javascript:;' %>>Analytics</a>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "notifications") ? 'class=active' : '' %>>
-                <a <%= (typeof(dashboard_id) !== "undefined") ? 'href=/notifications' : 'href=javascript:;' %>>Notifications<span class="badge ml-5">0</span></a>
-        </ul>
-        <ul class="nav navbar-nav navbar-right">
-            
-            <li class="dropdown <%= (typeof(page_category) !== "undefined" && page_category === "messages") ? 'active' : '' %>">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    <%= full_name %> <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                    <li <%= (typeof(page_category) !== "undefined" && page_category === "settings") ? 'class=active' : '' %>><a href="#">Account Settings</a></li>
-                    <li class="divider"></li>
-                    <li class="dropdown-header">Admin</li>
-                    <li><a href="#">Admin Options</a></li>
-                    <li class="divider"></li>
-                    <li><a href="/user/logout">Logout</a></li>
-                </ul>
-            </li>
-        </ul>
-        
-    </div><!-- /.nav-collapse -->
-</div>
 
 <div class="content">
     <%- body %>

@@ -21,8 +21,22 @@ module.exports = {
     blueprints: {
       rest: true
     }
-  }
+  },
 
-  
+  get_recent_silo_data: function (req, res) {
+    var siloId = req.param('id');
+    SiloData.find({silo: siloId}).populate("silo").sort('timestamp desc').limit(20).exec(function (err, siloData) {
+      if (err) sails.log.error("Error loading recent silo data: " + err);
+      if (siloData !== undefined && siloData !== null) {
+
+        // rfid_data = rfid_data.filter(function (i) {
+        //   return i.rfidTagNum !== undefined && i.rfidTagNum.organization === req.session.organization;
+        // });
+        res.json(JSON.stringify(siloData));
+      } else {
+      	res.json("undefined or null silo data",400);
+      }
+    });
+  }
 };
 

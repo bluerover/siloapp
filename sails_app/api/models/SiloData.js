@@ -23,6 +23,7 @@ module.exports = {
     
     rfidTagNum: 'integer',
     level: 'integer',
+    rawData: 'string',
     timestamp: 'integer',
   }
 

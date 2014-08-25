@@ -24,38 +24,6 @@ module.exports.policies = {
     // REST admin actions
     'findAll': ['isAdmin'],
     'find': ['isAdmin'],
-    'create': true,
-    'update': ['isAdmin'],
-    'destroy': ['isAdmin']
-  },
-
-  DashboardController: {
-    'findAll': ['isAdmin'],
-    'find': ['isAdmin'],
-    'create': ['isAdmin'],
-    'update': ['isAdmin'],
-    'destroy': ['isAdmin']
-  },
-
-  OrganizationController: {
-    'findAll': ['isAdmin'],
-    'find': ['isAdmin'],
-    'create': ['isAdmin'],
-    'update': ['isAdmin'],
-    'destroy': ['isAdmin']
-  },
-
-  RfidController: {
-    'findAll': ['isAdmin'],
-    'find': ['isAdmin'],
-    'create': ['isAdmin'],
-    'update': ['isAdmin'],
-    'destroy': ['isAdmin']
-  },
-
-  Dashboard_WidgetController: {
-    'findAll': ['isAdmin'],
-    'find': ['isAdmin'],
     'create': ['isAdmin'],
     'update': ['isAdmin'],
     'destroy': ['isAdmin']

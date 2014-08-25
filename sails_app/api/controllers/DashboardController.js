@@ -56,6 +56,8 @@ module.exports = {
             title: "Dashboard Selection", 
             page_category: "dashboard",
             full_name: req.session.full_name,
+            current_farm: req.session.current_farm,
+            current_silo: req.session.current_silo,
             user_farms: farms,
             regions: regions,
             products: products

@@ -33,21 +33,19 @@ module.exports.routes = {
     action: 'login_view'
   },
 
-  // Widget Assets
-  'get /widget_assets/:type/:file': {
-    controller: 'WidgetAsset',
-    action: 'retrieveAsset'
+  'get /silo/:id': {
+    controller: 'Silo',
+    action: 'index'
   },
 
-  // RFID Data
-  'get /rfid_data': {
-    controller: 'RfidData',
-    action: 'get_data'
+  'get /farm/:id': {
+    controller: 'Farm',
+    action: 'index'
   },
 
-  'get /rfid_data/:id/recent': {
-    controller: 'RfidData',
-    action: 'get_recent_data_for_rfid'
+  'get /silo_data/:id/recent': {
+    controller: 'SiloData',
+    action: 'get_recent_silo_data'
   },
 
   // Dashboards

@@ -34,7 +34,11 @@ module.exports = {
     },
     capacity: 'integer',
     location: 'string',
-    rfids: 'string'
+    rfid: 'integer',
+    level_1: 'integer',
+    level_2: 'integer',
+    level_3: 'integer',
+    level_4: 'integer'
   }
 
 };
