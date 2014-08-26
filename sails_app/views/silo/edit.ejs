@@ -1,0 +1,233 @@
+<link rel="stylesheet" href="/styles/bootstrapValidator.min.css"/>
+<div class="container">
+	<div class="row clearfix">
+		<div class="col-md-offset-2 col-md-8">
+			<div id="errorBlock" class="alert alert-danger" style="display:none;text-align:center;" role="alert"></div>
+			<div id="successBlock" class="alert alert-success" style="display:none;text-align:center;" role="alert"></div>
+		</div>
+		<div class="col-md-8 col-sm-8 col-xs-8 column">
+			<h2>Edit settings for: <%= silo.name %></h2>
+			<form class="form-horizontal">
+			    <div class="form-group">
+			        <label class="col-lg-3 control-label">Name</label>
+			        <div class="col-lg-6">
+			            <input type="text" class="form-control" name="name" value="<%= silo.name %>" />
+                  <input type="hidden" class="form-control" name="id" value="<%= silo.id %>" />
+			        </div>
+			    </div>
+			    <div class="form-group">
+			        <label class="col-lg-3 control-label">Description</label>
+			        <div class="col-lg-6">
+			            <input type="text" class="form-control" name="desc" value="<%= silo.desc %>" />
+			        </div>
+			    </div>
+			    <div class="form-group">
+			        <label class="col-lg-3 control-label">Farm</label>
+			        <div class="col-lg-6">
+			            <input type="text" class="form-control" name="farmName" value="<%= silo.farm.name %>" readonly />
+			        </div>
+			    </div>
+			    <div class="form-group">
+			        <label class="col-lg-3 control-label">Capacity</label>
+			        <div class="col-lg-6">
+			            <input type="number" class="form-control" name="capacity" value="<%= silo.capacity %>" />
+			        </div>
+			    </div>
+			    <div class="form-group">
+			        <label class="col-lg-3 control-label">Levels (%)</label>
+			        <div class="col-lg-2">
+			            <input type="text" class="form-control" name="level_1" value="<%= silo.level_1 %>" />
+			        </div>
+			        <div class="col-lg-2">
+			            <input type="text" class="form-control" name="level_2" value="<%= silo.level_2 %>" />
+			        </div>
+			        <div class="col-lg-2">
+			            <input type="text" class="form-control" name="level_3" value="<%= silo.level_3 %>" />
+			        </div>
+			        <div class="col-lg-2">
+			            <input type="text" class="form-control" name="level_4" value="<%= silo.level_4 %>" />
+			        </div>
+			    </div>
+			    <div class="form-group">
+			        <label class="col-lg-3 control-label">Product</label>
+			        <div class="col-lg-6">
+			            <input type="text" class="form-control" data-provide="typeahead" autocomplete="off" name="product" value="<%= silo.product.name %>" />
+                  <input type="hidden" class="form-control" data-provide="typeahead" autocomplete="off" name="old_product_id" value="<%= silo.product.id %>" />
+			        </div>
+			    </div>
+
+          <div style="float:right;">
+            <a href="/silo/<%= silo.id %>" class="btn btn-lg btn-primary btn-block" style="padding:10px;">Back to Silo</a>
+				    <a href="javascript:;" id="submitEdit" class="btn btn-lg btn-success btn-block" style="padding:10px;">Save Silo Details</a>
+          </div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="/js/bootstrapValidator.min.js"></script>
+<script type="text/javascript" src="/js/typeahead.bundle.min.js"></script>
+<script type="text/javascript">
+
+  $(document).ready(function() {
+    var products = JSON.parse("<%= JSON.stringify(products) %>".replace(/&quot;/g,'"'));
+
+    var substringMatcher = function(products) {
+      return function findMatches(q, cb) {
+        var matches, substrRegex;
+     
+        matches = [];
+        substrRegex = new RegExp(q, 'i');
+        $.each(products, function(i, product) {
+          if (substrRegex.test(product.name)) {
+            matches.push({ value: product.name });
+          }
+        });
+     
+        cb(matches);
+      };
+    };
+
+    $('input[name="product"]').typeahead({
+      hint: true,
+      minLength: 2,
+      highlight: true,
+    },{ source: substringMatcher(products) });
+  });
+	$('.form-horizontal').bootstrapValidator({
+    message: 'This value is not valid',
+    feedbackIcons: {
+      valid: 'glyphicon glyphicon-ok',
+      invalid: 'glyphicon glyphicon-remove',
+      validating: 'glyphicon glyphicon-refresh'
+    },
+    fields: {
+      name: {
+        message: 'The username is not valid',
+        validators: {
+            notEmpty: {
+              message: 'The name is required and cannot be empty'
+            },
+            regexp: {
+              regexp: /^[a-zA-Z0-9\s]+$/,
+              message: 'The name can only be alphanumeric with spaces'
+            }
+        }
+      },
+      desc: {
+        validators: {
+          regexp: {
+            regexp: /^[a-zA-Z0-9\s]+$/,
+            message: 'The name can only be alphanumeric with spaces'
+          }
+        }
+      },
+      capacity: {
+        validators: {
+          greaterThan: {
+            inclusive: true,
+            value: 0,
+            message: 'Capacity must be greater than or equal to 0'
+          },
+          lessThan: {
+            inclusive: true,
+            value: 100,
+            message: 'Capacity must be less than or equal to 100'
+          },
+          digits: {
+            message: 'Capacity must be a whole number'
+          }
+        }
+      },
+      level_1: {
+        validators: {
+          greaterThan: {
+            inclusive: true,
+            value: 0,
+            message: 'Level 1 must be greater than or equal to 0'
+          },
+          lessThan: {
+            inclusive: true,
+            value: 100,
+            message: 'Level 1 must be less than or equal to 100'
+          },
+          digits: {
+            message: 'Level 1 value must be a number'
+          }
+        }
+      },
+      level_2: {
+        validators: {
+          greaterThan: {
+            inclusive: true,
+            value: 0,
+            message: 'Level 2 must be greater than or equal to 0'
+          },
+          lessThan: {
+            inclusive: true,
+            value: 100,
+            message: 'Level 2 must be less than or equal to 100'
+          },
+          digits: {
+            message: 'Level 2 value must be a number'
+          }
+        }
+      },
+      level_3: {
+        validators: {
+          greaterThan: {
+            inclusive: true,
+            value: 0,
+            message: 'Level 3 must be greater than or equal to 0'
+          },
+          lessThan: {
+            inclusive: true,
+            value: 100,
+            message: 'Level 3 must be less than or equal to 100'
+          },
+          digits: {
+            message: 'Level 3 value must be a number'
+          }
+        }
+      },
+      level_4: {
+        validators: {
+          greaterThan: {
+            inclusive: true,
+            value: 0,
+            message: 'Level 4 must be greater than or equal to 0'
+          },
+          lessThan: {
+            inclusive: true,
+            value: 100,
+            message: 'Level 4 must be less than or equal to 100'
+          },
+          digits: {
+            message: 'Level 4 value must be a number'
+          }
+        }
+      },
+    }
+  });
+  
+
+  $('#submitEdit').on('click', function() {
+    var values = $('.form-horizontal').serializeArray();
+    $.ajax({
+      type: "GET",
+      url: "/silo/update",
+      data: values,
+      success: function(data) {
+          $('#successBlock').empty().append("Successfully updated silo info").show().delay(3000).fadeOut();
+      },
+      error: function(response) {
+          console.log("Error");
+          console.log(response);
+          $('#errorBlock').empty().append("<p>Error: " + response.responseText + "</p>").show().delay(3000).fadeOut();
+      }
+    });
+  });
+	function openErrorBlock(message) {
+		$('#errorBlock').html(message).show().delay(3000).fadeOut();
+	}
+
+</script>

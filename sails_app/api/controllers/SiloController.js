@@ -113,5 +113,72 @@ module.exports = {
   	    	res.view('dashboard/silotable', {siloData: tableData, layout:null});
 		  });
     });
-  }
+  },
+
+  edit: function(req,res) {
+    var siloId = req.param('id');
+    Silo.findOne(siloId).populate('farm').populate('product').exec(function (err, silo) {
+      if(err) {
+        sails.log.error("Error when getting silo: " + err);
+        res.view({layout: "barebones"}, '500');
+        return;
+      }
+      Product.find().exec(function (err, products) {
+        if (err) {
+          sails.log.error("Error getting products: " + err);
+          res.view({layout: "barebones"}, '500');
+          return;
+        }
+
+        res.view({
+            title: "Silo Edit: " + silo.name, 
+            page_category: "silo",
+            full_name: req.session.full_name,
+            current_farm: req.session.current_farm,
+            current_silo: req.session.current_silo,
+            silo: silo,
+            products: products
+          });
+      });
+    });
+  },
+
+  update: function(req,res) {
+    delete req.query["farmName"];
+    //verify that the product is in the product database
+    Product.findOne({name: req.query.product}).exec(function (err, product) {
+      if(err || !product || product === undefined) {
+        sails.log.error("Error finding product: " + err);
+        res.json("Product name incorrect, please review and try again",500);
+        return;
+      }
+      req.query.product = product.id;
+      var changeLogFlag = false;
+      if(product.id !== req.query.old_product_id) {
+        changeLogFlag = true;
+      }
+      Silo.update(req.query.id,req.query).exec(function (err, updatedSilo) {
+        if(err) {
+          sails.log.error("Error updating silo: " + err);
+          res.json("Error updating silo " + err,500);
+          return;
+        } else {
+          sails.log.info("Updated silo " + updatedSilo[0].id);
+          if(changeLogFlag) {
+            var moment = require("moment");
+            SiloChangelog.create(
+              {silo: updatedSilo[0].id,
+               old_product: req.query.old_product_id,
+               new_product: req.query.product,
+               timestamp: moment().unix()}).exec(function (err, newLog) {
+
+               if(err) { sails.log.error("Error creating change log " + err);}
+            });
+          }
+          res.json("");
+        }
+      });
+    });
+  },
+
 };

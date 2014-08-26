@@ -33,10 +33,20 @@ module.exports.routes = {
     action: 'login_view'
   },
 
+  'get /silo/update': {
+    controller: 'Silo',
+    action: 'update'
+  },
   'get /silo/:id': {
     controller: 'Silo',
     action: 'index'
   },
+
+  'get /silo/:id/edit': {
+    controller: 'Silo',
+    action: 'edit'
+  },
+
 
   'get /farm/:id': {
     controller: 'Farm',
