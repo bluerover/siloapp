@@ -19,8 +19,47 @@ module.exports = {
     
   _config: {
     blueprints: {
-      rest: true
+      rest: true,
+      shortcuts: true
     }
+  },
+
+  home: function(req,res) {
+    Product.find().exec(function (err, products) {
+      if(err) {
+        sails.log.error("Error when retrieving products: " + err);
+        res.view({layout: "barebones"}, '500');
+        return;
+      }
+      res.view({
+        title: "Product Management",
+        page_category: "productmgmt",
+        full_name: req.session.full_name,
+        current_farm: req.session.current_farm,
+        current_silo: req.session.current_silo,
+        products: products
+      });
+    });
+  },
+
+  get_product: function(req,res) {
+    var productId = req.query["id"];
+    var action = req.query["action"];
+    if(action === "Add") {
+      
+      //make a dummy product, this should reflect the Product model
+      var product = {name: "", SKU_ID: "", desc: "", id: ""};
+      res.view('product/form', {product: product, action: action, layout:null});
+      return;
+    }
+    Product.findOne(productId).exec(function (err, product) {
+      if(err) {
+        sails.log.error("Error when retrieving product: " + err);
+        res.json(err,500);
+        return;
+      }
+      res.view('product/form', {product: product, action: action, layout:null});
+    });
   }
 
   

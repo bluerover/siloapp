@@ -33,6 +33,7 @@ module.exports.routes = {
     action: 'login_view'
   },
 
+  // Silo
   'get /silo/update': {
     controller: 'Silo',
     action: 'update'
@@ -47,16 +48,17 @@ module.exports.routes = {
     action: 'edit'
   },
 
+  'get /silosearch': {
+    controller: 'Silo',
+    action: 'silosearch'
+  },
 
+  // Farm
   'get /farm/:id': {
     controller: 'Farm',
     action: 'index'
   },
 
-  'get /silo_data/:id/recent': {
-    controller: 'SiloData',
-    action: 'get_recent_silo_data'
-  },
 
   // Dashboards
   'get /dashboard': {
@@ -64,14 +66,27 @@ module.exports.routes = {
     action: 'home'
   },
 
-  'get /silosearch': {
-    controller: 'Silo',
-    action: 'silosearch'
-  },
   
   'get /dashboard/:id': {
     controller: 'Dashboard',
     action: 'show'
+  },
+
+  // SiloData
+  'get /silo_data/:id/recent': {
+    controller: 'SiloData',
+    action: 'get_recent_silo_data'
+  },
+
+  // Product
+  'get /products': {
+    controller: 'Product',
+    action: 'home'
+  },
+
+  'get /product/edit': {
+    controller: 'Product',
+    action: 'get_product'
   },
 
   // User
