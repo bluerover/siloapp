@@ -202,7 +202,7 @@
               </tr>
               <tr>
                 <td>Last Updated</td>
-                <td><%= silodata[0].timestamp %></td>
+                <td class="timestamp"><%= silodata[0].timestamp %></td>
               </tr>  
             </table>
           </div>
@@ -218,9 +218,9 @@
                 <tbody>
                   <% for (var i in siloChanges) { %>
                     <tr>
-                      <td>siloChanges.new_product</td>
-                      <td>siloChanges.old_product</td>
-                      <td>siloChanges.timestamp</td>
+                      <td><%= siloChanges[i].new_product.name %></td>
+                      <td><%= siloChanges[i].old_product.name %></td>
+                      <td class="timestamp"><%= siloChanges[i].timestamp %></td>
                     </tr>
                   <% } %>
                 </tbody>
@@ -253,6 +253,9 @@
           window.document.location = $(this).data("url");
         });
         
+        $(".timestamp").each(function (index, element) {
+          $(element).html(moment.unix($(element).text()).format("MMM D YYYY, HH:mm:ss"));
+        });
         DURATION = 500;
         //======DRAW SILO ====
         var elem = d3.select('#silo');

@@ -9,9 +9,15 @@
 module.exports = {
 
   attributes: {
-    silo: 'integer',
-    old_product: 'integer',
-    new_product: 'integer',
+    silo: {
+        model: 'silo'
+    },
+    old_product: {
+        model: 'product'
+    },
+    new_product: {
+        model: 'product'
+    },
     timestamp: 'integer',
   }
 

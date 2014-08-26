@@ -42,7 +42,7 @@ module.exports = {
         SiloData.find({silo: silo.id}).sort("timestamp desc").limit(10).exec(function (err, silodata) {
           // console.log(silodata);
           //we don't really care if you don't past data
-          SiloChangelog.find({silo: silo.id}).sort("timestamp desc").limit(5).exec(function (err, siloChanges) {
+          SiloChangelog.find({silo: silo.id}).populate("new_product").populate("old_product").sort("timestamp desc").limit(5).exec(function (err, siloChanges) {
             //we don't really care if you don't have any changes
             // console.log(siloChanges);
             res.view({
@@ -67,19 +67,13 @@ module.exports = {
   	var errorMsg = "";
   	for(var item in req.query) {
   		if(!req.query[item] || req.query[item] === undefined) {
-  			errorFlag = true;
-  			errorMsg += item + " must be a proper value\n";
-  		} else if (req.query[item] !== "%") {
-        req.query[item] = parseInt(req.query[item]);
+        req.query[item] = "%";
       }
-  	}
-  	if(errorFlag) {
-  		res.json(errorMsg,400);
-  		return;
   	}
   	//Get all the silos in the region with such product
   	Silo.query("SELECT silo.id, silo.name, silo.location FROM silo JOIN farm on farm.id = silo.farm " + 
-  			   "WHERE silo.product LIKE ? AND farm.region LIKE ?",[req.query.product, req.query.region],
+  			   "WHERE silo.product LIKE ? AND farm.region LIKE ? AND silo.name LIKE '%" + req.query.siloName + "%'",
+           [req.query.product, req.query.region],
     function (err,silos) {
     	if(err) {
     		sails.log.error("Error when getting subset of silos: " + err);
