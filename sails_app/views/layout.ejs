@@ -53,8 +53,8 @@
             <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>><a href="/dashboard">Dashboard</a></li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "farm") ? 'class=active' : '' %>><a <%= (typeof(current_farm) !== "undefined") ? 'href=/farm/' + current_farm : 'href=javascript:;' %>>Farm</a></li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "silo") ? 'class=active' : '' %>><a <%= (typeof(current_silo) !== "undefined") ? 'href=/silo/' + current_silo : 'href=javascript:;' %>>Silo</a></li>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "productmgmt") ? 'class=active' : '' %>><a href="#">Product Management</a></li>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "usersettings") ? 'class=active' : '' %>><a href="#">User Settings</a></li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "productmgmt") ? 'class=active' : '' %>><a href="/products">Product Management</a></li>
+            <li><a href="/user/logout">Logout</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>

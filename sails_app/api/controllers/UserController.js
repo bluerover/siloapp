@@ -92,8 +92,8 @@ module.exports = {
     req.session.user = null;
     req.session.username = null;
     req.session.full_name = null;
-    req.session.organization = null;
-    req.session.organization_name = null;
+    req.session.current_silo = undefined;
+    req.session.current_farm = undefined;
     req.session.authenticated = false;
     res.redirect('/');
   },

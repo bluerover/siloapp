@@ -170,9 +170,10 @@ module.exports = {
               {silo: updatedSilo[0].id,
                old_product: req.query.old_product_id,
                new_product: req.query.product,
-               timestamp: moment().unix()}).exec(function (err, newLog) {
-
-               if(err) { sails.log.error("Error creating change log " + err);}
+               timestamp: moment().unix()}
+              ).exec(function (err, newLog) {
+                if(err) { sails.log.error("Error creating change log " + err);
+              }
             });
           }
           res.json("");
