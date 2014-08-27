@@ -257,13 +257,13 @@
           url: "/silosearch",
           data: values,
           success: function(data) {
-              // console.log(data);
-              $('#siloSearchTable').html(data);
+            // console.log(data);
+            $('#siloSearchTable').html(data);
           },
           error: function(response) {
-              console.log("Error");
-              console.log(response);
-              $('#errorBlock').empty().append("<p>Error: " + response.responseText + "</p>").show().delay(3000).fadeOut();
+            console.log("Error");
+            console.log(response);
+            $('#errorBlock').empty().append("<p>Error: " + response.responseText + "</p>").show().delay(3000).fadeOut();
           }
         });
       });

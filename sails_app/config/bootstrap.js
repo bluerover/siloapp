@@ -118,9 +118,9 @@ function setupEventListeners() {
   // Save parsed data to database
   sails.event_emitter.on('parsed_data', function(data) {
     sails.log.debug("Attempting to write rfid data to database: " + data.rfidTagNum);
-    RfidData.create(data).exec(function (err, rfid_data) {
-      if (err) { sails.log.error("Error saving RFID data to database: " + util.inspect(err)); }
-      else { sails.log.info("Wrote new RFID data to database: " + rfid_data.rfidTagNum); }
+    SiloData.create(data).exec(function (err, silodata) {
+      if (err) { sails.log.error("Error saving silo data to database: " + util.inspect(err)); }
+      else { sails.log.info("Wrote new silo data to database: rfid#" + silodata.rfidTagNum); }
     });
   });
 
@@ -267,16 +267,14 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       var alerthandler_filename = alerthandler_data[index].alerthandler_name;
 
       // This is to prevent alert handlers from hijacking the real event bus
-      var fs = require('fs');
-      var mock_event_bus = {
+      var mock_event_bus = {        
         rfid: parsed_rfid,
         emit: function(channel, data) {
           var ms_timestamp = new Date().getTime();
           data.timestamp = Math.round(ms_timestamp / 1000);
-	  //sails.event_emitter.emit('log', channel + " " + data.timestamp + " " +  data.autoIndex +  "\n");
           data.alerthandler_name = alerthandler_filename;
           data.rfidTagNum = this.rfid;
-          sails.alert_emitter.emit(tag_id, data);
+          // sails.alert_emitter.emit(tag_id, data);
           sails.recent_alerts[this.rfid] = data;
           sails.log.debug("Attempting to write alert to database");
           AlertData.create(data).exec(function (err, d) {
@@ -284,8 +282,8 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
             sails.log.info("Wrote alert to database");
           });
 
-          //send an email on alarm or when alerthandler tells us to send
-          if(data.status === 'alarm' || (data.status === 'in-progress' && data.send)) {
+          // send an email on alarm or when alerthandler tells us to send
+          if(data.send) {
             sails.event_emitter.emit('email',data);
           }
         }
@@ -301,20 +299,11 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
       if (parsed_data !== undefined && parsed_data !== null) {
         alerthandler.on('data', parsed_data);
       }
-      sails.event_emitter.on('tick', function (timestamp) {
-        alerthandler.on('tick', timestamp);
-      });
+      // sails.event_emitter.on('tick', function (timestamp) {
+      //   alerthandler.on('tick', timestamp);
+      // });
 
       sails.notification_handlers[tag_id].push(alerthandler);
-
-      var fs = require('fs');
-      fs.appendFile('/tmp/alerthandler.log', JSON.stringify(alerthandler_data[index]), function (err) {
-        if(err) {
-          sails.log.error("couldn't write to the alert log");
-        } else {
-          sails.log.info("write to log successfully");
-        }
-      });
     }
   });
 }
@@ -353,22 +342,22 @@ function loadRecentAlerts () {
   });
 }
 
-function loadRecentRfidData () {
+function loadRecentSiloData () {
   var query = "SELECT b.* FROM " + 
     "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM rfiddata GROUP BY rfidTagNum) a " + 
     "INNER JOIN rfiddata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
 
-  sails.log.debug("Attempting to find recent RFID data");
-  RfidData.query(query, function (err, rfid_data) {
+  sails.log.debug("Attempting to find recent silo data");
+  SiloData.query(query, function (err, silodata) {
     if (err) { 
-      sails.log.error("RfidData was not successfully loaded"); 
+      sails.log.error("SiloData was not successfully loaded"); 
       return; 
     }
 
-    sails.log.debug("Found recent RFID data");
+    sails.log.debug("Found recent Silo data");
 
-    for (i in rfid_data) {
-      sails.recent_rfid_data[rfid_data[i].rfidTagNum] = rfid_data[i];
+    for (i in silodata) {
+      sails.recent_rfid_data[silodata[i].rfidTagNum] = silodata[i];
     }
   });
 }
