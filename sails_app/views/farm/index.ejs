@@ -74,7 +74,7 @@
               </thead>
               <tbody>
                 <% for (var i in silos) { %>
-                  <tr id="silo-<%= silos[i].id %>" class="clickableRow" data-url="/silo/<%= silos[i].id %>">
+                  <tr id="silo-rfid-<%= silos[i].rfid %>" class="clickableRow" data-url="/silo/<%= silos[i].id %>">
                     <td>
                       <div class="level">
                         <span class="level-bar"></span>
@@ -83,13 +83,13 @@
                         <span class="level-bar"></span>
                       </div>
                     </td>
-                    <td id="silo-<%= silos[i].id %>-level">0%</td>
+                    <td id="silo-rfid-<%= silos[i].rfid %>-level">0%</td>
                     <td><%= silos[i].name %></td>
                     <td><%= silos[i].desc %></td>
                     <td><%= silos[i].capacity %></td>
                     <td><%= silos[i].product.name %></td>
                     <td><%= silos[i].rfid %></td>
-                    <td id="silo-<%= silos[i].id %>-timestamp"></td>
+                    <td id="silo-rfid-<%= silos[i].rfid %>-timestamp"></td>
                     <td><%= silos[i].location %></td>
                   </tr>
                 <% } %>
@@ -135,23 +135,23 @@
         for(var index in silos) {
           $.ajax({
             type: "GET",
-            url: "/silo_data/" + silos[index].id + "/recent",
+            url: "/silo_data/" + silos[index].rfid + "/recent",
             data: {},
             success: function(data) {
               //we only need the most recent one
               var siloData = JSON.parse(data)[0];
 
-              $('#silo-' + siloData.silo.id + '-level').html(siloData.level + "%");
-              $('#silo-' + siloData.silo.id + '-timestamp').html(moment.unix(siloData.timestamp).format("MMM D YYYY, HH:mm:ss"));
+              $('#silo-rfid-' + siloData.rfidTagNum + '-level').html(siloData.level + "%");
+              $('#silo-rfid-' + siloData.rfidTagNum + '-timestamp').html(moment.unix(siloData.timestamp).format("MMM D YYYY, HH:mm:ss"));
               
               //to do the levels, need to iterate through the rfids and figure out which ones are on according to rawData
               var colors = ['green', 'yellow', 'orange', 'red'];
               for(var index in siloData.rawData) {
                 if(typeof(siloData.rawData[index]) !== "function") {
                   if(siloData.rawData[index] === "1") {
-                    $('#silo-' + siloData.silo.id + " .level span:nth-child(" + index + ")").addClass(colors[index]);
+                    $('#silo-rfid-' + siloData.rfidTagNum + " .level span:nth-child(" + index + ")").addClass(colors[index]);
                   } else {
-                    $('#silo-' + siloData.silo.id + " .level span:nth-child(" + index + ")").removeClass(colors[index]);
+                    $('#silo-rfid-' + siloData.rfidTagNum + " .level span:nth-child(" + index + ")").removeClass(colors[index]);
                   }
                 }
               }

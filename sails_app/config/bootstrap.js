@@ -28,6 +28,7 @@ module.exports.bootstrap = function (cb) {
 
   createEventEmitters();
   setupTickEvent();
+  setupBlueRoverApi();
   // setupEventListeners();
   // loadRecentAlerts();
   // loadRecentRfidData();
@@ -57,8 +58,8 @@ function setupBlueRoverApi() {
   var bluerover = require('node-bluerover-api');
 
   bluerover.setCredentials({
-    key: "0OZW0W/dO8KiWlmee24z7S8YxZGqb9ALYDT1x3QUsgpJvYzpiPCgZHoiu7QKUIdQ",
-    token: "v0P6TZqlK3QQ5dHpg8FgEno2GRx6Phh+w9QQQ7vH",
+    key: "yXIJ1omZUNtbo6wNjMOkKYBLNJakn0nr/OzgVtDKh2i5lDktVT2xv5xfbYlCkW+Z",
+    token: "9DquKlyhPKpZ35mxcjG/JUqWAd//U12O13ja6Wqp",
     baseUrl: "http://developers.bluerover.us"});
 
     var streamBuffer = "";
@@ -72,6 +73,7 @@ function setupBlueRoverApi() {
         var emptyBuffer = new Buffer([13, 10]);
         var str = e.toString();
         // If the data isn't empty, parse it and emit the object
+        console.log(str);
         if (str !== emptyBuffer.toString()) {
             try {
                 str = streamBuffer + str;
@@ -80,6 +82,7 @@ function setupBlueRoverApi() {
                     //console.log("Extracted JSON: " + json)
                     str = str.substring(str.indexOf('}') + 1);
                     //sails.log.debug(JSON.parse(json));
+                    console.log(json);
                     sails.log.info("Retrieved and parsed Stream API data");
                     sails.event_emitter.emit('parsed_data', JSON.parse(json));
                 }

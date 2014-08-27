@@ -39,7 +39,7 @@ module.exports = {
           res.view({layout: "barebones"}, '500');
           return;
         } 
-        SiloData.find({silo: silo.id}).sort("timestamp desc").limit(10).exec(function (err, silodata) {
+        SiloData.find({rfidTagNum: silo.rfid}).sort("timestamp desc").limit(10).exec(function (err, silodata) {
           // console.log(silodata);
           //we don't really care if you don't past data
           SiloChangelog.find({silo: silo.id}).populate("new_product").populate("old_product").sort("timestamp desc").limit(5).exec(function (err, siloChanges) {
@@ -77,7 +77,7 @@ module.exports = {
         productString += products[index].id + ",";
       }
       //Get all the silos in the region with such product
-      Silo.query("SELECT silo.id, silo.name, silo.location FROM silo JOIN farm on farm.id = silo.farm " + 
+      Silo.query("SELECT silo.rfid, silo.name, silo.location FROM silo JOIN farm on farm.id = silo.farm " + 
              "WHERE silo.product IN (" + productString.slice(0,-1) + ") AND farm.region LIKE ? " +
              "AND silo.name LIKE ?",
              [req.query.region, '%' + req.query.siloName + '%'],
@@ -92,14 +92,14 @@ module.exports = {
         }
         var siloString = "";
         for(var index in silos) {
-          siloString += silos[index].id + ",";
+          siloString += silos[index].rfid + ",";
         }
         //Now to get all the silodata for those silos
-        SiloData.query("SELECT L.silo, L.level, DATE_FORMAT(FROM_UNIXTIME(L.timestamp), '%b %e %Y, %T') as recent FROM silodata L " +
+        SiloData.query("SELECT L.rfidTagNum, L.level, DATE_FORMAT(FROM_UNIXTIME(L.timestamp), '%b %e %Y, %T') as recent FROM silodata L " +
                "LEFT JOIN silodata R ON " +
-               "L.silo = R.silo AND " +
+               "L.rfidTagNum = R.rfidTagNum AND " +
                "L.timestamp < R.timestamp " +
-               "WHERE isnull(R.silo) AND L.silo IN (" + siloString.slice(0,-1) + ") ORDER BY level ASC LIMIT 5",[],
+               "WHERE isnull(R.rfidTagNum) AND L.rfidTagNum IN (" + siloString.slice(0,-1) + ") ORDER BY level ASC LIMIT 5",[],
         function (err, siloData) {
           if(err) {
             sails.log.error("Error when getting recent silo data: " + err);
@@ -109,7 +109,7 @@ module.exports = {
             var tableData = [];
             for(var index in siloData) {
               for(var index2 in silos) {
-                if(silos[index2].id === siloData[index].silo) {
+                if(silos[index2].rfid === parseInt(siloData[index].rfidTagNum,10)) {
                   siloData[index].name = silos[index2].name;
                   siloData[index].location = silos[index2].name;
                   tableData.push(siloData[index]);

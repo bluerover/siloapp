@@ -28,10 +28,6 @@ module.exports = {
         collection: 'silochangelog',
         via: 'silo'
     },
-    silodata: {
-        collection: 'silodata',
-        via: 'silo'
-    },
     capacity: 'integer',
     location: 'string',
     rfid: 'integer',

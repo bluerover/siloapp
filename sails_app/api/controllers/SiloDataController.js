@@ -24,8 +24,8 @@ module.exports = {
   },
 
   get_recent_silo_data: function (req, res) {
-    var siloId = req.param('id');
-    SiloData.find({silo: siloId}).populate("silo").sort('timestamp desc').limit(20).exec(function (err, siloData) {
+    var rfid = req.param('id');
+    SiloData.find({rfidTagNum: rfid}).sort('timestamp desc').limit(20).exec(function (err, siloData) {
       if (err) sails.log.error("Error loading recent silo data: " + err);
       if (siloData !== undefined && siloData !== null) {
 

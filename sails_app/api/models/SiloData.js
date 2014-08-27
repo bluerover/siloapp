@@ -16,15 +16,11 @@ module.exports = {
   attributes: {
     accountID: 'string',
     deviceID: 'string',
-    statusCode: 'integer',
-    silo: {
-        model: 'silo'
-    },
-    
+    statusCode: 'integer',   
     rfidTagNum: 'integer',
     level: 'integer',
     rawData: 'string',
-    timestamp: 'integer',
+    timestamp: 'integer'
   }
 
 };
