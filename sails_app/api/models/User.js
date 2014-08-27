@@ -53,10 +53,6 @@ module.exports = {
       required: true,
       minLength: 6
     },
-    farm: {
-      model: 'farm',
-      required: true
-    },
     first_name: {
       type: 'string',
       required: true
@@ -72,6 +68,9 @@ module.exports = {
     roles: {
       collection: 'role',
       via: 'user'
+    },
+    organization: {
+      model: 'Organization'
     },
     
     full_name: function() {

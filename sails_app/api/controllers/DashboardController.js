@@ -38,7 +38,7 @@ module.exports = {
         res.view({layout: "barebones"}, '500');
         return;
       }
-      Product.find().exec(function (err, products) {
+      Product.find({organization: req.session.organization}).exec(function (err, products) {
         if (err || products === undefined || products === null) {
           sails.log.error("No products available: " + err);
           res.view({layout: "barebones"}, '500');
@@ -47,13 +47,13 @@ module.exports = {
         
         //now to actually generate the dashboard, we need user's farms
         //populateAll loads the associations for the collection
-        Farm.find(req.session.user).populateAll().exec(function (err, farms) {
+        Farm.find({organization: req.session.organization}).populateAll().exec(function (err, farms) {
           if (err || farms === undefined || farms === null) {
             res.view({layout: "barebones"}, '500');
             return;
           }
           res.view({
-            title: "Dashboard Selection", 
+            title: "Safe Farm Dashboard", 
             page_category: "dashboard",
             full_name: req.session.full_name,
             current_farm: req.session.current_farm,
@@ -62,68 +62,6 @@ module.exports = {
             regions: regions,
             products: products
           });
-        });
-      });
-    });
-  },
-
-  show: function(req, res) {
-    var ip = require("ip");
-    var dashboard_id = req.param('id');
-
-    sails.log.debug("Dashboard controller request");
-
-    if (dashboard_id === undefined || dashboard_id === null) {
-      res.view({layout: "barebones"}, '404');
-      return;
-    }
-
-    sails.log.debug("Attempting to find dashboard from database for dashboard request");
-    Dashboard.query("SELECT d.name, d.id, d.organization, o.name as organization_name from dashboard as d " +
-                    "join organization as o on d.organization = o.id " +
-                    "where d.id = ?",[dashboard_id], function (err, d) {
-      if (err) {
-        res.view({layout: "barebones"}, '500');
-        return;
-      }
-
-      sails.log.debug("Found dashboard");
-
-      if (d === undefined || d === null || d.length === 0) {
-        res.view({layout: "barebones"}, '404');
-        return;
-      }
-
-      var dashboard = d[0];
-
-      //Reset organization, organization name in case you're a parent
-      req.session.organization = dashboard.organization;
-      req.session.organization_name = dashboard.organization_name;
-
-
-      sails.log.debug("Attempting to find dashboard widget from database for dashboard request");
-      Dashboard_Widget.find({dashboard: dashboard_id}).populate('widget').sort('widget_order ASC').exec(function (err, dashboard_widgets) {
-        if (err) {
-          res.view({layout: "barebones"}, '500');
-          return;
-        }
-
-        sails.log.info("Got widgets");
-        req.session.dashboard_id = dashboard_id;
-        
-        res.view({
-          title: dashboard.name,
-          is_parent: req.session.is_parent,
-          dashboard_id: req.session.dashboard_id,
-          organization_name: req.session.organization_name,
-          page_category: "dashboard",
-          full_name: req.session.full_name,
-          dashboard_widgets: dashboard_widgets,
-          load_dashboard_js: true,
-          header_javascript: "",
-          renderWidget: sails.custom_helpers.render_widget,
-          host: ip.address(),
-          port: process.env.PORT || 1337
         });
       });
     });

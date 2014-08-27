@@ -63,10 +63,13 @@ module.exports = {
   },
 
   silosearch: function(req,res) {
-    Product.find({ like: { name: '%'+req.query.product+'%' } }).exec(function (err, products) {
+    Product.find({ like: { name: '%'+req.query.product+'%' } }).where({organization: req.session.organization}).exec(function (err, products) {
       if(err) {
         sails.log.error("Error with retrieving like products: " + err);
         res.json(err,500);
+        return;
+      } else if (products.length === 0) {
+        res.json("No silos match your criteria, please try again",400);
         return;
       }
       var productString = "";
@@ -129,7 +132,7 @@ module.exports = {
         res.view({layout: "barebones"}, '500');
         return;
       }
-      Product.find().exec(function (err, products) {
+      Product.find({organization: req.session.organization}).exec(function (err, products) {
         if (err) {
           sails.log.error("Error getting products: " + err);
           res.view({layout: "barebones"}, '500');
@@ -152,7 +155,7 @@ module.exports = {
   update: function(req,res) {
     delete req.query["farmName"];
     //verify that the product is in the product database
-    Product.findOne({name: req.query.product}).exec(function (err, product) {
+    Product.findOne({name: req.query.product}).where({organization: req.session.organization}).exec(function (err, product) {
       if(err || !product || product === undefined) {
         sails.log.error("Error finding product: " + err);
         res.json("Product name incorrect, please review and try again",500);

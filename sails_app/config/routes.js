@@ -66,12 +66,6 @@ module.exports.routes = {
     action: 'home'
   },
 
-  
-  'get /dashboard/:id': {
-    controller: 'Dashboard',
-    action: 'show'
-  },
-
   // SiloData
   'get /silo_data/:id/recent': {
     controller: 'SiloData',

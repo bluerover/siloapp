@@ -58,10 +58,10 @@ module.exports = {
         bcrypt.compare(req.body.password, user.password, function (err, match) {
           if (err) res.view({layout: "barebones"}, '500');
           if (match) {
-            
             req.session.user = user.id;
             req.session.username = user.username;
             req.session.full_name = user.full_name();
+            req.session.organization = user.organization;
             req.session.authenticated = true;
             if (req.body.redirect_to !== undefined && req.body.redirect_to !== null) {
               res.redirect(req.body.redirect_to);
@@ -92,6 +92,7 @@ module.exports = {
     req.session.user = null;
     req.session.username = null;
     req.session.full_name = null;
+    req.session.organization = null;
     req.session.current_silo = undefined;
     req.session.current_farm = undefined;
     req.session.authenticated = false;

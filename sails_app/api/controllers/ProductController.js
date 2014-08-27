@@ -25,7 +25,7 @@ module.exports = {
   },
 
   home: function(req,res) {
-    Product.find().exec(function (err, products) {
+    Product.find({organization: req.session.organization}).exec(function (err, products) {
       if(err) {
         sails.log.error("Error when retrieving products: " + err);
         res.view({layout: "barebones"}, '500');
@@ -48,7 +48,7 @@ module.exports = {
     if(action === "Add") {
       
       //make a dummy product, this should reflect the Product model
-      var product = {name: "", SKU_ID: "", desc: "", id: ""};
+      var product = {name: "", SKU_ID: "", organization: req.session.organization, desc: "", id: ""};
       res.view('product/form', {product: product, action: action, layout:null});
       return;
     }

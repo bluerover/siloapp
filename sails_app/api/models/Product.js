@@ -17,6 +17,9 @@ module.exports = {
         type: 'string',
         required: true
     },
+    organization: {
+      model: 'Organization',
+    },
     desc: {
       type: 'string'
     }

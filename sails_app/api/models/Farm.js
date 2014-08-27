@@ -21,6 +21,9 @@ module.exports = {
     region: {
       model: 'region'
     },
+    organization: {
+      model: 'Organization'
+    },
     location: 'string',
     address: 'string'
 	    
