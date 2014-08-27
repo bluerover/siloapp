@@ -63,56 +63,62 @@ module.exports = {
   },
 
   silosearch: function(req,res) {
-  	var errorFlag = false;
-  	var errorMsg = "";
-  	for(var item in req.query) {
-  		if(!req.query[item] || req.query[item] === undefined) {
-        req.query[item] = "%";
-      }
-  	}
-  	//Get all the silos in the region with such product
-  	Silo.query("SELECT silo.id, silo.name, silo.location FROM silo JOIN farm on farm.id = silo.farm " + 
-  			   "WHERE silo.product LIKE ? AND farm.region LIKE ? AND silo.name LIKE '%" + req.query.siloName + "%'",
-           [req.query.product, req.query.region],
-    function (err,silos) {
-    	if(err) {
-    		sails.log.error("Error when getting subset of silos: " + err);
-    		res.json(err,500);
-    		return;
-    	} else if (silos.length === 0) {
-        res.json("No silos match your criteria, please try again",400);
+    Product.find({ like: { name: '%'+req.query.product+'%' } }).exec(function (err, products) {
+      if(err) {
+        sails.log.error("Error with retrieving like products: " + err);
+        res.json(err,500);
         return;
       }
-    	var siloString = "";
-    	for(var index in silos) {
-    		siloString += silos[index].id + ",";
-    	}
-    	//Now to get all the silodata for those silos
-    	SiloData.query("SELECT L.silo, L.level, DATE_FORMAT(FROM_UNIXTIME(L.timestamp), '%b %e %Y, %T') as recent FROM silodata L " +
-					   "LEFT JOIN silodata R ON " +
-					   "L.silo = R.silo AND " +
-					   "L.timestamp < R.timestamp " +
-					   "WHERE isnull(R.silo) AND L.silo IN (" + siloString.slice(0,-1) + ") ORDER BY level ASC LIMIT 5",[],
-		  function (err, siloData) {
-  			if(err) {
-  				sails.log.error("Error when getting recent silo data: " + err);
-  	    		res.json(err,500);
-  	    		return;
-  	    	}
-          var tableData = [];
-          for(var index in siloData) {
-            for(var index2 in silos) {
-              if(silos[index2].id === siloData[index].silo) {
-                siloData[index].name = silos[index2].name;
-                siloData[index].location = silos[index2].name;
-                tableData.push(siloData[index]);
+      var productString = "";
+      for(var index in products) {
+        productString += products[index].id + ",";
+      }
+      //Get all the silos in the region with such product
+      Silo.query("SELECT silo.id, silo.name, silo.location FROM silo JOIN farm on farm.id = silo.farm " + 
+             "WHERE silo.product IN (" + productString.slice(0,-1) + ") AND farm.region LIKE ? " +
+             "AND silo.name LIKE ?",
+             [req.query.region, '%' + req.query.siloName + '%'],
+      function (err,silos) {
+        if(err) {
+          sails.log.error("Error when getting subset of silos: " + err);
+          res.json(err,500);
+          return;
+        } else if (silos.length === 0) {
+          res.json("No silos match your criteria, please try again",400);
+          return;
+        }
+        var siloString = "";
+        for(var index in silos) {
+          siloString += silos[index].id + ",";
+        }
+        //Now to get all the silodata for those silos
+        SiloData.query("SELECT L.silo, L.level, DATE_FORMAT(FROM_UNIXTIME(L.timestamp), '%b %e %Y, %T') as recent FROM silodata L " +
+               "LEFT JOIN silodata R ON " +
+               "L.silo = R.silo AND " +
+               "L.timestamp < R.timestamp " +
+               "WHERE isnull(R.silo) AND L.silo IN (" + siloString.slice(0,-1) + ") ORDER BY level ASC LIMIT 5",[],
+        function (err, siloData) {
+          if(err) {
+            sails.log.error("Error when getting recent silo data: " + err);
+              res.json(err,500);
+              return;
+            }
+            var tableData = [];
+            for(var index in siloData) {
+              for(var index2 in silos) {
+                if(silos[index2].id === siloData[index].silo) {
+                  siloData[index].name = silos[index2].name;
+                  siloData[index].location = silos[index2].name;
+                  tableData.push(siloData[index]);
+                }
               }
             }
-          }
-  	    	//i want this to go to a partial view
-  	    	res.view('dashboard/silotable', {siloData: tableData, layout:null});
-		  });
+            //i want this to go to a partial view
+            res.view('dashboard/silotable', {siloData: tableData, layout:null});
+        });
+      });
     });
+  	
   },
 
   edit: function(req,res) {

@@ -47,3 +47,8 @@ table.table {
 #siloSearchTable {
 	background: #FFFFFF;
 }
+
+.tt-dropdown-menu {
+	background: #FFFFFF;
+	padding-left:5px;
+}

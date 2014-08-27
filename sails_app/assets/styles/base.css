@@ -214,3 +214,5 @@ input:-ms-input-placeholder {
 .clickableRow {
 	cursor: pointer;
 }
+
+.tt-dropdown-menu, .twitter-typeahead, .tt-hint { width: 100%; } 
