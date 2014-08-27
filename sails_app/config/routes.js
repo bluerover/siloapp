@@ -89,6 +89,11 @@ module.exports.routes = {
     action: 'get_product'
   },
 
+  'delete /product/:id': {
+    controller: 'Product',
+    action: 'delete_product'
+  },
+
   // User
   'get /user/login': {
     controller: 'User',

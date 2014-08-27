@@ -36,7 +36,7 @@ module.exports = {
         return 0;
       }
       //may need to sort silos
-      // silos.sort(compare);
+      silos.sort(compare);
       if(!flag) {
         res.view({
           title: "Farm: " + farm.name, 

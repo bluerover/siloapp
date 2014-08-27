@@ -60,6 +60,36 @@ module.exports = {
       }
       res.view('product/form', {product: product, action: action, layout:null});
     });
+  },
+
+  delete_product: function(req,res) {
+    var productId = req.param("id");
+    Silo.find(productId).exec(function (err, silos) {
+      if(err) {
+        sails.log.error("Error when retrieving silos: " + err);
+        res.json(err,500);
+        return;
+      }
+      if(silos.length === 0) {
+        Product.destroy({id:productId}).exec(function (err, deletedProduct) {
+          if(err) {
+            sails.log.error("Error when deleting product: " + err);
+            res.json(err,500);
+            return;
+          }
+          if(deletedProduct) {
+            sails.log.info("deleted product " + deletedProduct[0].name);
+          }
+          res.json("");
+        })
+      } else {
+        usingSiloString = "";
+        for(var index in silos) {
+          usingSiloString += silos[index].name + ",";
+        }
+        res.json(usingSiloString.slice(0,-1),406);
+      }
+    });
   }
 
   
