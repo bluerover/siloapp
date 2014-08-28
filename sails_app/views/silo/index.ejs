@@ -407,9 +407,9 @@
         var currentLevel = <%= silodata[0].level %>;
         var colors = [["#00ff00","#56ff56"],["#ccff66","#FFFF66"],["#ffff00","#ffff5f"],["#ff7f00","#ffaa56"],["#ff0000","#ff5656"]];
         var animateState = function (level) {
-          if(level > <%= silo.level_1 %>) {//"above level 1"
+          if(level >= <%= silo.level_1 %>) {//"above level 1"
             animateSilo(['above ' + <%= silo.level_1 %>],level,100-level,colors[0][0],colors[0][1]);
-          } else if(level < <%= silo.level_4 %>){//"below level 4"
+          } else if(level <= <%= silo.level_4 %>){//"below level 4"
             animateSilo(['below ' + <%= silo.level_4 %>],level,100-level,colors[4][0],colors[4][1]);
           } else {
             levels = getUnique(levels);//must account for something like 80,80,40,40 and 80,50,50,20

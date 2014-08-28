@@ -12,26 +12,19 @@ module.exports.bootstrap = function (cb) {
   sails.project_path = "/" + __dirname.substring(1, __dirname.lastIndexOf('/'));
   sails.handheld_data_path = process.env.HANDHELD_DATA_PATH || "/Users/andrew/Downloads/test_files";
 
-  sails.custom_helpers = {};
-  sails.custom_helpers.render_widget = function(widget) {
-    var ejs = require('ejs');
-    var fs = require('fs');
-    var file = fs.readFileSync(sails.project_path + "/views/dashboard/widgets/" + widget.widget.template_filename).toString();
-    var rendered = ejs.render(file, { locals: {widget: widget} });
-    return rendered;
-  };
 
-  sails.socket_listeners = {};
+  // sails.socket_listeners = {};
   sails.notification_handlers = {};
   sails.recent_alerts = {};
   sails.recent_rfid_data = {};
+  sails.silo_levels = {};
 
   createEventEmitters();
-  setupTickEvent();
-  setupBlueRoverApi();
-  // setupEventListeners();
-  // loadRecentAlerts();
-  // loadRecentRfidData();
+  // setupTickEvent();
+  setupSiloLevels();
+  setupEventListeners();
+  loadRecentAlerts();
+  loadRecentSiloData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
@@ -54,13 +47,37 @@ function setupTickEvent() {
   tick();
 }
 
+function setupSiloLevels() {
+  Silo.find().exec(function (err, silos) {
+    if(err) {
+      sails.log.error("Cannot setup silo levels: " + err);
+      return;
+    }
+    for(var index in silos) {
+      var silo = silos[index];
+      sails.silo_levels[silo.rfid] = [silo.capacity, silo.level_1, silo.level_2, silo.level_3, silo.level_4];
+    }
+  });
+}
+
 function setupBlueRoverApi() {
+
+  function zeroPad(num, numZeros) {
+    var zeros = Math.max(0, numZeros - Math.floor(num).toString().length );
+    var zeroString = Math.pow(10,zeros).toString().substr(1);
+    return zeroString+num;
+  }
   var bluerover = require('node-bluerover-api');
 
   bluerover.setCredentials({
     key: "yXIJ1omZUNtbo6wNjMOkKYBLNJakn0nr/OzgVtDKh2i5lDktVT2xv5xfbYlCkW+Z",
     token: "9DquKlyhPKpZ35mxcjG/JUqWAd//U12O13ja6Wqp",
     baseUrl: "http://developers.bluerover.us"});
+
+  // bluerover.setCredentials({
+  //   key: "0OZW0W/dO8KiWlmee24z7S8YxZGqb9ALYDT1x3QUsgpJvYzpiPCgZHoiu7QKUIdQ",
+  //   token: "v0P6TZqlK3QQ5dHpg8FgEno2GRx6Phh+w9QQQ7vH",
+  //   baseUrl: "http://developers.bluerover.us"});
 
     var streamBuffer = "";
     // Open the BlueRover API stream
@@ -84,7 +101,7 @@ function setupBlueRoverApi() {
                     //sails.log.debug(JSON.parse(json));
                     console.log(json);
                     sails.log.info("Retrieved and parsed Stream API data");
-                    sails.event_emitter.emit('parsed_data', JSON.parse(json));
+                    // sails.event_emitter.emit('parsed_data', JSON.parse(json));
                 }
 
                 streamBuffer = str;
@@ -97,6 +114,30 @@ function setupBlueRoverApi() {
             }
         }
     });
+    var emittedString = "$E051:F50053BC429600000000000000000205000001010000014DB51B0003C5";
+    
+    //extract status code, timestamp, lat long, tag serial, switch channel value
+    // var json = {};
+    // json["statusCode"] = parseInt(emittedString.slice(6,10),16);
+    // json["timestamp"] = parseInt(emittedString.slice(10,18),16);
+    // json["rfidTagNum"] = parseInt(emittedString.slice(48,54),16);
+    // json["rawData"] = zeroPad(parseInt(emittedString.slice(58,62),16).toString(2),4);
+    // for(var index in json["rawData"]) {
+    //   if(json["rawData"][index] === "1") {
+    //     try {
+    //       json["level"] = sails.silo_levels[json["rfidTagNum"]][index];
+    //     } catch(e) {
+    //       sails.log.error("no rfid #" + json["rfidTagNum"] + " being collected");
+    //       return;
+    //     }
+    //     break;
+    //   }
+    // }
+    // if(!json["level"] || json["level"] === undefined) {
+    //   json["level"] = 0;
+    // }
+    // sails.event_emitter.emit('parsed_data',json);
+
 }
 
 function setupEventListeners() {
@@ -155,95 +196,64 @@ function setupEventListeners() {
     }
   });
 
-  sails.event_emitter.on('log', function(data) {
-    var fs = require("fs");
-    fs.appendFile('/tmp/alerthandler.log', data, function (err) {
-      if(err) {
-        sails.log.error("couldn't write to the alert log");
-      } else {
-        sails.log.info("write to log successfully");
-      }
-    });
-  });
   sails.event_emitter.on('email', function (data) {
-    Rfid.findOne(data.rfidTagNum).exec(function (err, rfid) {
+    Silo.findOne({rfid: data.rfidTagNum}).populate('farm').populate('product').exec(function (err, silo) {
       if(err) {
-        sails.log.error("No rfid found for rfid #" + data.rfidTagNum + ": " + err);
+        sails.log.error("No silo found for rfid #" + data.rfidTagNum + ": " + err);
         return;
       }
-      //hacks for different email patterns
-      if(!(rfid.display_name_2)) {
-	sails.log.info("no hot emails for non-marilus");
-        return;
-      }
-      if(rfid.organization == 10 && rfid.display_name_2 === "Air") {
-        sails.log.info("no air emails for bp3");
-        return;
-      }
-      if(rfid.organization == 7 && rfid.display_name_2 === 'Air' && data.status !== "alarm") {
-        sails.log.info("marilu only air temps at alarm state");
-        return;
-      }
-      // .end hacks
-
-      Organization.findOne(rfid.organization).exec(function (err, organization) {
+      Organization.findOne(silo.farm.organization).exec(function (err, organization) {
         if(err) {
-          sails.log.error("No organization found for organization #" + rfid.organization + ": " + err);
+          sails.log.error("No organization found for organization #" + silo.farm.organization + ": " + err);
           return;
         }
-        Dashboard.findOne({organization: organization.id}).exec(function (err, dashboard) {
+        User.find({organization: organization.id}).exec(function (err, users) {
           if(err) {
-            sails.log.error("No dashboard found for organization #" + rfid.organization + ": " + err);
+            sails.log.error("No users found for organization #" + organization.id + ": " + err);
             return;
           }
-          User.find({organization: rfid.organization}).exec(function (err, users) {
-            if(err) {
-              sails.log.error("No users found for organization #" + rfid.organization + ": " + err);
-              return;
-            }
-            for(var index in users) {
-              if (users[index].is_alert_active) {
-                var emailData = {};
-                emailData.username = users[index].username;
-                emailData.email_address = users[index].email;
-                emailData.rfid = rfid.id;
-                emailData.alarm_status = data.status;
-                var nodemailer = require("nodemailer");
-                var smtpTransport = nodemailer.createTransport("sendmail");
-                var alertTime = data.status === "alarm" ? 2 : 1.5;
+          for(var index in users) {
+            if (users[index].is_alert_active) {
+              var emailData = {};
+              emailData.username = users[index].username;
+              emailData.email_address = users[index].email;
+              emailData.silo = silo.id;
+              emailData.alarm_status = data.status;
+              emailData.threshold = data.threshold;
+              var nodemailer = require("nodemailer");
+              var smtpTransport = nodemailer.createTransport("sendmail");
 
-                sails.log.info("Sending email to " + emailData.username);
-                var mail = function(emailData, rfid, dashboard, organization, user, alertTime) {
-                  var tmp = function() {
-                    smtpTransport.sendMail({
-                     from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
-                     to: user.full_name() + "<" + user.email + ">", // comma separated list of receivers
-                     subject: organization.name + " Temperature Alert", // Subject line
-                     html: "<p>Hi " + user.first_name + ",<br/><br/>"
-                           + "Please check your dashboard for " + organization.name + " at "
-                           + "<a href='safefood.bluerover.us/dashboard/" + dashboard.id +"'>safefood.bluerover.us</a><br/><br/>"
-                           + "Reason: <b>" + rfid.display_name + " (" + rfid.display_name_2 + ")</b> at " + organization.name
-                           + " has passed the safe temperature threshold for <b>" + alertTime + " hours.</b> Please acknowledge.<br/></p>"
-                    }, function(error, response) {
-                      if(error) {
-                          emailData.email_status = error;
-                          sails.log.info("Email not sent to " + emailData.username + ": " + error);
-                      } else {
-                          emailData.email_status = "success";
-                          sails.log.info("Message sent to : " + emailData.username);
-                      }
-                      Email.create(emailData).exec(function (err, d) {
-                        if (err) { sails.log.error("Email was not saved successfully: " + err); }
-                        else { sails.log.info("Wrote email to database"); }
-                      });
+              sails.log.info("Sending email to " + emailData.username);
+              var mail = function(emailData, silo, farm, organization, user) {
+                var tmp = function() {
+                  smtpTransport.sendMail({
+                   from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
+                   to: user.full_name() + "<" + user.email + ">", // comma separated list of receivers
+                   subject: organization.name + " Bin Volume Alert", // Subject line
+                   html: "<p>Hi " + user.first_name + ",<br/><br/>"
+                         + "Please check your silo in " + farm.name + " for " + organization.name + " at "
+                         + "<a href='safefarm.bluerover.us/silo/" + silo.id +"'>safefarm.bluerover.us</a><br/><br/>"
+                         + "Reason: <b>" + silo.name + " (" + silo.product.name + ")</b> at " + farm.name
+                         + " is at <b>" + emailData.threshold + "%</b> of its capacity (" + silo.capacity + ") Please acknowledge.<br/></p>"
+                  }, function(error, response) {
+                    if(error) {
+                        emailData.email_status = error;
+                        sails.log.info("Email not sent to " + emailData.username + ": " + error);
+                    } else {
+                        emailData.email_status = "success";
+                        sails.log.info("Message sent to : " + emailData.username);
+                    }
+                    Email.create(emailData).exec(function (err, d) {
+                      if (err) { sails.log.error("Email was not saved successfully: " + err); }
+                      else { sails.log.info("Wrote email to database"); }
                     });
-                  }
-                  return tmp;
+                  });
                 }
-                setTimeout(mail(emailData, rfid, dashboard, organization, users[index], alertTime),20);
+                return tmp;
               }
+              setTimeout(mail(emailData, silo, silo.farm, organization, users[index]),20);
             }
-          });
+          }
         });
       });
     });
@@ -257,7 +267,6 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
     if (err) { sails.log.error("There was a problem finding the alerthandlers for an rfid: " + err); return; }
 
     sails.log.info("alerthandler found!");
-
     if (alerthandler_data === undefined || alerthandler_data === null || alerthandler_data.length === 0) {
       return;
     }
@@ -317,7 +326,7 @@ function loadRecentAlerts () {
   sails.log.debug("Attempting to find recent alert data");
   AlertData.query(query, function (err, alert_data) {
     if (err) { 
-      sails.log.error("AlertData was not successfully loaded"); 
+      sails.log.error("AlertData was not successfully loaded: " + err); 
       return; 
     }
 
@@ -333,8 +342,10 @@ function loadRecentAlerts () {
     }
     var id = setInterval(function() {
       if(Object.keys(sails.notification_handlers).length === rfidArray.length) {
-        clearInterval(id);
-        setupBlueRoverApi();
+        if(sails.silo_levels) {
+          clearInterval(id);
+          setupBlueRoverApi();
+        }
       } else {
         sails.log.info(Object.keys(sails.notification_handlers).length + "/" + rfidArray.length);
       }
@@ -344,13 +355,13 @@ function loadRecentAlerts () {
 
 function loadRecentSiloData () {
   var query = "SELECT b.* FROM " + 
-    "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM rfiddata GROUP BY rfidTagNum) a " + 
-    "INNER JOIN rfiddata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
+    "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM silodata GROUP BY rfidTagNum) a " + 
+    "INNER JOIN silodata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
 
   sails.log.debug("Attempting to find recent silo data");
   SiloData.query(query, function (err, silodata) {
     if (err) { 
-      sails.log.error("SiloData was not successfully loaded"); 
+      sails.log.error("SiloData was not successfully loaded: " + err); 
       return; 
     }
 

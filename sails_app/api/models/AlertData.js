@@ -22,7 +22,7 @@ module.exports = {
         type: 'string',
         required: true
     },
-    message: 'string',
+    threshold: 'integer',
     status: 'string',
     timestamp: 'integer'
     

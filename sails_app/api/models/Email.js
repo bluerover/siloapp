@@ -18,7 +18,11 @@ module.exports = {
       type: 'email',
       required: true
     },
-    rfid: {
+    silo: {
+      type: 'integer',
+      required: true
+    },
+    threshold: {
       type: 'integer',
       required: true
     },
