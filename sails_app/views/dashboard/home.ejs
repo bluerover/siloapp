@@ -94,7 +94,7 @@
               </tr>
             </thead>
             <tbody id="farm-list">
-              <% for (var i in user_farms) { %>
+              <% for (var i = 0; i < user_farms.length && i < 5; i++) { %>
                 <tr class="clickableRow" data-url="/farm/<%= user_farms[i].id %>">
                   <td><%= user_farms[i].name %></td>
                   <td><%= user_farms[i].address %></td>
@@ -140,10 +140,7 @@
       var products = JSON.parse("<%= JSON.stringify(products) %>".replace(/&quot;/g,'"'));
 
       $(document).ready(function() {
-          $(".clickableRow").click(function() {
-                window.document.location = $(this).data("url");
-          });
-
+          addClickableRows();
           siloList = [];
           for(var index in farms) {
             siloList = siloList.concat(farms[index].silos);
@@ -233,21 +230,22 @@
       var mc = new MarkerClusterer(map, markerIndex, mcOptions);
 
       $("#srch-term").keyup(function () {
-        var searchTerm = $("#srch-term").val();
-        $.extend($.expr[':'], {
-          'containsi': function(elem, i, match, array)
-          {
-            return (elem.textContent || elem.innerText || '').toLowerCase()
-            .indexOf((match[3] || "").toLowerCase()) >= 0;
+        typewatch(function () {
+          // executed only 500 ms after the last keyup event.
+          var searchTerm = $("#srch-term").val().toLowerCase();
+          $('#farm-list').empty();
+          for (var index = 0; index < farms.length; ++index) {
+            var farm = farms[index];
+            if (farm.name.toLowerCase().indexOf(searchTerm) > -1 || farm.address.toLowerCase().indexOf(searchTerm) > -1) {
+              $('#farm-list').append(
+                ('<tr class="clickableRow" data-url="/farm/{0}">' + 
+                  '<td>{1}</td>' + 
+                  '<td>{2}</td>' +
+                  '<td>{3}</td></tr>').f(farm.id, farm.name, farm.address, farm.silos.length));
+            }
           }
-        });
-        var searchSplit = searchTerm.replace(/ /g, "'):containsi('");
-        $("#farm-list tr").not(":containsi('" + searchSplit + "')").each(function(e)   {
-              $(this).css('display','none');
-        });
-        $("#farm-list tr:containsi('" + searchSplit + "')").each(function(e) {
-              $(this).css('display','table-row');
-        });
+          addClickableRows();
+        }, 300);
       });
 
       $('#siloSearch').on('click', function() {

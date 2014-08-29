@@ -46,7 +46,6 @@ function MinThreshold (event_bus, config, resume_data) {
       }
     }
     sails.log.info("Successfully resumed alerthandler");
-    console.log(this.thresholds);
   };
 
   if (resume_data !== undefined && resume_data !== null &&

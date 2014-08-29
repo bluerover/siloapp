@@ -30,22 +30,22 @@
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Capacity</label>
 			        <div class="col-lg-6">
-			            <input type="number" class="form-control input-sm" name="capacity" value="<%= silo.capacity %>" />
+			            <input type="number" class="form-control input-sm" name="capacity" value="<%= silo.capacity %>" readonly />
 			        </div>
 			    </div>
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Levels (%)</label>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_1" value="<%= silo.level_1 %>" />
+			            <input type="text" class="form-control input-sm" name="level_1" value="<%= silo.level_1 %>" readonly />
 			        </div>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_2" value="<%= silo.level_2 %>" />
+			            <input type="text" class="form-control input-sm" name="level_2" value="<%= silo.level_2 %>" readonly />
 			        </div>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_3" value="<%= silo.level_3 %>" />
+			            <input type="text" class="form-control input-sm" name="level_3" value="<%= silo.level_3 %>" readonly />
 			        </div>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_4" value="<%= silo.level_4 %>" />
+			            <input type="text" class="form-control input-sm" name="level_4" value="<%= silo.level_4 %>" readonly />
 			        </div>
 			    </div>
 			    <div class="form-group">
@@ -120,92 +120,7 @@
             message: 'The name can only be alphanumeric with spaces'
           }
         }
-      },
-      capacity: {
-        validators: {
-          greaterThan: {
-            inclusive: true,
-            value: 0,
-            message: 'Capacity must be greater than or equal to 0'
-          },
-          lessThan: {
-            inclusive: true,
-            value: 100,
-            message: 'Capacity must be less than or equal to 100'
-          },
-          digits: {
-            message: 'Capacity must be a whole number'
-          }
-        }
-      },
-      level_1: {
-        validators: {
-          greaterThan: {
-            inclusive: true,
-            value: 0,
-            message: 'Level 1 must be greater than or equal to 0'
-          },
-          lessThan: {
-            inclusive: true,
-            value: 100,
-            message: 'Level 1 must be less than or equal to 100'
-          },
-          digits: {
-            message: 'Level 1 value must be a number'
-          }
-        }
-      },
-      level_2: {
-        validators: {
-          greaterThan: {
-            inclusive: true,
-            value: 0,
-            message: 'Level 2 must be greater than or equal to 0'
-          },
-          lessThan: {
-            inclusive: true,
-            value: 100,
-            message: 'Level 2 must be less than or equal to 100'
-          },
-          digits: {
-            message: 'Level 2 value must be a number'
-          }
-        }
-      },
-      level_3: {
-        validators: {
-          greaterThan: {
-            inclusive: true,
-            value: 0,
-            message: 'Level 3 must be greater than or equal to 0'
-          },
-          lessThan: {
-            inclusive: true,
-            value: 100,
-            message: 'Level 3 must be less than or equal to 100'
-          },
-          digits: {
-            message: 'Level 3 value must be a number'
-          }
-        }
-      },
-      level_4: {
-        validators: {
-          greaterThan: {
-            inclusive: true,
-            value: 0,
-            message: 'Level 4 must be greater than or equal to 0'
-          },
-          lessThan: {
-            inclusive: true,
-            value: 100,
-            message: 'Level 4 must be less than or equal to 100'
-          },
-          digits: {
-            message: 'Level 4 value must be a number'
-          }
-        }
-      },
+      }
     }
   });
   

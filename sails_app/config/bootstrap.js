@@ -74,11 +74,6 @@ function setupBlueRoverApi() {
     token: "9DquKlyhPKpZ35mxcjG/JUqWAd//U12O13ja6Wqp",
     baseUrl: "http://developers.bluerover.us"});
 
-  // bluerover.setCredentials({
-  //   key: "0OZW0W/dO8KiWlmee24z7S8YxZGqb9ALYDT1x3QUsgpJvYzpiPCgZHoiu7QKUIdQ",
-  //   token: "v0P6TZqlK3QQ5dHpg8FgEno2GRx6Phh+w9QQQ7vH",
-  //   baseUrl: "http://developers.bluerover.us"});
-
     var streamBuffer = "";
     // Open the BlueRover API stream
     sails.log.info("Opening blueRover stream");
@@ -90,7 +85,6 @@ function setupBlueRoverApi() {
         var emptyBuffer = new Buffer([13, 10]);
         var str = e.toString();
         // If the data isn't empty, parse it and emit the object
-        console.log(str);
         if (str !== emptyBuffer.toString()) {
             try {
                 str = streamBuffer + str;
@@ -99,9 +93,28 @@ function setupBlueRoverApi() {
                     //console.log("Extracted JSON: " + json)
                     str = str.substring(str.indexOf('}') + 1);
                     //sails.log.debug(JSON.parse(json));
-                    console.log(json);
+                    var jsonObj = JSON.parse(json);
+                    if (typeof(jsonObj.rfidTagNum) === 'undefined' || jsonObj.rfidTagNum === null) {
+                      return;
+                    }
+                    //Add more data by parsing some of the raw data to get level
+                    jsonObj["binaryLevel"] = zeroPad(parseInt(jsonObj["rawData"].slice(58,62),16).toString(2),4);
+                    for(var index in jsonObj["binaryLevel"]) {
+                      if(jsonObj["binaryLevel"][index] === "1") {
+                        try {
+                          jsonObj["level"] = sails.silo_levels[jsonObj["rfidTagNum"]][index];
+                        } catch(e) {
+                          sails.log.error("no rfid #" + jsonObj["rfidTagNum"] + " being collected");
+                          return;
+                        }
+                        break;
+                      }
+                    }
+                    if(!jsonObj["level"] || jsonObj["level"] === undefined) {
+                      jsonObj["level"] = 0;
+                    }
                     sails.log.info("Retrieved and parsed Stream API data");
-                    // sails.event_emitter.emit('parsed_data', JSON.parse(json));
+                    sails.event_emitter.emit('parsed_data', jsonObj);
                 }
 
                 streamBuffer = str;
@@ -110,34 +123,11 @@ function setupBlueRoverApi() {
             catch(e) {
                 sails.log.error("Could not parse JSON: " + e.toString());
                 sails.log.info("Error...clearing the stream buffer");
+                console.log(streamBuffer);
                 streamBuffer = "";
             }
         }
     });
-    var emittedString = "$E051:F50053BC429600000000000000000205000001010000014DB51B0003C5";
-    
-    //extract status code, timestamp, lat long, tag serial, switch channel value
-    // var json = {};
-    // json["statusCode"] = parseInt(emittedString.slice(6,10),16);
-    // json["timestamp"] = parseInt(emittedString.slice(10,18),16);
-    // json["rfidTagNum"] = parseInt(emittedString.slice(48,54),16);
-    // json["rawData"] = zeroPad(parseInt(emittedString.slice(58,62),16).toString(2),4);
-    // for(var index in json["rawData"]) {
-    //   if(json["rawData"][index] === "1") {
-    //     try {
-    //       json["level"] = sails.silo_levels[json["rfidTagNum"]][index];
-    //     } catch(e) {
-    //       sails.log.error("no rfid #" + json["rfidTagNum"] + " being collected");
-    //       return;
-    //     }
-    //     break;
-    //   }
-    // }
-    // if(!json["level"] || json["level"] === undefined) {
-    //   json["level"] = 0;
-    // }
-    // sails.event_emitter.emit('parsed_data',json);
-
 }
 
 function setupEventListeners() {
@@ -145,7 +135,7 @@ function setupEventListeners() {
   var util = require('util');
 
   // This listener takes the parsed data and broadcasts on the rfid-* channel
-  sails.event_emitter.on('parsed_data', function(data) {
+  // sails.event_emitter.on('parsed_data', function(data) {
     // This is to cache the last 20 events for each rfid in memory (right now we just load it from the DB)
     // if (!(data['rfidTagNum'] in sails.rfid_history)) {
     //     sails.rfid_history[data['rfidTagNum']] = new circBuffer(20);
@@ -153,11 +143,14 @@ function setupEventListeners() {
 
     // sails.rfid_history[data['rfidTagNum']].push(data);
 
-    sails.event_emitter.emit('rfid-' + data['rfidTagNum'], data);
-  });
+  //   sails.event_emitter.emit('rfid-' + data['rfidTagNum'], data);
+  // });
 
   // Save parsed data to database
   sails.event_emitter.on('parsed_data', function(data) {
+    if (typeof(data.rfidTagNum) === 'undefined' || data.rfidTagNum === null) {
+      return;
+    }
     sails.log.debug("Attempting to write rfid data to database: " + data.rfidTagNum);
     SiloData.create(data).exec(function (err, silodata) {
       if (err) { sails.log.error("Error saving silo data to database: " + util.inspect(err)); }
@@ -266,10 +259,11 @@ function initializeAlertHandler(tag_id, parsed_data, resume_data) {
   RfidAlerthandler.find({rfid: parsed_rfid}).exec(function (err, alerthandler_data) {
     if (err) { sails.log.error("There was a problem finding the alerthandlers for an rfid: " + err); return; }
 
-    sails.log.info("alerthandler found!");
     if (alerthandler_data === undefined || alerthandler_data === null || alerthandler_data.length === 0) {
+      sails.log.info("no alert handlers found");
       return;
     }
+    sails.log.info("alerthandler found!");
 
     sails.notification_handlers[tag_id] = [];
     for (var index in alerthandler_data) {

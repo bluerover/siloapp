@@ -221,7 +221,13 @@
               </tr>
               <tr>
                 <td>Last Updated</td>
-                <td class="timestamp"><%= siloChanges[0].timestamp %></td>
+                <td class="timestamp">
+                  <% if (typeof(siloChanges) !== 'undefined' && siloChanges.length > 0) { %>
+                   <%= siloChanges[0].timestamp %>
+                  <% } else { %>
+                    Never
+                  <% } %>
+                </td>
               </tr>  
             </table>
             
@@ -272,13 +278,11 @@
     <script src="/js/d3.v3.min.js"></script>
 
     <script>
-      $(document).ready(function() {
-        $(".clickableRow").click(function() {
-          window.document.location = $(this).data("url");
-        });
         
         $(".timestamp").each(function (index, element) {
-          $(element).html(moment.unix($(element).text()).format("MMM D YYYY, HH:mm:ss"));
+          if(!isNaN($(element).text())) {
+            $(element).html(moment.unix($(element).text()).format("MMM D YYYY, HH:mm:ss"));
+          }
         });
         DURATION = 500;
         //======DRAW SILO ====

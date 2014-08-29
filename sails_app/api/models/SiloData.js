@@ -19,6 +19,7 @@ module.exports = {
     statusCode: 'integer',   
     rfidTagNum: 'integer',
     level: 'integer',
+    binaryLevel: 'string',
     rawData: 'string',
     timestamp: 'integer'
   }
