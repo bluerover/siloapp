@@ -99,6 +99,59 @@ module.exports = {
     res.redirect('/');
   },
 
+  settings: function (req, res) {
+    User.findOne(req.session.user).exec(function (err,user) {
+      if(err) {
+        sails.log.error("Cannot find user settings for user " + req.session.user + ": " + err);
+        return;
+      }
+      res.view('user/settings',{
+        title: "User Settings",
+        page_category: "settings",
+        user: user,
+        full_name: req.session.full_name,
+        current_farm: req.session.current_farm,
+        current_silo: req.session.current_silo
+      });
+    });
+  },
+
+  save_settings: function (req, res) {
+    sails.log.info("User change request");
+    var bcrypt = require('bcrypt');
+
+    User.findOne(req.session.user).exec(function (err,user) {
+      if(err) {
+        sails.log.error("Cannot find user settings for user " + req.session.user + ": " + err);
+        return;
+      }
+      bcrypt.compare(req.query["old_password"], user.password, function (err, match) {
+          if (err) {
+            sails.log.error(err);
+            res.view({layout: "barebones"}, '500');
+            return;
+          } 
+          if (match) {
+            req.query["is_alert_active"] = req.query["is_alert_active"] === "on" ? 1 : 0;
+            User.update({id: req.session.user},req.query).exec(function (err,updatedUsers) {
+              if(err || updatedUsers.length === 0) {
+                sails.log.error(err);
+                res.json("Error with update: " + err, 500);
+                return;
+              }
+              if(updatedUsers.length > 0 && updatedUsers[0].id === req.session.user) {
+                req.session.full_name = updatedUsers[0].full_name();
+                res.json("User updated successfully");  
+              }
+            });
+          } else {
+            res.json("Invalid old password, please verify and try again", 401);
+            return; 
+          }
+      });
+    });
+  },
+
   get_active_emails: function (req,res) {
     User.findOne(req.session.user).exec(function (err,user) {
       if(err || !user.is_admin) {

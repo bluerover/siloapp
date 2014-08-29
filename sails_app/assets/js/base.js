@@ -6,11 +6,9 @@ var typewatch = (function(){
   }  
 })();
 
-function addClickableRows() {
-  $(".clickableRow").click(function() {
-    window.document.location = $(this).data("url");
-  });  
-}
+$(".clickableRow").click(function() {
+  window.document.location = $(this).data("url");
+});  
 
 $.extend($.expr[':'], {
   'containsi': function(elem, i, match, array)

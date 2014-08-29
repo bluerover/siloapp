@@ -104,6 +104,16 @@ module.exports.routes = {
     action: 'logout'
   },
 
+  'get /user/settings': {
+    controller: 'User',
+    action: 'settings'
+  },
+
+  'get /user/save_settings': {
+    controller: 'User',
+    action: 'save_settings'
+  },
+
   'get /user/get_active_emails': {
     controller: 'User',
     action: 'get_active_emails'

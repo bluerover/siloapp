@@ -70,7 +70,7 @@
                 </tr>
               </thead>
               <tbody id="silo-list">
-                <% for (var i = 0; i < silos.length && i < 5; i++) { %>
+                <% for (var i = 0; i < silos.length; i++) { %>
                   <tr id="silo-rfid-<%= silos[i].rfid %>" class="clickableRow" data-url="/silo/<%= silos[i].id %>">
                     <td>
                       <div class="level">
@@ -125,7 +125,6 @@
       var silos = JSON.parse("<%= JSON.stringify(silos) %>".replace(/&quot;/g,'"'));
       var farm = JSON.parse("<%= JSON.stringify(farm) %>".replace(/&quot;/g,'"'));
       $(document).ready(function() {
-        addClickableRows();
         for(var index in silos) {
           $.ajax({
             type: "GET",
@@ -139,23 +138,13 @@
               }
 
               //add it to silo data instead of using jquery
-              var colors = ['green', 'yellow', 'orange', 'red'];
-              for(var index in silos) {
-                if(silos[index].rfid === parseInt(siloData.rfidTagNum,10)) {
-                  silos[index]["levelString"] = siloData.level + "%";
-                  silos[index]["timestamp"] = moment.unix(siloData.timestamp).format("MMM D YYYY, HH:mm:ss");
-                  $('#silo-rfid-' + siloData.rfidTagNum + '-level').html(silos[index]["levelString"]);
-                  $('#silo-rfid-' + siloData.rfidTagNum + '-timestamp').html(silos[index]["timestamp"]);
+              $('#silo-rfid-' + siloData.rfidTagNum + '-level').html(siloData.level + "%");
+              $('#silo-rfid-' + siloData.rfidTagNum + '-timestamp').html(moment.unix(siloData.timestamp).format("MMM D YYYY, HH:mm:ss"));
 
-                  silos[index]["colors"] = [];
-                  for(var index2 in siloData.binaryLevel) {
-                    if(typeof(siloData.binaryLevel[index2]) !== "function" && siloData.binaryLevel[index2] === "1") {
-                      silos[index]["colors"].push(colors[index2]);
-                      $('#silo-rfid-' + siloData.rfidTagNum + " .level span:nth-child(" + (parseInt(index2,10)+1) + ")").addClass(colors[index2]);
-                    } else {
-                      silos[index]["colors"].push(null);
-                    }
-                  }
+              var colors = ['green', 'yellow', 'orange', 'red'];
+              for(var index in siloData.binaryLevel) {
+                if(typeof(siloData.binaryLevel[index]) !== "function" && siloData.binaryLevel[index] === "1") {
+                  $('#silo-rfid-' + siloData.rfidTagNum + " .level span:nth-child(" + (parseInt(index,10)+1) + ")").addClass(colors[index]);
                 }
               }
             },
@@ -225,28 +214,15 @@
       $("#srch-term").keyup(function () {
         typewatch(function () {
           // executed only 500 ms after the last keyup event.
-          var searchTerm = $("#srch-term").val().toLowerCase();
-          $('#silo-list').empty();
-          for (var index = 0; index < silos.length; ++index) {
-            var silo = silos[index];
-            if (silo.name.toLowerCase().indexOf(searchTerm) > -1) {
-              $('#silo-list').append(
-                ('<tr id="silo-rfid-{6}" class="clickableRow" data-url="/silo/{0}">' + 
-                  '<td><div class="level"><span class="level-bar"></span><span class="level-bar"></span><span class="level-bar"></span><span class="level-bar"></span></div></td>' + 
-                  '<td>{1}</td>' +
-                  '<td>{2}</td>' +
-                  '<td>{3}</td>' +
-                  '<td>{4}</td>' +
-                  '<td>{5}</td>' +
-                  '<td>{6}</td>' +
-                  '<td>{7}</td>' + 
-                  '<td>{8}</td></tr>').f(silo.id, silo.level ? silo["levelString"] : "0%", silo.name, silo.desc, silo.capacity, silo.product.name, silo.rfid, silo.timestamp ? silo.timestamp : "Never", silo.location));
-              for(var cIndex in silo["colors"]) {
-                $('#silo-rfid-' + silo.rfid + " .level span:nth-child(" + (parseInt(cIndex,10)+1) + ")").addClass(silo["colors"][cIndex]);
-              }
-              addClickableRows();
-            }
-          }
+          var searchTerm = $("#srch-term").val();
+          var searchSplit = searchTerm.replace(/ /g, "'):containsi('");
+          $("#silo-list tr").not(":containsi('" + searchSplit + "')").each(function(e)   {
+                $(this).css('display','none');
+          });
+          
+          $("#silo-list tr:containsi('" + searchSplit + "')").each(function(e) {
+                $(this).css('display','table-row');
+          });
         }, 700);
       });
     </script>

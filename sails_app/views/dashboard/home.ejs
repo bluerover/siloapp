@@ -94,7 +94,7 @@
               </tr>
             </thead>
             <tbody id="farm-list">
-              <% for (var i = 0; i < user_farms.length && i < 5; i++) { %>
+              <% for (var i = 0; i < user_farms.length; i++) { %>
                 <tr class="clickableRow" data-url="/farm/<%= user_farms[i].id %>">
                   <td><%= user_farms[i].name %></td>
                   <td><%= user_farms[i].address %></td>
@@ -140,7 +140,6 @@
       var products = JSON.parse("<%= JSON.stringify(products) %>".replace(/&quot;/g,'"'));
 
       $(document).ready(function() {
-          addClickableRows();
           siloList = [];
           for(var index in farms) {
             siloList = siloList.concat(farms[index].silos);
@@ -232,19 +231,15 @@
       $("#srch-term").keyup(function () {
         typewatch(function () {
           // executed only 500 ms after the last keyup event.
-          var searchTerm = $("#srch-term").val().toLowerCase();
-          $('#farm-list').empty();
-          for (var index = 0; index < farms.length; ++index) {
-            var farm = farms[index];
-            if (farm.name.toLowerCase().indexOf(searchTerm) > -1 || farm.address.toLowerCase().indexOf(searchTerm) > -1) {
-              $('#farm-list').append(
-                ('<tr class="clickableRow" data-url="/farm/{0}">' + 
-                  '<td>{1}</td>' + 
-                  '<td>{2}</td>' +
-                  '<td>{3}</td></tr>').f(farm.id, farm.name, farm.address, farm.silos.length));
-            }
-          }
-          addClickableRows();
+          var searchTerm = $("#srch-term").val();
+          var searchSplit = searchTerm.replace(/ /g, "'):containsi('");
+          $("#farm-list tr").not(":containsi('" + searchSplit + "')").each(function(e)   {
+                $(this).css('display','none');
+          });
+          
+          $("#farm-list tr:containsi('" + searchSplit + "')").each(function(e) {
+                $(this).css('display','table-row');
+          });
         }, 300);
       });
 
