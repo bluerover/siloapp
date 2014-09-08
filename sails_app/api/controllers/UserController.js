@@ -40,7 +40,7 @@ module.exports = {
 
     sails.log.debug(require('util').inspect(req.query));
 
-    res.view({ layout: 'none', redirect_to: req.query.redirect_to }, 'user/login');
+    res.view('user/login', { layout: 'none', redirect_to: req.query.redirect_to });
   },
 
   /**
