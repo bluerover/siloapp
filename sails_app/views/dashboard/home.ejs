@@ -209,10 +209,10 @@
 
       for(var farmIndex in farms) {
         var farm = farms[farmIndex];
-        for(var index in farm.silos) {
-          var silo = farm.silos[index];
-          createMarker(silo.name,"silo",silo.location, silo.desc + "|Capacity: " + silo.capacity,silo.id);
-        }
+        // for(var index in farm.silos) {
+        //   var silo = farm.silos[index];
+        //   createMarker(silo.name,"silo",silo.location, silo.desc + "|Capacity: " + silo.capacity,silo.id);
+        // }
         createMarker(farm.name,"farm",farm.location,farm.address,farm.id);
       }
       var mcOptions = { 
