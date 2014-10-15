@@ -10,8 +10,6 @@
 
 module.exports.bootstrap = function (cb) {
   sails.project_path = "/" + __dirname.substring(1, __dirname.lastIndexOf('/'));
-  sails.handheld_data_path = process.env.HANDHELD_DATA_PATH || "/Users/andrew/Downloads/test_files";
-
 
   // sails.socket_listeners = {};
   sails.notification_handlers = {};
