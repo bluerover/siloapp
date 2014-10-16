@@ -186,7 +186,7 @@
                 <td>RFID</td>
                 <td><%= bin.rfid %></td>
               </tr>
-              <tr>
+              <tr class="clickableRow" data-url="/farm/<%= farm.id %>">
                 <td>Farm</td>
                 <td><%= farm.name %></td>
               </tr>
@@ -279,6 +279,12 @@
             $(element).html(moment.unix($(element).text()).format("MMM D YYYY, HH:mm:ss"));
           }
         });
+
+        $(function() {
+          $(document).on('click','.clickableRow',function() {
+            window.document.location.href = $(this).data("url");
+          })
+        })
         
         DURATION = 500;
         //======DRAW bin ====
