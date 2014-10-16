@@ -155,6 +155,11 @@ table {
 		line-height: 1.9em;
 	}
 
+span.calNav {
+  color: #bbb;
+  cursor: pointer;
+}
+
 /* inputs */
 
 input {

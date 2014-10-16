@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <style type="text/css">
-    #calendar {
-      margin-top: 30px;
-      margin-bottom: 30px;
-      line-height: 320px;
-      background: #f5f5f5;
-      text-align: center;
-    }
-    </style>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +9,7 @@
     <title>blueRover</title>
 
     <!-- Custom styles for this template -->
-    <link href="/styles/calendar.min.css" rel="stylesheet">
+    <link href="/styles/calendar.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -257,14 +248,18 @@
               </table>
             </div>
           <% } %>
+
+          <div class="elm-grouping" id="calendar-container" style="display:none">
+            <h3 style="text-align:center">
+              <span class="calNav" data-nav="prev">&lt;</span> 
+              <span class="calTitle">Month</span>
+              <span class="calNav" data-nav="next">&gt;</span> 
+            </h3>
+            <div id="calendar"></div>
+          </div>
+
         </div>
       </div>
-
-      <div class="row">
-        <div class="col-md-12">
-          <div id="calendar" style="height:500px;"></div>
-        </div>
-      </div> 
     </div>
 
     <div class="footer">
@@ -273,8 +268,8 @@
       </div>
     </div>
 
-<!--     // <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
-    // <script src="/js/calendar.min.js" type="text/javascript"></script> -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+    <script src="/js/calendar.min.js" type="text/javascript"></script>
     <script src="/js/d3.v3.min.js"></script>
 
     <script>
@@ -447,17 +442,55 @@
         //lets begin processing live stream
         // start();
 
-        // var calendar = $("#calendar").calendar({
-        //   tmpl_path: "/views/silo/templates/",
-        //   events_source: [{
-        //     "id": 293,
-        //     "title": "Event 1",
-        //     "url": "http://example.com",
-        //     "class": "event-important",
-        //     "start": 12039485678000, // Milliseconds
-        //     "end": 1234576967000 // Milliseconds
-        //   }],
-        // });
+        var calendar;
+        $(window).load(function() {
+          $.getJSON('/silo_data/' + <%= silo.rfid %> + '/changelog', function(data) {
+
+            siloData = _.map(data.data, function (dataPoint, index, allPoints) {
+              var siloChange = {};
+              siloChange.id = dataPoint.id;
+              siloChange.title = data.silo.name 
+                                + " from " + data.silo.farm.name 
+                                + " reported level " + dataPoint.level 
+                                + " at " +  moment.unix(dataPoint.timestamp).format("MMM D YYYY, HH:mm:ss");
+              siloChange.start = dataPoint.timestamp * 1000;
+              siloChange.end = ((index == allPoints.length - 1) ? 
+                                Date.now() : 
+                                allPoints[index + 1].timestamp * 1000);
+              
+              if(dataPoint.level > data.silo.level_1) {//"above level 1"
+                siloChange.class = "event-success"
+              } else if(dataPoint.level < data.silo.level_4){//"below level 4"
+                siloChange.class = "event-important"
+              } else {
+                siloChange.class = "event-warning"
+              } 
+
+              return siloChange;
+            })
+
+            calendar = $("#calendar").calendar({
+              tmpl_path: "/calendar-template/",
+              events_source: siloData,
+              views: {
+                year:  { enable: 0 },
+                month: { enable: 1, slide_events: 1},
+                week:  { enable: 0 },
+                day:   { enable: 0 }
+              },
+              onAfterViewLoad: function(view) {
+                $('#calendar-container .calTitle').text(this.getTitle());
+              }
+            });
+
+            $('#calendar-container .calNav').click(function (e) {
+              calendar.navigate($(this).data('nav'));
+            })
+
+            $("#calendar-container").show();
+          })
+        })
+
     </script>
   </body>
 </html>

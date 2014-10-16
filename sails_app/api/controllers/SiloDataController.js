@@ -37,6 +37,47 @@ module.exports = {
       	res.json("undefined or null silo data",400);
       }
     });
+  },
+
+  get_data_changes: function (req, res) {
+    
+    var rfid = req.param('id');
+    var from = req.param('from');
+    var to = req.param('to');
+
+    var query = {rfidTagNum: rfid};
+    if (!(from == null && to == null)) query.timestamp = {};
+    if (!(from == null)) query.timestamp['>'] = new Date(from);
+    if (!(to == null)) query.timestamp['<'] = new Date(from);
+
+    SiloData.find().where(query).sort('timestamp').exec(function (err, siloData) {
+      if (err) { 
+        sails.log.error("Error loading recent silo data: " + err);
+        return res.view('500', {layout: 'barebones'});
+      }
+      if (siloData !== undefined && siloData !== null) {
+        Silo.findOne({rfid: rfid}).populateAll().exec(function (err, silo) {
+          if (err) { 
+            sails.log.error("Error loading recent silo: " + err);
+            return res.view('500', {layout: 'barebones'});
+          }   
+          if (silo !== undefined && silo !== null) {
+            
+            //only get the edges
+            siloData = _.filter(siloData, function (dataPoint, index, allData) {
+              if (index == 0) return true;
+              return dataPoint.level !== allData[index - 1].level;
+            })
+
+            return res.json({silo: silo, data: siloData}); //return format
+
+          } else {
+            return res.json("undefind or null silo",404)
+          } 
+        })
+      } else {
+        return res.json("undefined or null silo data",404);
+      }
+    })
   }
 };
-

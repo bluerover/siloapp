@@ -72,6 +72,11 @@ module.exports.routes = {
     action: 'get_recent_silo_data'
   },
 
+  'get /silo_data/:id/changelog': {
+    controller: 'SiloData',
+    action: 'get_data_changes'
+  },
+
   // Product
   'get /products': {
     controller: 'Product',
