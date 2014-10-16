@@ -60,7 +60,7 @@
             </div>
           </div>
         </div>
-        <div class="container">
+        <div class="search-results">
           <div class="row">
             <div id="siloSearchTable">
             </div>
@@ -104,7 +104,7 @@
             </tbody>
           </table>
 
-          <ul class="pagination">
+          <!-- <ul class="pagination">
             <li><a href="#">&laquo;</a></li>
             <li><a href="#">1</a></li>
             <li><a href="#">2</a></li>
@@ -112,7 +112,7 @@
             <li><a href="#">4</a></li>
             <li><a href="#">5</a></li>
             <li><a href="#">&raquo;</a></li>
-          </ul>
+          </ul> -->
 
         </div>
 
@@ -140,36 +140,48 @@
       var products = JSON.parse("<%= JSON.stringify(products) %>".replace(/&quot;/g,'"'));
 
       $(document).ready(function() {
-          siloList = [];
-          for(var index in farms) {
-            siloList = siloList.concat(farms[index].silos);
-          }
-          var substringMatcher = function(items) {
-            return function findMatches(q, cb) {
-              var matches, substrRegex;
-           
-              matches = [];
-              substrRegex = new RegExp(q, 'i');
-              $.each(items, function(i, item) {
-                if (substrRegex.test(item.name)) {
-                  matches.push({ value: item.name });
-                }
-              });
-           
-              cb(matches);
-            };
+        siloList = [];
+        for(var index in farms) {
+          siloList = siloList.concat(farms[index].silos);
+        }
+        var substringMatcher = function(items) {
+          return function findMatches(q, cb) {
+            var matches, substrRegex;
+         
+            matches = [];
+            substrRegex = new RegExp(q, 'i');
+            $.each(items, function(i, item) {
+              if (substrRegex.test(item.name)) {
+                matches.push({ value: item.name });
+              }
+            });
+         
+            cb(matches);
           };
+        };
 
-          $('input[name="product"]').typeahead({
-            hint: true,
-            minLength: 2,
-            highlight: true,
-          },{ source: substringMatcher(products) });
-          $('input[name="siloName"]').typeahead({
-            hint: true,
-            minLength: 2,
-            highlight: true,
-          },{ source: substringMatcher(siloList) });
+        $('input[name="product"]').typeahead({
+          hint: true,
+          minLength: 2,
+          highlight: true,
+        },{ source: substringMatcher(products) });
+        $('input[name="siloName"]').typeahead({
+          hint: true,
+          minLength: 2,
+          highlight: true,
+        },{ source: substringMatcher(siloList) });
+
+        $("#siloSearchForm input").keypress(function (e) {
+          if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+            $('#siloSearch').click();
+            return false;
+          } else return true;
+        });
+
+        $("body").on('click','.clickableRow',function() {
+          window.document.location.href = $(this).data("url");
+        });
+
       });
 
       function createMarker(name,type,location,desc,id) {
@@ -260,6 +272,7 @@
           }
         });
       });
+
     </script>
   </body>
 </html>

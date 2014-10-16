@@ -82,7 +82,7 @@ module.exports = {
         productString += products[index].id + ",";
       }
       //Get all the silos in the region with such product
-      Silo.query("SELECT silo.rfid, silo.name, silo.location FROM silo JOIN farm on farm.id = silo.farm " + 
+      Silo.query("SELECT silo.rfid, silo.name, silo.location, silo.id FROM silo JOIN farm on farm.id = silo.farm " + 
              "WHERE silo.product IN (" + productString.slice(0,-1) + ") AND farm.region LIKE ? " +
              "AND silo.name LIKE ?",
              [req.query.region, '%' + req.query.siloName + '%'],
@@ -116,7 +116,8 @@ module.exports = {
               for(var index2 in silos) {
                 if(silos[index2].rfid === parseInt(siloData[index].rfidTagNum,10)) {
                   siloData[index].name = silos[index2].name;
-                  siloData[index].location = silos[index2].name;
+                  siloData[index].location = silos[index2].location;
+                  siloData[index].id = silos[index2].id
                   tableData.push(siloData[index]);
                 }
               }

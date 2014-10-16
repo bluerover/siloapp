@@ -1,4 +1,4 @@
-<table class='table table-condensed'>
+<table class='table table-condensed table-striped table-hover'>
     <thead>
         <th>Silo Name</th>
         <th>Silo Location</th>
@@ -7,7 +7,7 @@
     </thead>
     <tbody>
         <% for (var i in siloData) { %>
-          <tr>
+          <tr class="clickableRow" data-url="/silo/<%= siloData[i].id %>">
             <td><%= siloData[i].name %></td>
             <td><%= siloData[i].location %></td>
             <td><%= siloData[i].level %></td>
