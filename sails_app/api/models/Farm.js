@@ -14,8 +14,8 @@ module.exports = {
       type: 'string',
       required: true
     },
-    silos: {
-      collection: 'silo',
+    bins: {
+      collection: 'bin',
       via: 'farm'
     },
     region: {

@@ -31,14 +31,14 @@
 
     <div class="welcome-box">
       <div class="container">
-        <h1>Find your Silo</h1>
+        <h1>Find your Bin</h1>
         <div class="search">
           <div id="errorBlock" class="col-sm-offset-3 col-sm-6 alert alert-danger center-text" style="display:none;">
           </div>
           <div class="clearfix"></div>
           <div class="row">
             <div class="container">
-              <form id="siloSearchForm" class="form-horizontal" role="form">
+              <form id="binSearchForm" class="form-horizontal" role="form">
                 <div class="col-md-2">
                   <select class="form-control input-sm" name="region">
                     <option value="%">Any Region</option>
@@ -48,13 +48,13 @@
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <input type="text" class="form-control input-sm" placeholder="Silo Name" name="siloName">
+                  <input type="text" class="form-control input-sm" placeholder="Bin Name" name="binName">
                 </div>
                 <div class="col-md-3">
                   <input type="text" class="form-control input-sm" placeholder="Product" data-provide="typeahead" autocomplete="off" name="product" />
                 </div>
                 <div class="col-md-3">
-                  <a href="javascript:;" class="btn btn-lg btn-success btn-block" id="siloSearch">Search</a>
+                  <a href="javascript:;" class="btn btn-lg btn-success btn-block" id="binSearch">Search</a>
                 </div>
               </form>
             </div>
@@ -62,7 +62,7 @@
         </div>
         <div class="search-results">
           <div class="row">
-            <div id="siloSearchTable">
+            <div id="binSearchTable">
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@
               <tr>
                 <th>Name</th>
                 <th>Address</th>
-                <th>Number of Silos</th>
+                <th>Number of Bins</th>
               </tr>
             </thead>
             <tbody id="farm-list">
@@ -98,7 +98,7 @@
                 <tr class="clickableRow" data-url="/farm/<%= user_farms[i].id %>">
                   <td><%= user_farms[i].name %></td>
                   <td><%= user_farms[i].address %></td>
-                  <td><%= user_farms[i].silos.length %></td>
+                  <td><%= user_farms[i].bins.length %></td>
                 </tr>
               <% } %>
             </tbody>
@@ -141,9 +141,9 @@
       var products = JSON.parse("<%= JSON.stringify(products) %>".replace(/&quot;/g,'"'));
 
       $(document).ready(function() {
-        siloList = [];
+        binList = [];
         for(var index in farms) {
-          siloList = siloList.concat(farms[index].silos);
+          binList = binList.concat(farms[index].bins);
         }
         var substringMatcher = function(items) {
           return function findMatches(q, cb) {
@@ -166,15 +166,15 @@
           minLength: 2,
           highlight: true,
         },{ source: substringMatcher(products) });
-        $('input[name="siloName"]').typeahead({
+        $('input[name="binName"]').typeahead({
           hint: true,
           minLength: 2,
           highlight: true,
-        },{ source: substringMatcher(siloList) });
+        },{ source: substringMatcher(binList) });
 
-        $("#siloSearchForm input").keypress(function (e) {
+        $("#binSearchForm input").keypress(function (e) {
           if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
-            $('#siloSearch').click();
+            $('#binSearch').click();
             return false;
           } else return true;
         });
@@ -222,9 +222,9 @@
 
       for(var farmIndex in farms) {
         var farm = farms[farmIndex];
-        // for(var index in farm.silos) {
-        //   var silo = farm.silos[index];
-        //   createMarker(silo.name,"silo",silo.location, silo.desc + "|Capacity: " + silo.capacity,silo.id);
+        // for(var index in farm.bins) {
+        //   var bin = farm.bins[index];
+        //   createMarker(bin.name,"bin",bin.location, bin.desc + "|Capacity: " + bin.capacity,bin.id);
         // }
         createMarker(farm.name,"farm",farm.location,farm.address,farm.id);
       }
@@ -260,15 +260,15 @@
         }, 300);
       });
 
-      $('#siloSearch').on('click', function() {
-        var values = $('#siloSearchForm').serializeArray();
+      $('#binSearch').on('click', function() {
+        var values = $('#binSearchForm').serializeArray();
         $.ajax({
           type: "GET",
-          url: "/silosearch",
+          url: "/binsearch",
           data: values,
           success: function(data) {
             // console.log(data);
-            $('#siloSearchTable').html(data);
+            $('#binSearchTable').html(data);
           },
           error: function(response) {
             console.log("Error");

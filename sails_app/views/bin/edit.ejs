@@ -6,59 +6,59 @@
 			<div id="successBlock" class="alert alert-success" style="display:none;text-align:center;" role="alert"></div>
 		</div>
 		<div class="col-md-8 col-sm-8 col-xs-8 column">
-			<h2>Edit settings for: <%= silo.name %></h2>
+			<h2>Edit settings for: <%= bin.name %></h2>
 			<form class="form-horizontal">
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Name</label>
 			        <div class="col-lg-6">
-			            <input type="text" class="form-control input-sm" name="name" value="<%= silo.name %>" />
-                  <input type="hidden" class="form-control" name="id" value="<%= silo.id %>" />
+			            <input type="text" class="form-control input-sm" name="name" value="<%= bin.name %>" />
+                  <input type="hidden" class="form-control" name="id" value="<%= bin.id %>" />
 			        </div>
 			    </div>
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Description</label>
 			        <div class="col-lg-6">
-			            <input type="text" class="form-control input-sm" name="desc" value="<%= silo.desc %>" />
+			            <input type="text" class="form-control input-sm" name="desc" value="<%= bin.desc %>" />
 			        </div>
 			    </div>
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Farm</label>
 			        <div class="col-lg-6">
-			            <input type="text" class="form-control input-sm" name="farmName" value="<%= silo.farm.name %>" readonly />
+			            <input type="text" class="form-control input-sm" name="farmName" value="<%= bin.farm.name %>" readonly />
 			        </div>
 			    </div>
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Capacity</label>
 			        <div class="col-lg-6">
-			            <input type="number" class="form-control input-sm" name="capacity" value="<%= silo.capacity %>" readonly />
+			            <input type="number" class="form-control input-sm" name="capacity" value="<%= bin.capacity %>" readonly />
 			        </div>
 			    </div>
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Levels (%)</label>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_1" value="<%= silo.level_1 %>" readonly />
+			            <input type="text" class="form-control input-sm" name="level_1" value="<%= bin.level_1 %>" readonly />
 			        </div>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_2" value="<%= silo.level_2 %>" readonly />
+			            <input type="text" class="form-control input-sm" name="level_2" value="<%= bin.level_2 %>" readonly />
 			        </div>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_3" value="<%= silo.level_3 %>" readonly />
+			            <input type="text" class="form-control input-sm" name="level_3" value="<%= bin.level_3 %>" readonly />
 			        </div>
 			        <div class="col-lg-2">
-			            <input type="text" class="form-control input-sm" name="level_4" value="<%= silo.level_4 %>" readonly />
+			            <input type="text" class="form-control input-sm" name="level_4" value="<%= bin.level_4 %>" readonly />
 			        </div>
 			    </div>
 			    <div class="form-group">
 			        <label class="col-lg-3 control-label">Product</label>
 			        <div class="col-lg-6">
-			            <input type="text" class="form-control input-sm" data-provide="typeahead" autocomplete="off" name="product" value="<%= silo.product.name %>" />
-                  <input type="hidden" class="form-control" data-provide="typeahead" autocomplete="off" name="old_product_id" value="<%= silo.product.id %>" />
+			            <input type="text" class="form-control input-sm" data-provide="typeahead" autocomplete="off" name="product" value="<%= bin.product.name %>" />
+                  <input type="hidden" class="form-control" data-provide="typeahead" autocomplete="off" name="old_product_id" value="<%= bin.product.id %>" />
 			        </div>
 			    </div>
 
           <div style="float:right;">
-            <a href="/silo/<%= silo.id %>" class="btn btn-lg btn-primary btn-block" style="padding:10px;">Back to Silo</a>
-				    <a href="javascript:;" id="submitEdit" class="btn btn-lg btn-success btn-block" style="padding:10px;">Save Silo Details</a>
+            <a href="/bin/<%= bin.id %>" class="btn btn-lg btn-primary btn-block" style="padding:10px;">Back to Bin</a>
+				    <a href="javascript:;" id="submitEdit" class="btn btn-lg btn-success btn-block" style="padding:10px;">Save Bin Details</a>
           </div>
 			</form>
 		</div>
@@ -129,10 +129,10 @@
     var values = $('.form-horizontal').serializeArray();
     $.ajax({
       type: "GET",
-      url: "/silo/update",
+      url: "/bin/update",
       data: values,
       success: function(data) {
-          $('#successBlock').empty().append("Successfully updated silo info").show().delay(3000).fadeOut();
+          $('#successBlock').empty().append("Successfully updated bin info").show().delay(3000).fadeOut();
       },
       error: function(response) {
           console.log("Error");

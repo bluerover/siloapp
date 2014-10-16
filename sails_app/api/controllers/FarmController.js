@@ -27,7 +27,7 @@ module.exports = {
     var id = req.param('id');
     req.session.current_farm = id;
     var flag = false;
-    function cb(farm,silos) {
+    function cb(farm,bins) {
       function compare(a,b) {
         if (a.id < b.id)
            return -1;
@@ -35,43 +35,43 @@ module.exports = {
           return 1;
         return 0;
       }
-      //may need to sort silos
-      silos.sort(compare);
+      //may need to sort bins
+      bins.sort(compare);
       if(!flag) {
         res.view({
           title: "Farm: " + farm.name, 
           page_category: "farm",
           full_name: req.session.full_name,
           current_farm: req.session.current_farm,
-          current_silo: req.session.current_silo,
+          current_bin: req.session.current_bin,
           farm: farm,
-          silos: silos
+          bins: bins
         });
         flag = true;
       }
     }
 
-    var silos = [];
+    var bins = [];
     Farm.findOne(id).populateAll().exec(function (err, farm) {
       if (err) {
         sails.log.error("Error with retrieving farm: " + err);
         res.view({layout: "barebones"}, '500');
         return;
       } 
-      var siloLength = farm.silos.length;
+      var binLength = farm.bins.length;
       var count = 0;
-      for(var index in farm.silos) {
-        if(typeof(farm.silos[index]) !== "function") {
-          Silo.findOne({id: farm.silos[index].id}).populate("product").exec(function (err, silo) {
+      for(var index in farm.bins) {
+        if(typeof(farm.bins[index]) !== "function") {
+          Bin.findOne({id: farm.bins[index].id}).populate("product").exec(function (err, bin) {
             if(err) {
-              sails.log.error("Error with retrieving silos " + err);
+              sails.log.error("Error with retrieving bins " + err);
               cb(farm,[]);
               return;
             } else {
-              silos.push(silo);
+              bins.push(bin);
               count++;
-              if(count === siloLength) {
-                cb(farm,silos);
+              if(count === binLength) {
+                cb(farm,bins);
                 return;
               }
             }

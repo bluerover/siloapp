@@ -33,24 +33,24 @@ module.exports.routes = {
     action: 'login_view'
   },
 
-  // Silo
-  'get /silo/update': {
-    controller: 'Silo',
+  // Bin
+  'get /bin/update': {
+    controller: 'Bin',
     action: 'update'
   },
-  'get /silo/:id': {
-    controller: 'Silo',
+  'get /bin/:id': {
+    controller: 'Bin',
     action: 'index'
   },
 
-  'get /silo/:id/edit': {
-    controller: 'Silo',
+  'get /bin/:id/edit': {
+    controller: 'Bin',
     action: 'edit'
   },
 
-  'get /silosearch': {
-    controller: 'Silo',
-    action: 'silosearch'
+  'get /binsearch': {
+    controller: 'Bin',
+    action: 'binsearch'
   },
 
   // Farm
@@ -66,14 +66,14 @@ module.exports.routes = {
     action: 'home'
   },
 
-  // SiloData
-  'get /silo_data/:id/recent': {
-    controller: 'SiloData',
-    action: 'get_recent_silo_data'
+  // BinData
+  'get /bin_data/:id/recent': {
+    controller: 'BinData',
+    action: 'get_recent_bin_data'
   },
 
-  'get /silo_data/:id/changelog': {
-    controller: 'SiloData',
+  'get /bin_data/:id/changelog': {
+    controller: 'BinData',
     action: 'get_data_changes'
   },
 

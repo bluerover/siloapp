@@ -52,7 +52,7 @@
           <ul class="nav navbar-nav">
             <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>><a href="/dashboard">Dashboard</a></li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "farm") ? 'class=active' : '' %>><a <%= (typeof(current_farm) !== "undefined") ? 'href=/farm/' + current_farm : 'href=javascript:;' %>>Farm</a></li>
-            <li <%= (typeof(page_category) !== "undefined" && page_category === "silo") ? 'class=active' : '' %>><a <%= (typeof(current_silo) !== "undefined") ? 'href=/silo/' + current_silo : 'href=javascript:;' %>>Silo</a></li>
+            <li <%= (typeof(page_category) !== "undefined" && page_category === "bin") ? 'class=active' : '' %>><a <%= (typeof(current_bin) !== "undefined") ? 'href=/bin/' + current_bin : 'href=javascript:;' %>>Bin</a></li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "productmgmt") ? 'class=active' : '' %>><a href="/products">Product Management</a></li>
             <li class="dropdown <%= (typeof(page_category) !== "undefined" && page_category === "messages") ? 'active' : '' %>">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">

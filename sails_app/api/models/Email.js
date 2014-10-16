@@ -18,7 +18,7 @@ module.exports = {
       type: 'email',
       required: true
     },
-    silo: {
+    bin: {
       type: 'integer',
       required: true
     },

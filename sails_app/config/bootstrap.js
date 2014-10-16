@@ -15,14 +15,14 @@ module.exports.bootstrap = function (cb) {
   sails.notification_handlers = {};
   sails.recent_alerts = {};
   sails.recent_rfid_data = {};
-  sails.silo_levels = {};
+  sails.bin_levels = {};
 
   createEventEmitters();
   // setupTickEvent();
-  setupSiloLevels();
+  setupBinLevels();
   setupEventListeners();
   loadRecentAlerts();
-  loadRecentSiloData();
+  loadRecentBinData();
 
   // DO NOT REMOVE! Without calling this callback, you will block the entire server
   cb();
@@ -45,15 +45,15 @@ function setupTickEvent() {
   tick();
 }
 
-function setupSiloLevels() {
-  Silo.find().exec(function (err, silos) {
+function setupBinLevels() {
+  Bin.find().exec(function (err, bins) {
     if(err) {
-      sails.log.error("Cannot setup silo levels: " + err);
+      sails.log.error("Cannot setup bin levels: " + err);
       return;
     }
-    for(var index in silos) {
-      var silo = silos[index];
-      sails.silo_levels[silo.rfid] = [silo.capacity, silo.level_1, silo.level_2, silo.level_3, silo.level_4];
+    for(var index in bins) {
+      var bin = bins[index];
+      sails.bin_levels[bin.rfid] = [bin.capacity, bin.level_1, bin.level_2, bin.level_3, bin.level_4];
     }
   });
 }
@@ -100,7 +100,7 @@ function setupBlueRoverApi() {
                     for(var index in jsonObj["binaryLevel"]) {
                       if(jsonObj["binaryLevel"][index] === "1") {
                         try {
-                          jsonObj["level"] = sails.silo_levels[jsonObj["rfidTagNum"]][index];
+                          jsonObj["level"] = sails.bin_levels[jsonObj["rfidTagNum"]][index];
                         } catch(e) {
                           sails.log.error("no rfid #" + jsonObj["rfidTagNum"] + " being collected");
                           return;
@@ -150,9 +150,9 @@ function setupEventListeners() {
       return;
     }
     sails.log.debug("Attempting to write rfid data to database: " + data.rfidTagNum);
-    SiloData.create(data).exec(function (err, silodata) {
-      if (err) { sails.log.error("Error saving silo data to database: " + util.inspect(err)); }
-      else { sails.log.info("Wrote new silo data to database: rfid#" + silodata.rfidTagNum); }
+    BinData.create(data).exec(function (err, bindata) {
+      if (err) { sails.log.error("Error saving bin data to database: " + util.inspect(err)); }
+      else { sails.log.info("Wrote new bin data to database: rfid#" + bindata.rfidTagNum); }
     });
   });
 
@@ -188,14 +188,14 @@ function setupEventListeners() {
   });
 
   sails.event_emitter.on('email', function (data) {
-    Silo.findOne({rfid: data.rfidTagNum}).populate('farm').populate('product').exec(function (err, silo) {
+    Bin.findOne({rfid: data.rfidTagNum}).populate('farm').populate('product').exec(function (err, bin) {
       if(err) {
-        sails.log.error("No silo found for rfid #" + data.rfidTagNum + ": " + err);
+        sails.log.error("No bin found for rfid #" + data.rfidTagNum + ": " + err);
         return;
       }
-      Organization.findOne(silo.farm.organization).exec(function (err, organization) {
+      Organization.findOne(bin.farm.organization).exec(function (err, organization) {
         if(err) {
-          sails.log.error("No organization found for organization #" + silo.farm.organization + ": " + err);
+          sails.log.error("No organization found for organization #" + bin.farm.organization + ": " + err);
           return;
         }
         User.find({organization: organization.id}).exec(function (err, users) {
@@ -208,24 +208,24 @@ function setupEventListeners() {
               var emailData = {};
               emailData.username = users[index].username;
               emailData.email_address = users[index].email;
-              emailData.silo = silo.id;
+              emailData.bin = bin.id;
               emailData.alarm_status = data.status;
               emailData.threshold = data.threshold;
               var nodemailer = require("nodemailer");
               var smtpTransport = nodemailer.createTransport("sendmail");
 
               sails.log.info("Sending email to " + emailData.username);
-              var mail = function(emailData, silo, farm, organization, user) {
+              var mail = function(emailData, bin, farm, organization, user) {
                 var tmp = function() {
                   smtpTransport.sendMail({
                    from: "BlueRover Alerts <alerts@blueRover.ca>", // sender address
                    to: user.full_name() + "<" + user.email + ">", // comma separated list of receivers
                    subject: organization.name + " Bin Volume Alert", // Subject line
                    html: "<p>Hi " + user.first_name + ",<br/><br/>"
-                         + "Please check your silo in " + farm.name + " for " + organization.name + " at "
-                         + "<a href='safefarm.bluerover.us/silo/" + silo.id +"'>safefarm.bluerover.us</a><br/><br/>"
-                         + "Reason: <b>" + silo.name + " (" + silo.product.name + ")</b> at " + farm.name
-                         + " is at <b>" + emailData.threshold + "%</b> of its capacity (" + silo.capacity + ") Please acknowledge.<br/></p>"
+                         + "Please check your bin in " + farm.name + " for " + organization.name + " at "
+                         + "<a href='safefarm.bluerover.us/bin/" + bin.id +"'>safefarm.bluerover.us</a><br/><br/>"
+                         + "Reason: <b>" + bin.name + " (" + bin.product.name + ")</b> at " + farm.name
+                         + " is at <b>" + emailData.threshold + "%</b> of its capacity (" + bin.capacity + ") Please acknowledge.<br/></p>"
                   }, function(error, response) {
                     if(error) {
                         emailData.email_status = error;
@@ -242,7 +242,7 @@ function setupEventListeners() {
                 }
                 return tmp;
               }
-              setTimeout(mail(emailData, silo, silo.farm, organization, users[index]),20);
+              setTimeout(mail(emailData, bin, bin.farm, organization, users[index]),20);
             }
           }
         });
@@ -334,7 +334,7 @@ function loadRecentAlerts () {
     }
     var id = setInterval(function() {
       if(Object.keys(sails.notification_handlers).length === rfidArray.length) {
-        if(sails.silo_levels) {
+        if(sails.bin_levels) {
           clearInterval(id);
           setupBlueRoverApi();
         }
@@ -345,22 +345,22 @@ function loadRecentAlerts () {
   });
 }
 
-function loadRecentSiloData () {
+function loadRecentBinData () {
   var query = "SELECT b.* FROM " + 
-    "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM silodata GROUP BY rfidTagNum) a " + 
-    "INNER JOIN silodata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
+    "(SELECT rfidTagNum, MAX(timestamp) AS maxsupdate FROM bindata GROUP BY rfidTagNum) a " + 
+    "INNER JOIN bindata b ON a.rfidTagNum = b.rfidTagNum AND a.maxsupdate = b.timestamp ORDER BY b.id;";
 
-  sails.log.debug("Attempting to find recent silo data");
-  SiloData.query(query, function (err, silodata) {
+  sails.log.debug("Attempting to find recent bin data");
+  BinData.query(query, function (err, bindata) {
     if (err) { 
-      sails.log.error("SiloData was not successfully loaded: " + err); 
+      sails.log.error("BinData was not successfully loaded: " + err); 
       return; 
     }
 
-    sails.log.debug("Found recent Silo data");
+    sails.log.debug("Found recent Bin data");
 
-    for (i in silodata) {
-      sails.recent_rfid_data[silodata[i].rfidTagNum] = silodata[i];
+    for (i in bindata) {
+      sails.recent_rfid_data[bindata[i].rfidTagNum] = bindata[i];
     }
   });
 }

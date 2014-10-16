@@ -49,7 +49,7 @@
 
           <div class="elm-grouping">
           
-            <h3>Silo Status</h3>
+            <h3>Bin Status</h3>
             <div class="input-group col-sm-5">
               <input type="text" class="form-control" placeholder="Search" name="srch-term" id="srch-term">
               <div class="input-group-btn">
@@ -69,9 +69,9 @@
                   <th>Location</th>
                 </tr>
               </thead>
-              <tbody id="silo-list">
-                <% for (var i = 0; i < silos.length; i++) { %>
-                  <tr id="silo-rfid-<%= silos[i].rfid %>" class="clickableRow" data-url="/silo/<%= silos[i].id %>">
+              <tbody id="bin-list">
+                <% for (var i = 0; i < bins.length; i++) { %>
+                  <tr id="bin-rfid-<%= bins[i].rfid %>" class="clickableRow" data-url="/bin/<%= bins[i].id %>">
                     <td>
                       <div class="level">
                         <span class="level-bar"></span>
@@ -80,14 +80,14 @@
                         <span class="level-bar"></span>
                       </div>
                     </td>
-                    <td id="silo-rfid-<%= silos[i].rfid %>-level">0%</td>
-                    <td><%= silos[i].name %></td>
-                    <td><%= silos[i].desc %></td>
-                    <td><%= silos[i].capacity %></td>
-                    <td><%= silos[i].product.name %></td>
-                    <td><%= silos[i].rfid %></td>
-                    <td id="silo-rfid-<%= silos[i].rfid %>-timestamp">Never</td>
-                    <td><%= silos[i].location %></td>
+                    <td id="bin-rfid-<%= bins[i].rfid %>-level">0%</td>
+                    <td><%= bins[i].name %></td>
+                    <td><%= bins[i].desc %></td>
+                    <td><%= bins[i].capacity %></td>
+                    <td><%= bins[i].product.name %></td>
+                    <td><%= bins[i].rfid %></td>
+                    <td id="bin-rfid-<%= bins[i].rfid %>-timestamp">Never</td>
+                    <td><%= bins[i].location %></td>
                   </tr>
                 <% } %>
               </tbody>
@@ -122,29 +122,29 @@
     <script src="/js/markerwithlabel_packed.js" type="text/javascript"></script>
 
     <script>
-      var silos = JSON.parse("<%= JSON.stringify(silos) %>".replace(/&quot;/g,'"'));
+      var bins = JSON.parse("<%= JSON.stringify(bins) %>".replace(/&quot;/g,'"'));
       var farm = JSON.parse("<%= JSON.stringify(farm) %>".replace(/&quot;/g,'"'));
       $(document).ready(function() {
-        for(var index in silos) {
+        for(var index in bins) {
           $.ajax({
             type: "GET",
-            url: "/silo_data/" + silos[index].rfid + "/recent",
+            url: "/bin_data/" + bins[index].rfid + "/recent",
             data: {},
             success: function(data) {
               //we only need the most recent one
-              var siloData = JSON.parse(data)[0];
-              if(!siloData || siloData === undefined) {
+              var binData = JSON.parse(data)[0];
+              if(!binData || binData === undefined) {
                 return;
               }
 
-              //add it to silo data instead of using jquery
-              $('#silo-rfid-' + siloData.rfidTagNum + '-level').html(siloData.level + "%");
-              $('#silo-rfid-' + siloData.rfidTagNum + '-timestamp').html(moment.unix(siloData.timestamp).format("MMM D YYYY, HH:mm:ss"));
+              //add it to bin data instead of using jquery
+              $('#bin-rfid-' + binData.rfidTagNum + '-level').html(binData.level + "%");
+              $('#bin-rfid-' + binData.rfidTagNum + '-timestamp').html(moment.unix(binData.timestamp).format("MMM D YYYY, HH:mm:ss"));
 
               var colors = ['green', 'yellow', 'orange', 'red'];
-              for(var index in siloData.binaryLevel) {
-                if(typeof(siloData.binaryLevel[index]) !== "function" && siloData.binaryLevel[index] === "1") {
-                  $('#silo-rfid-' + siloData.rfidTagNum + " .level span:nth-child(" + (parseInt(index,10)+1) + ")").addClass(colors[index]);
+              for(var index in binData.binaryLevel) {
+                if(typeof(binData.binaryLevel[index]) !== "function" && binData.binaryLevel[index] === "1") {
+                  $('#bin-rfid-' + binData.rfidTagNum + " .level span:nth-child(" + (parseInt(index,10)+1) + ")").addClass(colors[index]);
                 }
               }
             },
@@ -199,9 +199,9 @@
       });
 
       createMarker(farm.name,"farm",farm.location,farm.address,farm.id);
-      for(var index in silos) {
-        var silo = silos[index];
-        createMarker(silo.name,"silo",silo.location, silo.desc + "|Capacity: " + silo.capacity,silo.id);
+      for(var index in bins) {
+        var bin = bins[index];
+        createMarker(bin.name,"bin",bin.location, bin.desc + "|Capacity: " + bin.capacity,bin.id);
       }
       var mcOptions = { 
         styles: [{ height: 53,url: "http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/images/m1.png",width: 53},
@@ -221,11 +221,11 @@
           // executed only 500 ms after the last keyup event.
           var searchTerm = $("#srch-term").val();
           var searchSplit = searchTerm.replace(/ /g, "'):containsi('");
-          $("#silo-list tr").not(":containsi('" + searchSplit + "')").each(function(e)   {
+          $("#bin-list tr").not(":containsi('" + searchSplit + "')").each(function(e)   {
                 $(this).css('display','none');
           });
           
-          $("#silo-list tr:containsi('" + searchSplit + "')").each(function(e) {
+          $("#bin-list tr:containsi('" + searchSplit + "')").each(function(e) {
                 $(this).css('display','table-row');
           });
         }, 700);

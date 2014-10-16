@@ -1,5 +1,5 @@
 /**
- * Silo
+ * Bin
  *
  * @module      :: Model
  * @description :: A short summary of how this model works and what it represents.
@@ -25,8 +25,8 @@ module.exports = {
         model: 'product'
     },
     changelog: {
-        collection: 'silochangelog',
-        via: 'silo'
+        collection: 'binchangelog',
+        via: 'bin'
     },
     capacity: 'integer',
     location: 'string',

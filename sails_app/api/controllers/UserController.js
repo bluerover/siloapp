@@ -93,7 +93,7 @@ module.exports = {
     req.session.username = null;
     req.session.full_name = null;
     req.session.organization = null;
-    req.session.current_silo = undefined;
+    req.session.current_bin = undefined;
     req.session.current_farm = undefined;
     req.session.authenticated = false;
     res.redirect('/');
@@ -111,7 +111,7 @@ module.exports = {
         user: user,
         full_name: req.session.full_name,
         current_farm: req.session.current_farm,
-        current_silo: req.session.current_silo
+        current_bin: req.session.current_bin
       });
     });
   },

@@ -26,6 +26,6 @@ module.exports.adapters = {
     port     : 3306,
     user     : 'root',
     password : mysql_password,
-    database : 'siloapp'
+    database : 'binapp'
   }
 };

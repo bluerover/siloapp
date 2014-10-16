@@ -1,5 +1,5 @@
 /**
- * SiloDataController
+ * BinDataController
  *
  * @module      :: Controller
  * @description	:: A set of functions called `actions`.
@@ -23,18 +23,18 @@ module.exports = {
     }
   },
 
-  get_recent_silo_data: function (req, res) {
+  get_recent_bin_data: function (req, res) {
     var rfid = req.param('id');
-    SiloData.find({rfidTagNum: rfid}).sort('timestamp desc').limit(1).exec(function (err, siloData) {
-      if (err) sails.log.error("Error loading recent silo data: " + err);
-      if (siloData !== undefined && siloData !== null) {
+    BinData.find({rfidTagNum: rfid}).sort('timestamp desc').limit(1).exec(function (err, binData) {
+      if (err) sails.log.error("Error loading recent bin data: " + err);
+      if (binData !== undefined && binData !== null) {
 
         // rfid_data = rfid_data.filter(function (i) {
         //   return i.rfidTagNum !== undefined && i.rfidTagNum.organization === req.session.organization;
         // });
-        res.json(JSON.stringify(siloData));
+        res.json(JSON.stringify(binData));
       } else {
-      	res.json("undefined or null silo data",400);
+      	res.json("undefined or null bin data",400);
       }
     });
   },
@@ -50,33 +50,33 @@ module.exports = {
     if (!(from == null)) query.timestamp['>'] = new Date(from);
     if (!(to == null)) query.timestamp['<'] = new Date(from);
 
-    SiloData.find().where(query).sort('timestamp').exec(function (err, siloData) {
+    BinData.find().where(query).sort('timestamp').exec(function (err, binData) {
       if (err) { 
-        sails.log.error("Error loading recent silo data: " + err);
+        sails.log.error("Error loading recent bin data: " + err);
         return res.view('500', {layout: 'barebones'});
       }
-      if (siloData !== undefined && siloData !== null) {
-        Silo.findOne({rfid: rfid}).populateAll().exec(function (err, silo) {
+      if (binData !== undefined && binData !== null) {
+        Bin.findOne({rfid: rfid}).populateAll().exec(function (err, bin) {
           if (err) { 
-            sails.log.error("Error loading recent silo: " + err);
+            sails.log.error("Error loading recent bin: " + err);
             return res.view('500', {layout: 'barebones'});
           }   
-          if (silo !== undefined && silo !== null) {
+          if (bin !== undefined && bin !== null) {
             
             //only get the edges
-            siloData = _.filter(siloData, function (dataPoint, index, allData) {
+            binData = _.filter(binData, function (dataPoint, index, allData) {
               if (index == 0) return true;
               return dataPoint.level !== allData[index - 1].level;
             })
 
-            return res.json({silo: silo, data: siloData}); //return format
+            return res.json({bin: bin, data: binData}); //return format
 
           } else {
-            return res.json("undefind or null silo",404)
+            return res.json("undefind or null bin",404)
           } 
         })
       } else {
-        return res.json("undefined or null silo data",404);
+        return res.json("undefined or null bin data",404);
       }
     })
   }

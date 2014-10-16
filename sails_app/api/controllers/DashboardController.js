@@ -57,7 +57,7 @@ module.exports = {
             page_category: "dashboard",
             full_name: req.session.full_name,
             current_farm: req.session.current_farm,
-            current_silo: req.session.current_silo,
+            current_bin: req.session.current_bin,
             user_farms: farms,
             regions: regions,
             products: products

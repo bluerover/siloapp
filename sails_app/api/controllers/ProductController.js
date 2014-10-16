@@ -36,7 +36,7 @@ module.exports = {
         page_category: "productmgmt",
         full_name: req.session.full_name,
         current_farm: req.session.current_farm,
-        current_silo: req.session.current_silo,
+        current_bin: req.session.current_bin,
         products: products
       });
     });
@@ -64,13 +64,13 @@ module.exports = {
 
   delete_product: function(req,res) {
     var productId = req.param("id");
-    Silo.find(productId).exec(function (err, silos) {
+    Bin.find(productId).exec(function (err, bins) {
       if(err) {
-        sails.log.error("Error when retrieving silos: " + err);
+        sails.log.error("Error when retrieving bins: " + err);
         res.json(err,500);
         return;
       }
-      if(silos.length === 0) {
+      if(bins.length === 0) {
         Product.destroy({id:productId}).exec(function (err, deletedProduct) {
           if(err) {
             sails.log.error("Error when deleting product: " + err);
@@ -83,11 +83,11 @@ module.exports = {
           res.json("");
         })
       } else {
-        usingSiloString = "";
-        for(var index in silos) {
-          usingSiloString += silos[index].name + ",";
+        usingBinString = "";
+        for(var index in bins) {
+          usingBinString += bins[index].name + ",";
         }
-        res.json(usingSiloString.slice(0,-1),406);
+        res.json(usingBinString.slice(0,-1),406);
       }
     });
   }

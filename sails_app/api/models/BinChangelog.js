@@ -1,5 +1,5 @@
 /**
- * SiloChangelog
+ * BinChangelog
  *
  * @module      :: Model
  * @description :: A short summary of how this model works and what it represents.
@@ -9,8 +9,8 @@
 module.exports = {
 
   attributes: {
-    silo: {
-        model: 'silo'
+    bin: {
+        model: 'bin'
     },
     old_product: {
         model: 'product'
