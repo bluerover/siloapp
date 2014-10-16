@@ -284,6 +284,7 @@
             $(element).html(moment.unix($(element).text()).format("MMM D YYYY, HH:mm:ss"));
           }
         });
+        
         DURATION = 500;
         //======DRAW SILO ====
         var elem = d3.select('#silo');
@@ -362,37 +363,38 @@
             .transition()
             .duration(DURATION)
             .ease("cubic")
-          .attr('y',(175+dy)+"")
+            .attr('y',(175+dy)+"")
             .tween("text", function(d,i,a){
               var i = d3.interpolate(this.textContent,d);
               return function(t){
                 this.textContent = Math.round(i(t));
               }
             });
-            g.select('rect')
-          .transition()
-          .duration(DURATION)
-          .ease("cubic")
-          .attr('y',(175+dy)+"")
-          .attr('height',(115-dy)+"")
-          .style("fill", sideColor)
-              .style("stroke",sideColor) ;
-              
-            g.select('#bot-fluid')
-          .transition()
-          .duration(DURATION)
-          .ease("cubic")
-          .style("fill", sideColor)
-              .style("stroke",sideColor) ;
           
-        g.select('#top-fluid')
-          .transition() 
-          .duration(DURATION)
-          .ease("cubic")
-          .attrTween("transform", function(d,i,a) { 
-            return d3.interpolateString(a, "translate(0,"+dy+")"); })
-              .style("fill", topColor)
-              .style("stroke",topColor) ;
+          g.select('rect')
+            .transition()
+            .duration(DURATION)
+            .ease("cubic")
+            .attr('y',(175+dy)+"")
+            .attr('height',(115-dy)+"")
+            .style("fill", sideColor)
+            .style("stroke",sideColor) ;
+              
+          g.select('#bot-fluid')
+            .transition()
+            .duration(DURATION)
+            .ease("cubic")
+            .style("fill", sideColor)
+            .style("stroke",sideColor) ;
+          
+          g.select('#top-fluid')
+            .transition() 
+            .duration(DURATION)
+            .ease("cubic")
+            .attrTween("transform", function(d,i,a) { 
+              return d3.interpolateString(a, "translate(0,"+dy+")"); })
+            .style("fill", topColor)
+            .style("stroke",topColor) ;
         }
         
         function getUnique(array) {
@@ -408,7 +410,12 @@
         }
 
         var levels = [<%= silo.level_1 %>,<%= silo.level_2 %>,<%= silo.level_3 %>,<%= silo.level_4 %>];
-        var currentLevel = <%= silodata[0].level %>;
+        
+        currentLevel = 100;
+        <% if (!(silodata[0] == null)) { %>
+          currentLevel = <%= silodata[0].level %> ;
+        <% } %>
+        
         var colors = [["#00ff00","#56ff56"],["#ccff66","#FFFF66"],["#ffff00","#ffff5f"],["#ff7f00","#ffaa56"],["#ff0000","#ff5656"]];
         var animateState = function (level) {
           if(level >= <%= silo.level_1 %>) {//"above level 1"
@@ -450,8 +457,7 @@
         //     "start": 12039485678000, // Milliseconds
         //     "end": 1234576967000 // Milliseconds
         //   }],
-        // }); 
-      });
+        // });
     </script>
   </body>
 </html>

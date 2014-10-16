@@ -28,15 +28,20 @@ module.exports = {
     Silo.findOne(id).populate("product").exec(function (err, silo) {
       if (err) {
         sails.log.error("Error when retrieving silo " + err);
-        res.view({layout: "barebones"}, '500');
-        return;
+        return res.view('500', {layout: "barebones"});
       } 
+
+      if (silo == null || silo.id == null) {
+        sails.log.error("Error when retrieving silo " + id);
+        return res.view('404', {layout: "barebones"});
+      }
+
       req.session.current_silo = silo.id;
       req.session.current_farm = silo.farm;
       Farm.findOne({id: silo.farm}).populate("region").exec(function (err, farm) {
         if (err) {
           sails.log.error("Error when retrieving farm " + err);
-          res.view({layout: "barebones"}, '500');
+          res.view('500', {layout: "barebones"});
           return;
         } 
         SiloData.find({rfidTagNum: silo.rfid}).sort("timestamp desc").limit(10).exec(function (err, silodata) {
