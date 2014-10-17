@@ -121,6 +121,10 @@ table {
 
 /* page header */
 
+.panel .panel-heading {
+  overflow: hidden;
+}
+
 .page-header-search {
 	position: relative;
 	padding-bottom: 50px;
