@@ -15,6 +15,7 @@
  * @docs        :: http://sailsjs.org/#!documentation/controllers
  */
 
+moment = require("moment");
 module.exports = {
     
   _config: {
@@ -68,7 +69,10 @@ module.exports = {
   },
 
   binsearch: function(req,res) {
-    Product.find({ like: { name: '%'+req.query.product+'%' } }).where({organization: req.session.organization}).exec(function (err, products) {
+    if (req.query.product == null) req.query.product = "";
+    Product.find({name: {like: '%' + req.query.product + '%'}})
+    .where({organization: req.session.organization})
+    .exec(function (err, products) {
       if(err) {
         sails.log.error("Error with retrieving like products: " + err);
         res.json(err,500);
@@ -77,54 +81,120 @@ module.exports = {
         res.json("No bins match your criteria, please try again",400);
         return;
       }
-      var productString = "";
-      for(var index in products) {
-        productString += products[index].id + ",";
-      }
-      //Get all the bins in the region with such product
-      Bin.query("SELECT bin.rfid, bin.name, bin.location, bin.id FROM bin JOIN farm on farm.id = bin.farm " + 
-             "WHERE bin.product IN (" + productString.slice(0,-1) + ") AND farm.region LIKE ? " +
-             "AND bin.name LIKE ?",
-             [req.query.region, '%' + req.query.binName + '%'],
-      function (err,bins) {
-        if(err) {
-          sails.log.error("Error when getting subset of bins: " + err);
-          res.json(err,500);
-          return;
-        } else if (bins.length === 0) {
-          res.json("No bins match your criteria, please try again",400);
-          return;
+
+      productIds = _.pluck(products, 'id');
+
+      var filterByNameAndProduct = {}
+      if (req.query.binName) {name: {like: '%' + req.query.binName + '%'}};
+      if (productIds.length > 0 ) filterByNameAndProduct.product = productIds;
+
+      //find bins with given names and products
+      Bin.find(filterByNameAndProduct)
+      .populateAll()
+      .exec(function (err, bins) {
+        if (err) {
+          sails.log.error("Error when getting bins: " + err);
+          return res.json(err,500);
         }
-        var binString = "";
-        for(var index in bins) {
-          binString += bins[index].rfid + ",";
+
+        //filter by reigon in js since we can get it using populate all
+        if (req.query.region)
+          bins = _.filter(bins, function (thisBin) {return (thisBin.farm.region == req.query.region)});
+        if (bins.length < 1) {
+          return res.json('No Bins Found', 404);
         }
-        //Now to get all the bindata for those bins
-        BinData.query("SELECT L.rfidTagNum, L.level, DATE_FORMAT(FROM_UNIXTIME(L.timestamp), '%b %e %Y, %T') as recent FROM bindata L " +
-               "LEFT JOIN bindata R ON " +
-               "L.rfidTagNum = R.rfidTagNum AND " +
-               "L.timestamp < R.timestamp " +
-               "WHERE isnull(R.rfidTagNum) AND L.rfidTagNum IN (" + binString.slice(0,-1) + ") ORDER BY level ASC LIMIT 5",[],
-        function (err, binData) {
+
+        //did the request ask for spesific rfids?
+        var opts = {};
+        var rfids = _.pluck(bins, 'rfid')
+        if (rfids.length > 0) opts.rfids = rfids;
+
+        if (req.query.from && req.query.to) { //we have a time period
+          opts.period = {};
+          opts.period.from = req.query.from;
+          opts.period.to = req.query.to;
+        } else if (req.param.from) { //since some date
+          opts.period = {};
+          opts.period.from = req.param.from;
+          opts.period.to = parseInt(new Date().getTime() / 1000);
+        } else if (req.param.to) { // till some date
+          opts.period = {};
+          opts.period.from = 0;
+          opts.period.to = req.query.to;
+        }
+
+        //custom query that returns every changing edge
+        Bin.get_changelog(opts, function (err, binLog) {
           if(err) {
             sails.log.error("Error when getting recent bin data: " + err);
-              res.json(err,500);
-              return;
+            return res.json(err,500);
+          }
+
+          //if we want just the latest for each rfid, max timestamp should be this one
+          if (req.query.latest) {
+            binLog = _.filter(binLog, function (thisRow, index, allRows) {
+               return _.chain(allRows)
+                       .where({rfid: thisRow.rfid})
+                       .pluck('timestamp')
+                       .max()
+                       .value() == thisRow.timestamp
+             })
+          }
+
+          binLog = _.map(binLog, function (thisRow, index, allRows) {
+
+            var thisBin = _.findWhere(bins, {rfid: parseInt(thisRow.rfid)});
+            if (thisBin == null) return null;
+
+            var result = {};
+            result.id = thisBin.id;
+            result.name = thisBin.name;
+            result.location = thisBin.location;
+            result.farm = thisBin.farm.name;
+            result.farmid = thisBin.farm.id;
+            result.product = thisBin.product.name;
+            result.productId = thisBin.product.id;
+            result.since = thisRow.since;
+            result.since = thisRow.timestamp;
+            result.level = thisRow.level;
+            result.levels = {
+              level_1: thisBin.level_1,
+              level_2: thisBin.level_2,
+              level_3: thisBin.level_3,
+              level_4: thisBin.level_4
             }
-            var tableData = [];
-            for(var index in binData) {
-              for(var index2 in bins) {
-                if(bins[index2].rfid === parseInt(binData[index].rfidTagNum,10)) {
-                  binData[index].name = bins[index2].name;
-                  binData[index].location = bins[index2].location;
-                  binData[index].id = bins[index2].id
-                  tableData.push(binData[index]);
-                }
-              }
-            }
-            //i want this to go to a partial view
-            res.view('dashboard/bintable', {binData: tableData, layout:null});
-        });
+
+            //What is the most recent event after this one?
+            after_result = _.chain(allRows)
+              .filter(function (thisResult, index, allResults) {
+                return thisResult.rfid === thisRow.rfid 
+                    && thisResult.timestamp > thisRow.timestamp
+              }).pluck('timestamp')
+              .min()
+              .value()
+ 
+            //if there is none then lets just make it 
+            if (after_result == null || after_result == Infinity) 
+              after_result =  parseInt(new Date().getTime() / 1000);
+
+            result.duration = after_result - thisRow.timestamp;
+          
+            return result;
+
+          });
+  
+          if (req.query.latest) {
+            //sort based on the duration and level for knowing most important
+            binLog = _.chain(binLog).compact().sortBy('duration').reverse().sortBy('level').value();
+            return res.view('dashboard/bintable', {binData: binLog, moment: moment, layout:null});
+          } else {
+            //sort based on timestamp to get a changelog style thing going
+            binLog = _.chain(binLog).compact().sortBy('since').reverse().value();
+            return res.json(binLog, 200)
+          }
+          
+        })
+
       });
     });
   	
@@ -180,7 +250,6 @@ module.exports = {
         } else {
           sails.log.info("Updated bin " + updatedBin[0].id);
           if(changeLogFlag) {
-            var moment = require("moment");
             BinChangelog.create(
               {bin: updatedBin[0].id,
                old_product: req.query.old_product_id,

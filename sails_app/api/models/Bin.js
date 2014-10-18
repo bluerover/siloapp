@@ -35,6 +35,47 @@ module.exports = {
     level_2: 'integer',
     level_3: 'integer',
     level_4: 'integer'
-  }
+  },
 
+  get_changelog: function (opts, cb) {
+    var queryString = " \
+        select \
+          rfidTagNum as rfid \
+        , level \
+        , (CASE WHEN rfidTagNum <> previous_rfid \
+            THEN NULL \
+            ELSE previous_level \
+            END) AS previous_level \
+        , timestamp \
+          \
+        from ( \
+          select  \
+            y.* \
+          , @prev_r AS previous_rfid \
+          , @prev_r := rfidTagNum \
+          , @prev AS previous_level \
+          , @prev := level \
+          from  \
+            bindata y \
+          , (select @prev:=NULL, @prev_r:=NULL) vars \
+          order by rfidTagNum, timestamp \
+        ) with_previous " +
+
+        "WHERE ( \
+           level <> previous_level \
+        OR previous_level IS NULL \
+        OR previous_rfid <> rfidTagNum \
+        OR previous_rfid IS NULL \
+        ) " +
+        (opts.rfids? "AND rfidTagNum IN (" + opts.rfids.join(',') + ") " : " " ) + 
+        (opts.period? 
+          "AND timestamp  \
+          BETWEEN" + opts.period.from +
+             "AND" + opts.period.to + " "
+          : " " 
+        ) +
+        "ORDER BY rfid, timestamp DESC "
+
+    Bin.query(queryString, cb);
+  }
 };

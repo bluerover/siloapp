@@ -41,7 +41,7 @@
               <form id="binSearchForm" class="form-horizontal" role="form">
                 <div class="col-md-2">
                   <select class="form-control input-sm" name="region">
-                    <option value="%">Any Region</option>
+                    <option value="">Any Region</option>
                     <% for (var i in regions) { %>
                       <option value="<%= regions[i].id %>"><%= regions[i].name %></option>
                     <% } %>            
@@ -56,6 +56,7 @@
                 <div class="col-md-3">
                   <a href="javascript:;" class="btn btn-lg btn-success btn-block" id="binSearch">Search</a>
                 </div>
+                <input type="hidden" name="latest" value='true' />
               </form>
             </div>
           </div>

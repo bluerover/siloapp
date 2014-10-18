@@ -1,17 +1,19 @@
 <table class='table table-condensed table-striped table-hover'>
     <thead>
-        <th>Bin Name</th>
-        <th>Bin Location</th>
-        <th>Bin Level</th>
-        <th>Last Timestamp</th>
+        <th>Bin</th>
+        <th>Farm</th>
+        <th>Product</th>
+        <th>Level</th>
+        <th>Since</th>
     </thead>
     <tbody>
         <% for (var i in binData) { %>
           <tr class="clickableRow" data-url="/bin/<%= binData[i].id %>">
             <td><%= binData[i].name %></td>
-            <td><%= binData[i].location %></td>
+            <td><%= binData[i].farm %></td>
+            <td><%= binData[i].product %></td>
             <td><%= binData[i].level %></td>
-            <td><%= binData[i].recent %></td>
+            <td><%= moment(0).from(moment.unix(binData[i].duration)) %></td>
         <% } %>
     </tbody>
 </table>
