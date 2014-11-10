@@ -48,7 +48,7 @@
           </button>
           <a class="navbar-brand" href="/dashboard"><div class="logo"></div></a>
         </div>
-        <div class="collapse navbar-collapse pull-right">
+        <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <li <%= (typeof(page_category) !== "undefined" && page_category === "dashboard") ? 'class=active' : '' %>><a href="/dashboard">Dashboard</a></li>
             <li <%= (typeof(page_category) !== "undefined" && page_category === "farm") ? 'class=active' : '' %>><a <%= (typeof(current_farm) !== "undefined") ? 'href=/farm/' + current_farm : 'href=javascript:;' %>>Farm</a></li>
