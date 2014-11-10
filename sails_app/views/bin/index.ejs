@@ -155,14 +155,16 @@
               <h3>Recent Data</h3>
               <table class="table table-striped table-hover">
                 <thead>
-                  <th>Timestamp</th>
+                  <th>Date</th>
                   <th>Level</th>
+                  <th>Duration</th>
                 </thead>
                 <tbody>
                   <% for (var i in bindata) { %>
                     <tr>
-                      <td class="timestamp"><%= bindata[i].timestamp %></td>
+                      <td class="timestamp"><%= moment.unix(bindata[i].timestamp).format("MMM D YYYY, HH:mm:ss") %></td>
                       <td><%= bindata[i].level %></td>
+                      <td><%= moment(0).from(moment.unix(bindata[i].duration), true) %></td>
                     </tr>
                   <% } %>
                 </tbody>
@@ -450,51 +452,49 @@
 
         var calendar;
         $(window).load(function() {
-          $.getJSON('/bin_data/' + <%= bin.rfid %> + '/changelog', function(data) {
 
-            binData = _.map(data.data, function (dataPoint, index, allPoints) {
-              var binChange = {};
-              binChange.id = dataPoint.id;
-              binChange.title = data.bin.name 
-                                + " from " + data.bin.farm.name 
-                                + " reported level " + dataPoint.level 
-                                + " at " +  moment.unix(dataPoint.timestamp).format("MMM D YYYY, HH:mm:ss");
-              binChange.start = dataPoint.timestamp * 1000;
-              binChange.end = ((index == allPoints.length - 1) ? 
-                                Date.now() : 
-                                allPoints[index + 1].timestamp * 1000);
-              
-              if(dataPoint.level > data.bin.level_1) {//"above level 1"
-                binChange.class = "event-success"
-              } else if(dataPoint.level < data.bin.level_4){//"below level 4"
-                binChange.class = "event-important"
-              } else {
-                binChange.class = "event-warning"
-              } 
+          binData = _.map(<%- JSON.stringify(bindata) %>, function (dataPoint, index, allPoints) {
+            var binChange = {};
+            binChange.id = dataPoint.timestamp;
+            binChange.title = "<%= bin.name %>"
+                              + " from <%= farm.name %>"
+                              + " reported level " + dataPoint.level 
+                              + " at " +  moment.unix(dataPoint.timestamp).format("MMM D YYYY, HH:mm:ss");
+            binChange.start = dataPoint.timestamp * 1000;
+            binChange.end = ((index == 0) ? 
+                              Date.now() : 
+                              allPoints[index - 1].timestamp * 1000);
+            
+            if(dataPoint.level > <%= bin.level_1 %>) {//"above level 1"
+              binChange.class = "event-success"
+            } else if(dataPoint.level < <%= bin.level_4 %>){//"below level 4"
+              binChange.class = "event-important"
+            } else {
+              binChange.class = "event-warning"
+            } 
 
-              return binChange;
-            })
-
-            calendar = $("#calendar").calendar({
-              tmpl_path: "/calendar-template/",
-              events_source: binData,
-              views: {
-                year:  { enable: 0 },
-                month: { enable: 1, slide_events: 1},
-                week:  { enable: 0 },
-                day:   { enable: 0 }
-              },
-              onAfterViewLoad: function(view) {
-                $('#calendar-container .calTitle').text(this.getTitle());
-              }
-            });
-
-            $('#calendar-container .calNav').click(function (e) {
-              calendar.navigate($(this).data('nav'));
-            })
-
-            $("#calendar-container").show();
+            return binChange;
           })
+
+          calendar = $("#calendar").calendar({
+            tmpl_path: "/calendar-template/",
+            events_source: binData,
+            views: {
+              year:  { enable: 0 },
+              month: { enable: 1, slide_events: 1},
+              week:  { enable: 0 },
+              day:   { enable: 0 }
+            },
+            onAfterViewLoad: function(view) {
+              $('#calendar-container .calTitle').text(this.getTitle());
+            }
+          });
+
+          $('#calendar-container .calNav').click(function (e) {
+            calendar.navigate($(this).data('nav'));
+          })
+
+          $("#calendar-container").show();
         })
 
     </script>

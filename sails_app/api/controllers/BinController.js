@@ -45,9 +45,20 @@ module.exports = {
           res.view('500', {layout: "barebones"});
           return;
         } 
-        BinData.find({rfidTagNum: bin.rfid}).sort("timestamp desc").limit(10).exec(function (err, bindata) {
+
+        Bin.get_changelog({rfids: [bin.rfid]}, function (err, bindata) {
           // console.log(bindata);
           //we don't really care if you don't past data
+
+          //calculate the duration column on the bin data
+          bindata = _.map(bindata, function (thisRow, index, allRows) {
+            result = thisRow;
+            result.duration =  ((index == 0)? 
+                              Date.now()/1000 - thisRow.timestamp : 
+                              allRows[index - 1].timestamp - thisRow.timestamp);
+            return result;
+          });
+
           BinChangelog.find({bin: bin.id}).populate("new_product").populate("old_product").sort("timestamp desc").limit(5).exec(function (err, binChanges) {
             //we don't really care if you don't have any changes
             // console.log(binChanges);
@@ -60,7 +71,8 @@ module.exports = {
               bin: bin,
               farm: farm,
               bindata: bindata,
-              binChanges: binChanges
+              binChanges: binChanges,
+              moment: moment
             });
           });
         });
