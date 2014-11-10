@@ -423,7 +423,7 @@
         var animateState = function (level) {
           if(level >= <%= bin.level_1 %>) {//"above level 1"
             animateBin(['above ' + <%= bin.level_1 %>],level,100-level,colors[0][0],colors[0][1]);
-          } else if(level <= <%= bin.level_4 %>){//"below level 4"
+          } else if(level < <%= bin.level_4 %>){//"below level 4"
             animateBin(['below ' + <%= bin.level_4 %>],level,100-level,colors[4][0],colors[4][1]);
           } else {
             levels = getUnique(levels);//must account for something like 80,80,40,40 and 80,50,50,20
